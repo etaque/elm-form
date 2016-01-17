@@ -84,7 +84,7 @@ view address model =
     fieldGroup builder name =
       div
         [ class "field-group" ]
-        [ textInput name model.form formAddress []
+        [ builder name model.form formAddress []
         , errorsOn model.form name toString
         ]
   in

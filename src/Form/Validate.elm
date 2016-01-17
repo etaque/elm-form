@@ -18,17 +18,12 @@ type alias FieldError = Form.Model.FieldError
 get : String -> (FieldValue -> ValidationResult a) -> FieldValidator a
 get name validate =
   let
-    validateMaybe maybeString =
-      case maybeString of
-        Just s ->
-          if String.isEmpty s then
-            Err Empty
-          else
-            validate s
-        Nothing ->
+    validateMaybe maybeValue =
+      case maybeValue of
+        Just v ->
+          validate v
+        _ ->
           Err Empty
-      -- Maybe.map validate maybeValue
-      --   |> Maybe.withDefault (Err Empty)
   in
     FieldValidator name validateMaybe
 
@@ -38,8 +33,8 @@ maybe name validate =
   let
     validateMaybe maybeValue =
       case maybeValue of
-        Just s ->
-          validate s |> Result.map Just
+        Just v ->
+          validate v |> Result.map Just
         Nothing ->
           Ok Nothing
   in
@@ -58,25 +53,41 @@ andThen validation callback =
 
 
 string : FieldValue -> ValidationResult String
-string =
-  Ok
+string v =
+  case v of
+    Text s ->
+      Ok s
+    _ ->
+      Err InvalidString
 
 
 int : FieldValue -> ValidationResult Int
-int value =
-  String.toInt value
-    |> Result.formatError (\_ -> InvalidInt)
+int v =
+  case v of
+    Text s ->
+      String.toInt s
+        |> Result.formatError (\_ -> InvalidInt)
+    _ ->
+      Err InvalidInt
 
 
 float : FieldValue -> ValidationResult Float
-float value =
-  String.toFloat value
-    |> Result.formatError (\_ -> InvalidInt)
+float v =
+  case v of
+    Text s ->
+      String.toFloat s
+        |> Result.formatError (\_ -> InvalidInt)
+    _ ->
+      Err InvalidFloat
 
 
 bool : FieldValue -> ValidationResult Bool
-bool value =
-  Ok True
+bool v =
+  case v of
+    Check b ->
+      Ok b
+    _ ->
+      Err InvalidBool
 
 
 min : Int -> Int -> ValidationResult Int
@@ -87,9 +98,13 @@ min i value =
     Err (LowerThan i)
 
 date : FieldValue -> ValidationResult Date
-date value =
-  Date.fromString value
-    |> Result.formatError (\_ -> InvalidDate)
+date v =
+  case v of
+    Text s ->
+      Date.fromString s
+        |> Result.formatError (\_ -> InvalidDate)
+    _ ->
+      Err InvalidDate
 
 
 

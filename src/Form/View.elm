@@ -8,9 +8,9 @@ import Signal exposing (Address)
 import Form.Model exposing (..)
 
 
-updateField : String -> String -> Action
-updateField =
-  UpdateField
+-- updateField : String -> String -> Action
+-- updateField =
+--   UpdateField
 
 validate : Action
 validate =
@@ -21,10 +21,10 @@ textInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "text"
-      , value (getValue form name |> Maybe.withDefault "")
+      , value (getString form name |> Maybe.withDefault "")
       , on "input"
           targetValue
-          (\v -> Signal.message formAddress (updateField name v))
+          (\v -> Signal.message formAddress (updateString name v))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -35,10 +35,10 @@ checkboxInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "checkbox"
-      , value (getValue form name |> Maybe.withDefault "")
+      , checked (getBool form name |> Maybe.withDefault False)
       , on "input"
-          targetValue
-          (\v -> Signal.message formAddress (updateField name v))
+          targetChecked
+          (\v -> Signal.message formAddress (updateBool name v))
       ]
   in
     input (formAttrs ++ attrs) []

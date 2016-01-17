@@ -57,7 +57,7 @@ addErrorsToField (name, errors) form =
   if Dict.member name form then
     Dict.update name (Maybe.map (\f -> { f | errors = errors })) form
   else
-    Dict.insert name { value = "", errors = errors } form
+    Dict.insert name { value = EmptyValue, errors = errors } form
 
 
 validate : FieldValidator v -> Form -> FormResult v
