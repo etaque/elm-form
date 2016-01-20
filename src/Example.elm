@@ -16,7 +16,7 @@ import Form.View as FormView exposing (..)
 
 type alias User =
   { name : String
-  , age : Maybe Int
+  , age : Int
   , admin : Bool
   }
 
@@ -31,7 +31,7 @@ formSetup : Form.Setup User Action
 formSetup =
   { validation = form3 User
       ("name" := (trim string `andThen` nonEmpty))
-      ("age" ?= (int `andThen` (minInt 0)))
+      ("age" := (int `andThen` (minInt 0) |> customError [ "hey" ]))
       ("admin" := bool)
   , initialFields = Form.emptyFields
   , onOk = FormSuccess
