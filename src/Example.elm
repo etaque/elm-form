@@ -7,25 +7,36 @@ import Effects exposing (Effects)
 import Task exposing (Task)
 import Result
 
-import Form exposing (Form)
+import Form exposing (Form, WithForm)
 import Form.Validate as Validate exposing (..)
 import Form.View as FormView exposing (..)
 
 
 -- Model
 
-type alias Stuff =
-  { foo : String
-  , bar : Maybe Int
-  , baz : Bool
+type alias User =
+  { name : String
+  , age : Maybe Int
+  , admin : Bool
   }
 
-type alias Model =
-  { form : Form }
+type alias Model = WithForm User Action
+  { user : Maybe User }
 
 init : (Model, Effects Action)
 init =
-  ({ form = Form.emptyForm }, Effects.none)
+  ({ form = Form.initial formSetup, user = Nothing }, Effects.none)
+
+formSetup : Form.Setup User Action
+formSetup =
+  { validation = form3 User
+      ("name" := (trim string `andThen` nonEmpty))
+      ("age" ?= (int `andThen` (minInt 0)))
+      ("admin" := bool)
+  , initialFields = Form.emptyFields
+  , onOk = FormSuccess
+  , onErr = NoOp
+  }
 
 
 -- Action
@@ -33,7 +44,7 @@ init =
 type Action
   = NoOp
   | FormAction Form.Action
-  | SubmitForm Stuff
+  | FormSuccess User
 
 
 -- Update
@@ -42,37 +53,18 @@ mailbox : Signal.Mailbox Action
 mailbox =
   Signal.mailbox NoOp
 
-(:=) = get
-(?=) = maybe
-
-formSetup : Form.Setup Stuff Action
-formSetup =
-  { validate = Form.validate3 Stuff
-      ("foo" := string)
-      ("bar" ?= (int `andThen` (Validate.min 5)))
-      ("baz" := bool)
-  , address = mailbox.address
-  , okHandler = SubmitForm
-  , errHandler = NoOp
-  }
-
 update : Action -> Model -> (Model, Effects Action)
 update action model =
-  case Debug.log "action" action of
+  case action of
+
     NoOp ->
       (model, Effects.none)
 
     FormAction formAction ->
-      let
-        (newForm, fx) = Form.update formSetup formAction model.form
-      in
-        ({ model | form = newForm }, Effects.map FormAction fx)
+      Form.modelUpdate FormAction formAction model
 
-    SubmitForm stuff ->
-      let
-        _ = Debug.log "stuff" stuff
-      in
-        (model, Effects.none)
+    FormSuccess user ->
+      ({ model | user = Just user }, Effects.none)
 
 
 -- View
@@ -89,10 +81,11 @@ view address model =
         ]
   in
     div [ ]
-      [ fieldGroup textInput "foo"
-      , fieldGroup textInput "bar"
-      , fieldGroup checkboxInput "baz"
+      [ fieldGroup textInput "name"
+      , fieldGroup textInput "age"
+      , fieldGroup checkboxInput "admin"
       , button [ validateOnClick formAddress ] [ text "Ok" ]
+      , div [] [ text (toString model.user) ]
       ]
 
 

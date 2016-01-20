@@ -9,96 +9,61 @@ import Response exposing (..)
 import Form.Model as Model exposing (..)
 
 
-type alias Form = Model.Form
-type alias Setup value action = Model.Setup value action
+type alias Form target action = Model.Form target action
+type alias WithForm model target action = Model.WithForm model target action
+type alias Setup target action = Model.Setup target action
 type alias Action = Model.Action
 
 
-emptyForm : Form
-emptyForm =
-  Dict.empty
+initial : Setup target action -> Form target action
+initial setup =
+  { value = Group setup.initialFields, errors = GroupErrors Dict.empty, setup = setup }
 
 
-update : Setup v a -> Action -> Form -> (Form, Effects Action)
-update setup action form =
+modelUpdate : (Action -> action) -> Action -> WithForm target action model -> (WithForm target action model, Effects action)
+modelUpdate actionWrapper action model =
+  formUpdate actionWrapper action model.form
+    |> mapModel (\form -> { model | form = form })
+
+
+formUpdate : (Action -> action) -> Action -> Form target action -> (Form target action, Effects action)
+formUpdate actionWrapper action ({setup} as form) =
   case action of
 
     NoOp ->
-      (form, none)
+      res form none
 
     UpdateField name value ->
       let
-        field : Field
-        field = { value = value, errors = [] }
-        newForm = Dict.insert name field form
+        newValue = setField name value form.value
+        -- newErrors = Dict.insert name [] form.errors
+        newForm =
+          { form
+            | value = newValue
+            -- , errors = newErrors
+          }
       in
-        (newForm, none)
+        res newForm none
 
     Validate ->
-      case setup.validate form of
+      case setup.validation form.value of
+
         Ok value ->
-          Signal.send setup.address (setup.okHandler value)
-            |> taskRes form
-            |> mapEffects (\_ -> NoOp)
+          let
+            newForm = { form | errors = GroupErrors Dict.empty }
+            t = Task.succeed (setup.onOk value)
+          in
+            taskRes newForm t
+
         Err formErrors ->
-          Signal.send setup.address setup.errHandler
-            |> taskRes (addErrorsToForm formErrors form)
-            |> mapEffects (\_ -> NoOp)
+          -- res form none
+          let
+            newForm = Debug.log "withErrors" { form | errors = formErrors }
+            t = Task.succeed setup.onErr
+          in
+            taskRes newForm t
 
 
-addErrorsToForm : Dict String (List FieldError) -> Form -> Form
-addErrorsToForm formErrors form =
-  Dict.toList formErrors
-    |> List.foldl addErrorsToField form
-
-
-addErrorsToField : (String, List FieldError) -> Form -> Form
-addErrorsToField (name, errors) form =
-  if Dict.member name form then
-    Dict.update name (Maybe.map (\f -> { f | errors = errors })) form
-  else
-    Dict.insert name { value = EmptyValue, errors = errors } form
-
-
-validate : FieldValidator v -> Form -> FormResult v
-validate {name, validate} form =
-  validate (getValue form name)
-    |> Result.formatError (\e -> Dict.fromList [ (name, [ e ]) ])
-
-
-validate2 : (a -> b -> value) -> FieldValidator a -> FieldValidator b -> Form -> FormResult value
-validate2 f v1 v2 form =
-  case (validate v1 form, validate v2 form) of
-    (Ok a, Ok b) ->
-      Ok (f a b)
-    (r1, r2) ->
-      Err (mergeFormErrors [ err r1, err r2 ])
-
-
-validate3 : (a -> b -> c -> value) -> FieldValidator a -> FieldValidator b -> FieldValidator c -> Form -> FormResult value
-validate3 f v1 v2 v3 form =
-  case (validate v1 form, validate v2 form, validate v3 form) of
-    (Ok a, Ok b, Ok c) ->
-      Ok (f a b c)
-    (r1, r2, r3) ->
-      Err (mergeFormErrors [ err r1, err r2, err r3 ])
-
-
-mergeFormErrors : List (Maybe FormErrors) -> FormErrors
-mergeFormErrors errors =
-  List.filterMap identity errors
-    |> List.foldl (Dict.union) Dict.empty
-
-
-err : Result e a -> Maybe e
-err res =
-  case res of
-    Ok _ -> Nothing
-    Err e -> Just e
-
-
-getValue =
-  Model.getValue
-
-getErrors =
-  Model.getErrors
+emptyFields : Fields
+emptyFields =
+  Dict.empty

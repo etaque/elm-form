@@ -3,92 +3,130 @@ module Form.Model where
 import Dict exposing (Dict)
 
 
+-- Actions
+
+
 type Action
   = NoOp
-  | UpdateField String FieldValue
+  | UpdateField String Value
   | Validate
+
 
 updateString : String -> String -> Action
 updateString name s =
-  UpdateField name (Text s)
+  UpdateField name (TextField s)
 
 
 updateBool : String -> Bool -> Action
 updateBool name b =
-  UpdateField name (Check b)
+  UpdateField name (CheckBox b)
 
 
-type alias Form =  Dict String Field
+-- Model
 
-getValue : Form -> String -> Maybe FieldValue
-getValue form name =
-  Dict.get name form
-    |> Maybe.map .value
 
-getBool : Form -> String -> Maybe Bool
-getBool form name =
-  case getValue form name of
-    Just (Check b) ->
+type alias Form target action =
+  { value : Value
+  , errors : ValidationError
+  , setup : Setup target action
+  }
+
+
+type alias WithForm target action model = { model | form : Form target action }
+
+
+type Value
+  = Group Fields
+  | TextField String
+  | CheckBox Bool
+  | Multi String
+  | EmptyValue
+
+
+type alias Fields = Dict String Value
+
+
+type alias Setup target action =
+  { validation : Validation target
+  , initialFields : Fields
+  , onOk : target -> action
+  , onErr : action
+  }
+
+
+type alias Validation value =
+  Value -> Result ValidationError value
+
+
+type ValidationError
+  = GroupErrors (Dict String ValidationError)
+  | ValueError Error
+
+
+getValue : Form target action -> Value
+getValue =
+  .value
+
+
+getField : String -> Value -> Maybe Value
+getField name value =
+  case value of
+    Group fields ->
+      Dict.get name fields
+    _ ->
+      Nothing
+
+
+setField : String -> Value -> Value -> Value
+setField fieldName fieldValue value =
+  case value of
+    Group fields ->
+      Group <| Dict.insert fieldName fieldValue fields
+    _ ->
+      value
+
+
+getBool : Value -> Maybe Bool
+getBool value =
+  case value of
+    CheckBox b ->
       Just b
     _ ->
       Nothing
 
-getString : Form -> String -> Maybe String
-getString form name =
-  case getValue form name of
-    Just (Text s) ->
+
+getString : Value -> Maybe String
+getString value =
+  case value of
+    TextField s ->
       Just s
     _ ->
       Nothing
 
-getErrors : Form -> String -> List FieldError
-getErrors form name =
-  Dict.get name form
-    |> Maybe.map .errors
-    |> Maybe.withDefault []
+
+getErrors : String -> Form target action -> List Error
+getErrors name form =
+  case form.errors of
+    GroupErrors groupErrors ->
+      case Dict.get name groupErrors of
+        Just ve ->
+          case ve of
+            ValueError e -> [ e ]
+            GroupErrors _ -> []
+        Nothing ->
+          []
+    _ ->
+      []
 
 
-type alias Field =
-  { value : FieldValue
-  , errors : List FieldError
-  }
-
-type alias Setup value action =
-  { validate : Form -> FormResult value
-  , address : Signal.Address action
-  , okHandler : value -> action
-  , errHandler : action
-  }
-
-type alias FormResult a =
-  Result FormErrors a
-
-type alias FormErrors =
-  Dict String (List FieldError)
-
-type alias ValidationResult a =
-  Result FieldError a
-
-type alias FieldValidator v =
-  { name : String
-  , validate : Maybe FieldValue -> ValidationResult v
-  }
-
-type FieldValue
-  = EmptyValue
-  | Text String
-  | Check Bool
-  | Multi String
-
-
-type FieldError
-  = Empty
+type Error
+  = EmptyError
   | InvalidString
   | InvalidInt
   | InvalidFloat
   | InvalidBool
   | InvalidDate
-  | LowerThan Int
+  | SmallerThan Int
   | GreaterThan Int
   | ShorterThan Int
   | LongerThan Int

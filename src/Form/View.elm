@@ -4,24 +4,21 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
 import Signal exposing (Address)
+import Maybe exposing (andThen)
 
 import Form.Model exposing (..)
 
-
--- updateField : String -> String -> Action
--- updateField =
---   UpdateField
 
 validate : Action
 validate =
   Validate
 
-textInput : String -> Form -> Address Action -> List Attribute -> Html
+textInput : String -> Form t a -> Address Action -> List Attribute -> Html
 textInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "text"
-      , value (getString form name |> Maybe.withDefault "")
+      , value ((getValue form |> getField name) `andThen` getString |> Maybe.withDefault "")
       , on "input"
           targetValue
           (\v -> Signal.message formAddress (updateString name v))
@@ -30,15 +27,15 @@ textInput name form formAddress attrs =
     input (formAttrs ++ attrs) []
 
 
-checkboxInput : String -> Form -> Address Action -> List Attribute -> Html
+checkboxInput : String -> Form t a -> Address Action -> List Attribute -> Html
 checkboxInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "checkbox"
-      , checked (getBool form name |> Maybe.withDefault False)
-      , on "input"
+      , checked ((getValue form |> getField name) `andThen` getBool |> Maybe.withDefault False)
+      , on "change"
           targetChecked
-          (\v -> Signal.message formAddress (updateBool name v))
+          (\v -> Signal.message formAddress (updateBool name (Debug.log "checked" v)))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -49,10 +46,10 @@ validateOnClick formAddress =
   onClick formAddress validate
 
 
-errorsOn : Form -> String -> (FieldError -> String) -> Html
+errorsOn : Form t a-> String -> (Error -> String) -> Html
 errorsOn form name presenter =
   let
-    errors = getErrors form name
+    errors = getErrors name form
   in
     if List.isEmpty errors then
       text ""
