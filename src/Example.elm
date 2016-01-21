@@ -16,23 +16,34 @@ import Form.View as FormView exposing (..)
 
 type alias User =
   { name : String
-  , age : Int
+  , age : Maybe Int
   , admin : Bool
+  , role : String
+  , profile : Profile
   }
 
-type alias Model = WithForm User Action
+type alias Profile =
+  { foo : String
+  , bar : String
+  }
+
+type CustomError = Yay | Ooops
+
+type alias Model = WithForm CustomError User Action
   { user : Maybe User }
 
 init : (Model, Effects Action)
 init =
   ({ form = Form.initial formSetup, user = Nothing }, Effects.none)
 
-formSetup : Form.Setup User Action
+formSetup : Form.Setup CustomError User Action
 formSetup =
-  { validation = form3 User
+  { validation = form5 User
       ("name" := (trim string `andThen` nonEmpty))
-      ("age" := (int `andThen` (minInt 0) |> customError [ "hey" ]))
+      ("age" ?= (int `andThen` (minInt 18) |> customError Ooops))
       ("admin" := bool)
+      ("role" := string)
+      ("profile" := (form2 Profile ("foo" := string) ("bar" := string)))
   , initialFields = Form.emptyFields
   , onOk = FormSuccess
   , onErr = NoOp
@@ -84,6 +95,9 @@ view address model =
       [ fieldGroup textInput "name"
       , fieldGroup textInput "age"
       , fieldGroup checkboxInput "admin"
+      , fieldGroup (selectInput [("a", "Sorcier"), ("b", "Magicien")]) "role"
+      , fieldGroup textInput "profile.foo"
+      , fieldGroup textInput "profile.bar"
       , button [ validateOnClick formAddress ] [ text "Ok" ]
       , div [] [ text (toString model.user) ]
       ]

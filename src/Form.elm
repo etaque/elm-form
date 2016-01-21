@@ -9,24 +9,24 @@ import Response exposing (..)
 import Form.Model as Model exposing (..)
 
 
-type alias Form target action = Model.Form target action
-type alias WithForm model target action = Model.WithForm model target action
-type alias Setup target action = Model.Setup target action
+type alias Form e target action = Model.Form e target action
+type alias WithForm e target action model = Model.WithForm e target action model
+type alias Setup e target action = Model.Setup e target action
 type alias Action = Model.Action
 
 
-initial : Setup target action -> Form target action
+initial : Setup e target action -> Form e target action
 initial setup =
   { value = Group setup.initialFields, errors = GroupErrors Dict.empty, setup = setup }
 
 
-modelUpdate : (Action -> action) -> Action -> WithForm target action model -> (WithForm target action model, Effects action)
+modelUpdate : (Action -> action) -> Action -> WithForm e target action model -> (WithForm e target action model, Effects action)
 modelUpdate actionWrapper action model =
   formUpdate actionWrapper action model.form
     |> mapModel (\form -> { model | form = form })
 
 
-formUpdate : (Action -> action) -> Action -> Form target action -> (Form target action, Effects action)
+formUpdate : (Action -> action) -> Action -> Form e target action -> (Form e target action, Effects action)
 formUpdate actionWrapper action ({setup} as form) =
   case action of
 
@@ -35,7 +35,7 @@ formUpdate actionWrapper action ({setup} as form) =
 
     UpdateField name value ->
       let
-        newValue = setField name value form.value
+        newValue = setFieldAt name value form
         -- newErrors = Dict.insert name [] form.errors
         newForm =
           { form
@@ -56,7 +56,6 @@ formUpdate actionWrapper action ({setup} as form) =
             taskRes newForm t
 
         Err formErrors ->
-          -- res form none
           let
             newForm = Debug.log "withErrors" { form | errors = formErrors }
             t = Task.succeed setup.onErr
