@@ -1,18 +1,24 @@
-module Form.View where
+module Form.Input
+  ( textInput, checkboxInput, selectInput
+  , validateOnClick, errorMessage
+  ) where
 
-import Html exposing (..)
-import Html.Events exposing (..)
-import Html.Attributes exposing (..)
 import Signal exposing (Address)
 import Maybe exposing (andThen)
 import String
 
-import Form.Model exposing (..)
+import Html exposing (..)
+import Html.Events exposing (..)
+import Html.Attributes exposing (..)
+
+-- import Form.Core as Core exposing (..)
+import Form.Value as Value exposing (..)
+import Form.Error as Error exposing (..)
+import Form exposing (..)
 
 
-validate : Action
-validate =
-  Validate
+
+-- input helpers
 
 textInput : String -> Form e t a -> Address Action -> List Attribute -> Html
 textInput name form formAddress attrs =
@@ -22,7 +28,7 @@ textInput name form formAddress attrs =
       , value (getStringAt name form |> Maybe.withDefault "")
       , on "input"
           targetValue
-          (\v -> Signal.message formAddress (updateString name v))
+          (\v -> Signal.message formAddress (updateStringAt name v))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -35,7 +41,7 @@ selectInput options name form formAddress attrs =
       [ type' "checkbox"
       , on "change"
           targetValue
-          (\v -> Signal.message formAddress (updateString name v))
+          (\v -> Signal.message formAddress (updateStringAt name v))
       ]
     currentValue = getStringAt name form
     isSelected k =
@@ -54,10 +60,10 @@ checkboxInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "checkbox"
-      , checked ((getValue form |> getField name) `andThen` getBool |> Maybe.withDefault False)
+      , checked (getBoolAt name form |> Maybe.withDefault False)
       , on "change"
           targetChecked
-          (\v -> Signal.message formAddress (updateBool name v))
+          (\v -> Signal.message formAddress (updateBoolAt name v))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -82,9 +88,9 @@ validateOnClick formAddress =
   onClick formAddress validate
 
 
-errorsOn : Form e t a -> String -> (Error e -> String) -> Html
-errorsOn form name presenter =
-  case getError name form of
+errorMessage : Form e t a -> String -> (Error e -> String) -> Html
+errorMessage form name presenter =
+  case getErrorAt name form of
     Just error ->
       div [ class "errors" ] [ text (presenter error) ]
     Nothing ->

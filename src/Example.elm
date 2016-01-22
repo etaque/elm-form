@@ -1,15 +1,17 @@
 module Example where
 
-import Html exposing (..)
-import Html.Attributes exposing (..)
+import Task exposing (Task)
+import String
+import Dict
+
 import StartApp
 import Effects exposing (Effects)
-import Task exposing (Task)
-import Result
+import Html exposing (..)
+import Html.Attributes exposing (..)
 
 import Form exposing (Form, WithForm)
 import Form.Validate as Validate exposing (..)
-import Form.View as FormView exposing (..)
+import Form.Input as Input exposing (..)
 
 
 -- Model
@@ -32,6 +34,9 @@ type CustomError = Yay | Ooops
 type alias Model = WithForm CustomError User Action
   { user : Maybe User }
 
+
+-- Init
+
 init : (Model, Effects Action)
 init =
   ({ form = Form.initial formSetup, user = Nothing }, Effects.none)
@@ -39,12 +44,12 @@ init =
 formSetup : Form.Setup CustomError User Action
 formSetup =
   { validation = form5 User
-      ("name" := (trim string `andThen` nonEmpty))
+      ("name" := (string |> map String.trim |> pipeTo nonEmpty))
       ("age" ?= (int `andThen` (minInt 18) |> customError Ooops))
       ("admin" := bool)
       ("role" := string)
       ("profile" := (form2 Profile ("foo" := string) ("bar" := string)))
-  , initialFields = Form.emptyFields
+  , initialFields = Dict.empty
   , onOk = FormSuccess
   , onErr = NoOp
   }
@@ -72,7 +77,7 @@ update action model =
       (model, Effects.none)
 
     FormAction formAction ->
-      Form.modelUpdate FormAction formAction model
+      Form.wrappedUpdate FormAction formAction model
 
     FormSuccess user ->
       ({ model | user = Just user }, Effects.none)
@@ -84,22 +89,28 @@ view : Signal.Address Action -> Model -> Html
 view address model =
   let
     formAddress = Signal.forwardTo mailbox.address FormAction
-    fieldGroup builder name =
+    field name builder =
       div
-        [ class "field-group" ]
+        [ class "field" ]
         [ builder name model.form formAddress []
-        , errorsOn model.form name toString
+        , errorMessage model.form name toString
         ]
   in
     div [ ]
-      [ fieldGroup textInput "name"
-      , fieldGroup textInput "age"
-      , fieldGroup checkboxInput "admin"
-      , fieldGroup (selectInput [("a", "Sorcier"), ("b", "Magicien")]) "role"
-      , fieldGroup textInput "profile.foo"
-      , fieldGroup textInput "profile.bar"
-      , button [ validateOnClick formAddress ] [ text "Ok" ]
-      , div [] [ text (toString model.user) ]
+      [ field "name" textInput
+      , field "age" textInput
+      , field "admin" checkboxInput
+      , field "role" (selectInput [("a", "Sorcier"), ("b", "Magicien")])
+
+      , field "profile.foo" textInput
+      , field "profile.bar" textInput
+
+      , button
+          [ validateOnClick formAddress ]
+          [ text "Ok" ]
+      , div
+          []
+          [ text (toString model.user) ]
       ]
 
 
