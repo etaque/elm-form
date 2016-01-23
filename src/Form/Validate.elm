@@ -18,8 +18,8 @@ import Form.Field as Field exposing (Field(..))
 {-| A validation is a function that takes a form field and returns a result
 being either a validation error or the expected object.
 -}
-type alias Validation customError field =
-  Field -> Result (Error customError) field
+type alias Validation customError output =
+  Field -> Result (Error customError) output
 
 
 {-| Map over the result of the validation.

@@ -1,6 +1,6 @@
 module Form.Input
   ( textInput, checkboxInput, selectInput
-  , validateOnClick, errorMessage
+  , liveErrorAt
   ) where
 
 import Signal exposing (Address)
@@ -18,7 +18,7 @@ import Form exposing (Form, Action)
 
 -- input helpers
 
-textInput : String -> Form e t a -> Address Action -> List Attribute -> Html
+textInput : String -> Form e o -> Address Action -> List Attribute -> Html
 textInput name form formAddress attrs =
   let
     formAttrs =
@@ -27,12 +27,13 @@ textInput name form formAddress attrs =
       , on "input"
           targetValue
           (\v -> Signal.message formAddress (Form.updateStringAt name v))
+      , onBlur formAddress Form.validate
       ]
   in
     input (formAttrs ++ attrs) []
 
 
-selectInput : List (String, String) -> String -> Form e t a -> Address Action -> List Attribute -> Html
+selectInput : List (String, String) -> String -> Form e o -> Address Action -> List Attribute -> Html
 selectInput options name form formAddress attrs =
   let
     formAttrs =
@@ -40,6 +41,7 @@ selectInput options name form formAddress attrs =
       , on "change"
           targetValue
           (\v -> Signal.message formAddress (Form.updateStringAt name v))
+      , onBlur formAddress Form.validate
       ]
     currentValue = Form.getStringAt name form
     isSelected k =
@@ -53,7 +55,7 @@ selectInput options name form formAddress attrs =
       List.map buildOption options
 
 
-checkboxInput : String -> Form e t a -> Address Action -> List Attribute -> Html
+checkboxInput : String -> Form e o -> Address Action -> List Attribute -> Html
 checkboxInput name form formAddress attrs =
   let
     formAttrs =
@@ -62,12 +64,13 @@ checkboxInput name form formAddress attrs =
       , on "change"
           targetChecked
           (\v -> Signal.message formAddress (Form.updateBoolAt name v))
+      , onBlur formAddress Form.validate
       ]
   in
     input (formAttrs ++ attrs) []
 
 
--- radioInput : String -> String -> Form e t a -> Address Action -> List Attribute -> Html
+-- radioInput : String -> String -> Form e o -> Address Action -> List Attribute -> Html
 -- radioInput value name form formAddress attrs =
 --   le
 --     formAttrs =
@@ -81,18 +84,11 @@ checkboxInput name form formAddress attrs =
 --     input (formAttrs ++ attrs) []
 
 
-validateOnClick : Signal.Address Action -> Attribute
-validateOnClick formAddress =
-  onClick formAddress Form.validate
-
-
-errorMessage : Form e t a -> String -> (Error e -> String) -> Html
-errorMessage form name presenter =
-  if (Form.isDirty name form) || (Form.isSubmitted form) then
-    case Form.getErrorAt name form of
-      Just error ->
-        div [ class "errors" ] [ text (presenter error) ]
-      Nothing ->
-        text ""
+liveErrorAt : String -> Form e o -> Maybe (Error e)
+liveErrorAt name form =
+  if Form.isSubmitted form ||
+      (Form.isVisitedAt name form && not (Form.isDirtyAt name form)) then
+    Form.getErrorAt name form
   else
-    text ""
+    Nothing
+
