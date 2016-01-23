@@ -12,6 +12,7 @@ import Effects exposing (Effects, Never, none)
 import Task exposing (Task)
 import Response exposing (..)
 import String
+import Set exposing (Set)
 
 import Form.Error as Error exposing (..)
 import Form.Field as Field exposing (..)
@@ -34,7 +35,8 @@ type alias WithForm customError target action model =
 
 {-| Private -}
 type alias Model customError target action =
-  { field : Field
+  { fields : Field
+  , dirtyFields : Set String
   , submitted : Bool
   , errors : Error customError
   , setup : Setup customError target action
@@ -59,8 +61,9 @@ type alias Setup customError target action =
 initial : Setup e target action -> Form e target action
 initial setup =
   F <|
-    { field = Group setup.initialFields
+    { fields = Group setup.initialFields
     , submitted = False
+    , dirtyFields = Set.empty
     , errors = GroupErrors Dict.empty
     , setup = setup
     }
@@ -105,18 +108,23 @@ update actionWrapper action (F model) =
 
     UpdateField name field ->
       let
-        newField = setFieldAt name field (F model)
-        newModel = { model | field = newField}
+        newFields = setFieldAt name field (F model)
+        newDirtyFields = Set.insert name model.dirtyFields
+        newModel = { model
+          | fields = newFields
+          , dirtyFields = newDirtyFields
+          }
       in
         res (F newModel) none
 
     Validate ->
-      case model.setup.validation model.field of
+      case model.setup.validation model.fields of
 
         Ok field ->
           let
             newModel = { model
               | errors = GroupErrors Dict.empty
+              , dirtyFields = Set.empty
               , submitted = True
               }
             t = Task.succeed (model.setup.onOk field)
@@ -145,7 +153,7 @@ getFieldAt qualifiedName (F model) =
         Nothing ->
           Nothing
   in
-    List.foldl walkPath (Just model.field) (String.split "." qualifiedName)
+    List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
 
 
 {-| -}
@@ -175,7 +183,7 @@ setFieldAt qualifiedName field (F model) =
         [] ->
           field
   in
-    walkPath (String.split "." qualifiedName) (Just model.field)
+    walkPath (String.split "." qualifiedName) (Just model.fields)
 
 
 {-| -}
@@ -194,8 +202,7 @@ getErrorAt qualifiedName (F model) =
 
 isDirty : String -> Form e t a -> Bool
 isDirty qualifiedName (F model) =
-  -- TODO
-  False
+  Set.member qualifiedName model.dirtyFields
 
 
 isSubmitted : Form e t a -> Bool

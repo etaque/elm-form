@@ -1,6 +1,6 @@
 module Form.Validate
-  ( Validation, get, map, andThen, pipeTo, customError, withDefault
-  , (:=), (?=)
+  ( Validation, get, map, succeed, andThen, pipeTo, customError, defaultValue
+  , (:=), (?=), (|:)
   , form1, form2, form3, form4, form5, form6, form7, form8
   , string, int, float, bool, date, maybe
   , minInt, maxInt, minLength, maxLength, nonEmpty
@@ -49,15 +49,24 @@ pipeTo =
   flip andThen
 
 
--- apply : Validation (a -> b) -> Validation a -> Validation b
--- apply f vf =
---   f `andThen` (\f' -> f' `map` vf)
-
--- (|:) = apply
+succeed : a -> Validation e a
+succeed a field =
+  Ok a
 
 
-withDefault : a -> Validation e a -> Validation e a
-withDefault a validation field =
+apply : Validation e (a -> b) -> Validation e a -> Validation e b
+apply partialValidation aValidation field =
+  case (partialValidation field, aValidation field) of
+    (Ok partial, Ok a) ->
+      Ok (partial a)
+    (partialResult, aResult) ->
+      Err (mergeMany [ getErr partialResult, getErr aResult ])
+
+(|:) = apply
+
+
+defaultValue : a -> Validation e a -> Validation e a
+defaultValue a validation field =
   Ok (Result.withDefault a (validation field))
 
 
@@ -122,7 +131,6 @@ get key validation =
 (?=) s v =
   maybe (get s v)
 
-
 {-| Validate a form with one field. -}
 form1 : (a -> field) -> Validation e a -> Validation e field
 form1 =
@@ -131,72 +139,44 @@ form1 =
 
 {-| Validate a form with two fields. -}
 form2 : (a -> b -> m) -> Validation e a -> Validation e b -> Validation e m
-form2 func v1 v2 field =
-  case (v1 field, v2 field) of
-    (Ok a, Ok b) ->
-      Ok (func a b)
-    (r1, r2) ->
-      Err (mergeMany [ getErr r1, getErr r2 ])
+form2 func v1 v2 =
+  (form1 func v1) `apply` v2
 
 
 {-| Validate a form with three fields. -}
 form3 : (a -> b -> c -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e m
-form3 func v1 v2 v3 field =
-  case (v1 field, v2 field, v3 field) of
-    (Ok a, Ok b, Ok c) ->
-      Ok (func a b c)
-    (r1, r2, r3) ->
-      Err (mergeMany [ getErr r1, getErr r2, getErr r3 ])
+form3 func v1 v2 v3 =
+  (form2 func v1 v2) `apply` v3
 
 
 {-| Validate a form with four fields. -}
 form4 : (a -> b -> c -> d -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e d -> Validation e m
-form4 func v1 v2 v3 v4 field =
-  case (v1 field, v2 field, v3 field, v4 field) of
-    (Ok a, Ok b, Ok c, Ok d) ->
-      Ok (func a b c d)
-    (r1, r2, r3, r4) ->
-      Err (mergeMany [ getErr r1, getErr r2, getErr r3, getErr r4 ])
+form4 func v1 v2 v3 v4 =
+  (form3 func v1 v2 v3) `apply` v4
 
 
 {-| Validate a form with five fields. -}
 form5 : (a -> b -> c -> d -> e -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err m
-form5 func v1 v2 v3 v4 v5 field =
-  case (v1 field, v2 field, v3 field, v4 field, v5 field) of
-    (Ok a, Ok b, Ok c, Ok d, Ok e) ->
-      Ok (func a b c d e)
-    (r1, r2, r3, r4, r5) ->
-      Err (mergeMany [ getErr r1, getErr r2, getErr r3, getErr r4, getErr r5 ])
+form5 func v1 v2 v3 v4 v5 =
+  (form4 func v1 v2 v3 v4) `apply` v5
 
 
 {-| Validate a form with six fields. -}
 form6 : (a -> b -> c -> d -> e -> f -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err m
-form6 func v1 v2 v3 v4 v5 v6 field =
-  case (v1 field, v2 field, v3 field, v4 field, v5 field, v6 field) of
-    (Ok a, Ok b, Ok c, Ok d, Ok e, Ok f) ->
-      Ok (func a b c d e f)
-    (r1, r2, r3, r4, r5, r6) ->
-      Err (mergeMany [ getErr r1, getErr r2, getErr r3, getErr r4, getErr r5, getErr r6 ])
+form6 func v1 v2 v3 v4 v5 v6 =
+  (form5 func v1 v2 v3 v4 v5) `apply` v6
 
 
 {-| Validate a form with seven fields. -}
 form7 : (a -> b -> c -> d -> e -> f -> g -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err m
-form7 func v1 v2 v3 v4 v5 v6 v7 field =
-  case (v1 field, v2 field, v3 field, v4 field, v5 field, v6 field, v7 field) of
-    (Ok a, Ok b, Ok c, Ok d, Ok e, Ok f, Ok g) ->
-      Ok (func a b c d e f g)
-    (r1, r2, r3, r4, r5, r6, r7) ->
-      Err (mergeMany [ getErr r1, getErr r2, getErr r3, getErr r4, getErr r5, getErr r6, getErr r7 ])
+form7 func v1 v2 v3 v4 v5 v6 v7 =
+  (form6 func v1 v2 v3 v4 v5 v6) `apply` v7
 
 
 {-| Validate a form with eight fields. -}
 form8 : (a -> b -> c -> d -> e -> f -> g -> h -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err h -> Validation err m
-form8 func v1 v2 v3 v4 v5 v6 v7 v8 field =
-  case (v1 field, v2 field, v3 field, v4 field, v5 field, v6 field, v7 field, v8 field) of
-    (Ok a, Ok b, Ok c, Ok d, Ok e, Ok f, Ok g, Ok h) ->
-      Ok (func a b c d e f g h)
-    (r1, r2, r3, r4, r5, r6, r7, r8) ->
-      Err (mergeMany [ getErr r1, getErr r2, getErr r3, getErr r4, getErr r5, getErr r6, getErr r7, getErr r8 ])
+form8 func v1 v2 v3 v4 v5 v6 v7 v8 =
+  (form7 func v1 v2 v3 v4 v5 v6 v7) `apply` v8
 
 
 {-| Private -}
@@ -204,12 +184,12 @@ mergeMany : List (Maybe (Error e)) -> Error e
 mergeMany errors =
   errors
     |> List.filterMap identity
-    |> List.foldl merge (GroupErrors Dict.empty)
+    |> List.foldl groupErrorsUnion (GroupErrors Dict.empty)
 
 
 {-| Private -}
-merge : Error e -> Error e -> Error e
-merge e1 e2 =
+groupErrorsUnion : Error e -> Error e -> Error e
+groupErrorsUnion e1 e2 =
   case (e1, e2) of
     (GroupErrors ge1, GroupErrors ge2) ->
       GroupErrors (Dict.union ge1 ge2)
