@@ -10,8 +10,9 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 import Form exposing (Form)
+import Form.Field as Field
 import Form.Validate as Validate exposing (..)
-import Form.Input as Input exposing (..)
+import Form.Input as Input
 
 
 -- Model
@@ -41,7 +42,16 @@ type alias Model =
 
 init : (Model, Effects Action)
 init =
-  ({ form = Form.initial validation, userMaybe = Nothing }, Effects.none)
+  ({ form = Form.initial fields validation, userMaybe = Nothing }, Effects.none)
+
+
+fields : List (String, Field.Field)
+fields =
+  [ ("name", Field.text "hey")
+  , ("role", Field.text "a")
+  , ("profile", Field.group [])
+  ]
+
 
 validation : Validation CustomError User
 validation =

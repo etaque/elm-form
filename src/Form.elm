@@ -38,10 +38,10 @@ type alias Model customError output =
 
 
 {-| Initial form state. -}
-initial : Validation e output -> Form e output
-initial validation =
+initial : List (String, Field) -> Validation e output -> Form e output
+initial initialFields validation =
   F <|
-    { fields = Group Dict.empty
+    { fields = group initialFields
     , dirtyFields = Set.empty
     , visitedFields = Set.empty
     , isSubmitted = False
@@ -139,7 +139,7 @@ getFieldAt qualifiedName (F model) =
     walkPath name maybeField =
       case maybeField of
         Just field ->
-          Field.getAt name field
+          Field.at name field
         Nothing ->
           Nothing
   in
@@ -149,13 +149,13 @@ getFieldAt qualifiedName (F model) =
 {-| -}
 getStringAt : String -> Form e o -> Maybe String
 getStringAt name form =
-  getFieldAt name form `Maybe.andThen` getString
+  getFieldAt name form `Maybe.andThen` asString
 
 
 {-| -}
 getBoolAt : String -> Form e o -> Maybe Bool
 getBoolAt name form =
-  getFieldAt name form `Maybe.andThen` getBool
+  getFieldAt name form `Maybe.andThen` asBool
 
 
 {-| -}
@@ -167,7 +167,7 @@ setFieldAt qualifiedName field (F model) =
         name :: rest ->
           let
             node = Maybe.withDefault (Group Dict.empty) maybeNode
-            childField = walkPath rest (Field.getAt name node)
+            childField = walkPath rest (Field.at name node)
           in
             merge (Group (Dict.fromList [ (name, childField) ])) node
         [] ->
@@ -222,4 +222,3 @@ merge v1 v2 =
       Group (Dict.union g1 g2)
     _ ->
       v1
-

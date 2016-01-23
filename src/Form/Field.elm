@@ -1,5 +1,5 @@
 module Form.Field
-  ( Field (..), getAt, getString, getBool
+  ( Field (..), at, asString, asBool, text, check, group
   ) where
 
 import Dict exposing (Dict)
@@ -10,20 +10,35 @@ type Field
   = Group (Dict String Field)
   | Text String
   | Check Bool
-  | Multi String
+
+
+
+text : String -> Field
+text =
+  Text
+
+
+check : Bool -> Field
+check =
+  Check
+
+
+group : List (String, Field) -> Field
+group =
+  Group << Dict.fromList
 
 
 {-| Private -}
-getAt : String -> Field -> Maybe Field
-getAt name field =
+at : String -> Field -> Maybe Field
+at name field =
   case field of
     Group fields ->
       Dict.get name fields
     _ ->
       Nothing
 
-getBool : Field -> Maybe Bool
-getBool field =
+asBool : Field -> Maybe Bool
+asBool field =
   case field of
     Check b ->
       Just b
@@ -31,8 +46,8 @@ getBool field =
       Nothing
 
 
-getString : Field -> Maybe String
-getString field =
+asString : Field -> Maybe String
+asString field =
   case field of
     Text s ->
       Just s
