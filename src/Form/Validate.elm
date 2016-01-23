@@ -1,5 +1,5 @@
 module Form.Validate
-  ( Validation, Error, get, map, andThen, pipeTo, customError
+  ( Validation, get, map, andThen, pipeTo, customError, withDefault
   , (:=), (?=)
   , form1, form2, form3, form4, form5, form6, form7, form8
   , string, int, float, bool, date, maybe
@@ -11,27 +11,15 @@ import Date exposing (Date)
 import Dict exposing (Dict)
 import String
 
-import Form.Core as Core exposing (..)
 import Form.Error as Error exposing (Error(..))
-import Form.Value as Value exposing (Value(..))
+import Form.Field as Field exposing (Field(..))
 
 
-{-| A validation is a function that takes a form value and returns a result
+{-| A validation is a function that takes a form field and returns a result
 being either a validation error or the expected object.
 -}
-type alias Validation customError value =
-  Core.Validation customError value
-
-
--- {-| A validation error is either a group of errors by field, or a value  error. -}
--- type alias ValidationError customError =
---   Core.ValidationError customError
-
-
-{-| A value error. See `Validate.customError` for `CustomError` building. -}
-type alias Error e =
-  Error.Error e
-
+type alias Validation customError field =
+  Field -> Result (Error customError) field
 
 
 {-| Map over the result of the validation.
@@ -40,7 +28,7 @@ type alias Error e =
 -}
 map : (a -> b) -> Validation e a -> Validation e b
 map f validation =
-  \value -> Result.map f (validation value)
+  \field -> Result.map f (validation field)
 
 
 {-| Apply a new validation to the result of the validation.
@@ -49,7 +37,7 @@ map f validation =
 -}
 andThen : Validation e a -> (a -> Validation e b) -> Validation e b
 andThen validation callback =
-  \value -> validation value `Result.andThen` (\next -> (callback next) value)
+  \field -> validation field `Result.andThen` (\next -> (callback next) field)
 
 
 {-| Same as `andThen`, but flipped for piping.
@@ -67,34 +55,40 @@ pipeTo =
 
 -- (|:) = apply
 
+
+withDefault : a -> Validation e a -> Validation e a
+withDefault a validation field =
+  Ok (Result.withDefault a (validation field))
+
+
 {-| Call Result.formatError on validation result. -}
-formatError : (ValidationError e -> ValidationError e) -> Validation e a -> Validation e a
+formatError : (Error e -> Error e) -> Validation e a -> Validation e a
 formatError f validation =
-  \value -> Result.formatError f (validation value)
+  \field -> Result.formatError f (validation field)
 
 
 {-| Transform validation error to the provided custom error. -}
 customError : e -> Validation e a -> Validation e a
 customError e =
-  formatError (\_ -> ValueError (CustomError e))
+  formatError (\_ -> CustomError e)
 
 
 {-| private -}
-groupError : String -> ValidationError e -> ValidationError e
+groupError : String -> Error e -> Error e
 groupError name e =
   GroupErrors <| Dict.fromList [ (name, e) ]
 
 
 {-| private -}
-err : Error e -> Result (ValidationError e) a
+err : Error e -> Result (Error e) a
 err e =
-  Err (ValueError e)
+  Err e
 
 
 {-| private -}
-ifErr : Error e -> Result e' a -> Result (ValidationError e) a
+ifErr : Error e -> Result e' a -> Result (Error e) a
 ifErr e res =
-  Result.formatError (\_ -> ValueError e) res
+  Result.formatError (\_ -> e) res
 
 
 {-| get "name" string -}
@@ -105,9 +99,9 @@ get key validation =
       Group fields ->
         case Dict.get key fields of
           Just a -> validation a |> Result.formatError (\e -> groupError key e)
-          Nothing -> Err (groupError key (ValueError EmptyError))
+          Nothing -> Err (groupError key EmptyError)
       _ ->
-        Err (groupError key (ValueError EmptyError))
+        Err (groupError key EmptyError)
   in
     func
 
@@ -130,15 +124,15 @@ get key validation =
 
 
 {-| Validate a form with one field. -}
-form1 : (a -> value) -> Validation e a -> Validation e value
+form1 : (a -> field) -> Validation e a -> Validation e field
 form1 =
   map
 
 
 {-| Validate a form with two fields. -}
 form2 : (a -> b -> m) -> Validation e a -> Validation e b -> Validation e m
-form2 func v1 v2 value =
-  case (v1 value, v2 value) of
+form2 func v1 v2 field =
+  case (v1 field, v2 field) of
     (Ok a, Ok b) ->
       Ok (func a b)
     (r1, r2) ->
@@ -147,8 +141,8 @@ form2 func v1 v2 value =
 
 {-| Validate a form with three fields. -}
 form3 : (a -> b -> c -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e m
-form3 func v1 v2 v3 value =
-  case (v1 value, v2 value, v3 value) of
+form3 func v1 v2 v3 field =
+  case (v1 field, v2 field, v3 field) of
     (Ok a, Ok b, Ok c) ->
       Ok (func a b c)
     (r1, r2, r3) ->
@@ -157,8 +151,8 @@ form3 func v1 v2 v3 value =
 
 {-| Validate a form with four fields. -}
 form4 : (a -> b -> c -> d -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e d -> Validation e m
-form4 func v1 v2 v3 v4 value =
-  case (v1 value, v2 value, v3 value, v4 value) of
+form4 func v1 v2 v3 v4 field =
+  case (v1 field, v2 field, v3 field, v4 field) of
     (Ok a, Ok b, Ok c, Ok d) ->
       Ok (func a b c d)
     (r1, r2, r3, r4) ->
@@ -167,8 +161,8 @@ form4 func v1 v2 v3 v4 value =
 
 {-| Validate a form with five fields. -}
 form5 : (a -> b -> c -> d -> e -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err m
-form5 func v1 v2 v3 v4 v5 value =
-  case (v1 value, v2 value, v3 value, v4 value, v5 value) of
+form5 func v1 v2 v3 v4 v5 field =
+  case (v1 field, v2 field, v3 field, v4 field, v5 field) of
     (Ok a, Ok b, Ok c, Ok d, Ok e) ->
       Ok (func a b c d e)
     (r1, r2, r3, r4, r5) ->
@@ -177,8 +171,8 @@ form5 func v1 v2 v3 v4 v5 value =
 
 {-| Validate a form with six fields. -}
 form6 : (a -> b -> c -> d -> e -> f -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err m
-form6 func v1 v2 v3 v4 v5 v6 value =
-  case (v1 value, v2 value, v3 value, v4 value, v5 value, v6 value) of
+form6 func v1 v2 v3 v4 v5 v6 field =
+  case (v1 field, v2 field, v3 field, v4 field, v5 field, v6 field) of
     (Ok a, Ok b, Ok c, Ok d, Ok e, Ok f) ->
       Ok (func a b c d e f)
     (r1, r2, r3, r4, r5, r6) ->
@@ -187,8 +181,8 @@ form6 func v1 v2 v3 v4 v5 v6 value =
 
 {-| Validate a form with seven fields. -}
 form7 : (a -> b -> c -> d -> e -> f -> g -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err m
-form7 func v1 v2 v3 v4 v5 v6 v7 value =
-  case (v1 value, v2 value, v3 value, v4 value, v5 value, v6 value, v7 value) of
+form7 func v1 v2 v3 v4 v5 v6 v7 field =
+  case (v1 field, v2 field, v3 field, v4 field, v5 field, v6 field, v7 field) of
     (Ok a, Ok b, Ok c, Ok d, Ok e, Ok f, Ok g) ->
       Ok (func a b c d e f g)
     (r1, r2, r3, r4, r5, r6, r7) ->
@@ -197,8 +191,8 @@ form7 func v1 v2 v3 v4 v5 v6 v7 value =
 
 {-| Validate a form with eight fields. -}
 form8 : (a -> b -> c -> d -> e -> f -> g -> h -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err h -> Validation err m
-form8 func v1 v2 v3 v4 v5 v6 v7 v8 value =
-  case (v1 value, v2 value, v3 value, v4 value, v5 value, v6 value, v7 value, v8 value) of
+form8 func v1 v2 v3 v4 v5 v6 v7 v8 field =
+  case (v1 field, v2 field, v3 field, v4 field, v5 field, v6 field, v7 field, v8 field) of
     (Ok a, Ok b, Ok c, Ok d, Ok e, Ok f, Ok g, Ok h) ->
       Ok (func a b c d e f g h)
     (r1, r2, r3, r4, r5, r6, r7, r8) ->
@@ -206,7 +200,7 @@ form8 func v1 v2 v3 v4 v5 v6 v7 v8 value =
 
 
 {-| Private -}
-mergeMany : List (Maybe (ValidationError e)) -> ValidationError e
+mergeMany : List (Maybe (Error e)) -> Error e
 mergeMany errors =
   errors
     |> List.filterMap identity
@@ -214,7 +208,7 @@ mergeMany errors =
 
 
 {-| Private -}
-merge : ValidationError e -> ValidationError e -> ValidationError e
+merge : Error e -> Error e -> Error e
 merge e1 e2 =
   case (e1, e2) of
     (GroupErrors ge1, GroupErrors ge2) ->
@@ -235,32 +229,43 @@ getErr res =
 int : Validation e Int
 int v =
   case v of
-    Text s -> String.toInt s |> ifErr InvalidInt
-    _ -> err InvalidInt
+    Text s ->
+      String.toInt s |> ifErr InvalidInt
+    _ ->
+      err InvalidInt
 
 
 {-| Validate a float using `String.toFloat`. -}
 float : Validation e Float
 float v =
   case v of
-    Text s -> String.toFloat s |> ifErr InvalidFloat
-    _ -> err InvalidInt
+    Text s ->
+      String.toFloat s |> ifErr InvalidFloat
+    _ ->
+      err InvalidInt
 
 
 {-| Validate a String. -}
 string : Validation e String
 string v =
   case v of
-    Text s -> Ok s
-    _ -> err InvalidString
+    Text s ->
+      if String.isEmpty s then
+        Err EmptyError
+      else
+        Ok s
+    _ ->
+      err InvalidString
 
 
 {-| Validate a Bool. -}
 bool : Validation e Bool
 bool v =
   case v of
-    Check b -> Ok b
-    _ -> Ok False
+    Check b ->
+      Ok b
+    _ ->
+      Ok False
 
 
 {-| Validate a Date using `Date.fromString`. -}
@@ -275,22 +280,22 @@ date v =
 
 {-| Transform validation result to `Maybe`, using `Result.toMaybe`. -}
 maybe : Validation e a -> Validation e (Maybe a)
-maybe validation value =
-  Ok (Result.toMaybe (validation value))
+maybe validation field =
+  Ok (Result.toMaybe (validation field))
 
 
 {-| Fails if `String.isEmpty`. -}
 nonEmpty : String -> Validation e String
-nonEmpty s value =
+nonEmpty s field =
   if String.isEmpty s then
-    Ok s
-  else
     err EmptyError
+  else
+    Ok s
 
 
 {-| Min length for String. -}
 minLength : Int -> String -> Validation e String
-minLength min s value =
+minLength min s field =
   if String.length s >= min then
     Ok s
   else
@@ -299,20 +304,20 @@ minLength min s value =
 
 {-| Max length for String. -}
 maxLength : Int -> String -> Validation e String
-maxLength max s value =
+maxLength max s field =
   if String.length s <= max then
     Ok s
   else
     err (ShorterThan max)
 
 
-{-| Min value for Int. -}
+{-| Min field for Int. -}
 minInt : Int -> Int -> Validation e Int
 minInt min i =
-  \value -> if i >= min then Ok i else err (SmallerThan min)
+  \field -> if i >= min then Ok i else err (SmallerThan min)
 
 
-{-| Max value for Int. -}
+{-| Max field for Int. -}
 maxInt : Int -> Int -> Validation e Int
 maxInt max i =
-  \value -> if i <= max then Ok i else err (GreaterThan max)
+  \field -> if i <= max then Ok i else err (GreaterThan max)

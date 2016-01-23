@@ -2,9 +2,8 @@ module Form
   ( Action, Form, WithForm, Setup
   , updateStringAt, updateBoolAt, validate
   , initial, wrappedUpdate, update
-  , getFieldAt, getBoolAt, getStringAt
-  , setFieldAt
-  , getErrorAt
+  , getFieldAt, getBoolAt, getStringAt, setFieldAt, getErrorAt
+  , isDirty, isSubmitted
   ) where
 
 import Dict exposing (Dict)
@@ -14,9 +13,9 @@ import Task exposing (Task)
 import Response exposing (..)
 import String
 
-import Form.Core as Core exposing (..)
 import Form.Error as Error exposing (..)
-import Form.Value as Value exposing (..)
+import Form.Field as Field exposing (..)
+import Form.Validate as Validate
 
 
 {-| Form to embed in your model, with type parameters being:
@@ -35,27 +34,42 @@ type alias WithForm customError target action model =
 
 {-| Private -}
 type alias Model customError target action =
-  { value : Value
-  , errors : ValidationError customError
+  { field : Field
+  , submitted : Bool
+  , errors : Error customError
   , setup : Setup customError target action
   }
 
 
-
 {-| Form setup:
 * how to validate the form
-* initial value
+* initial field
 * which action to call on success, taking validated object as parameter
 * which action to call on error
 -}
 type alias Setup customError target action =
-  Core.Setup customError target action
+  { validation : Validate.Validation customError target
+  , initialFields : Dict String Field
+  , onOk : target -> action
+  , onErr : action
+  }
+
+
+{-| Initial field of the form. -}
+initial : Setup e target action -> Form e target action
+initial setup =
+  F <|
+    { field = Group setup.initialFields
+    , submitted = False
+    , errors = GroupErrors Dict.empty
+    , setup = setup
+    }
 
 
 {-| Form action -}
 type Action
   = NoOp
-  | UpdateField String Value
+  | UpdateField String Field
   | Validate
 
 
@@ -73,11 +87,6 @@ validate : Action
 validate =
   Validate
 
-{-| Initial value of the form. -}
-initial : Setup e target action -> Form e target action
-initial setup =
-  F { value = Group setup.initialFields, errors = GroupErrors Dict.empty, setup = setup }
-
 
 {-| Update for `WithForm` usage. -}
 wrappedUpdate : (Action -> action) -> Action -> WithForm e target action model -> (WithForm e target action model, Effects action)
@@ -94,97 +103,112 @@ update actionWrapper action (F model) =
     NoOp ->
       res (F model) none
 
-    UpdateField name value ->
+    UpdateField name field ->
       let
-        newValue = setFieldAt name value (F model)
-        newModel = { model | value = newValue}
+        newField = setFieldAt name field (F model)
+        newModel = { model | field = newField}
       in
         res (F newModel) none
 
     Validate ->
-      case model.setup.validation model.value of
+      case model.setup.validation model.field of
 
-        Ok value ->
+        Ok field ->
           let
-            newModel = { model | errors = GroupErrors Dict.empty }
-            t = Task.succeed (model.setup.onOk value)
+            newModel = { model
+              | errors = GroupErrors Dict.empty
+              , submitted = True
+              }
+            t = Task.succeed (model.setup.onOk field)
           in
             taskRes (F newModel) t
 
-        Err formErrors ->
+        Err error ->
           let
-            newModel = { model | errors = formErrors }
+            newModel = { model
+              | errors = error
+              , submitted = True
+              }
             t = Task.succeed model.setup.onErr
           in
             taskRes (F newModel) t
 
 
-
-
-getFieldAt : String -> Form e t a -> Maybe Value
+{-| -}
+getFieldAt : String -> Form e t a -> Maybe Field
 getFieldAt qualifiedName (F model) =
   let
-    walkPath name maybeValue =
-      case maybeValue of
-        Just value ->
-          getAt name value
+    walkPath name maybeField =
+      case maybeField of
+        Just field ->
+          Field.getAt name field
         Nothing ->
           Nothing
   in
-    List.foldl walkPath (Just model.value) (String.split "." qualifiedName)
+    List.foldl walkPath (Just model.field) (String.split "." qualifiedName)
 
 
+{-| -}
 getStringAt : String -> Form e t a -> Maybe String
 getStringAt name form =
   getFieldAt name form `Maybe.andThen` getString
 
 
+{-| -}
 getBoolAt : String -> Form e t a -> Maybe Bool
 getBoolAt name form =
   getFieldAt name form `Maybe.andThen` getBool
 
 
-setFieldAt : String -> Value -> Form e t a -> Value
-setFieldAt qualifiedName value (F model) =
+{-| -}
+setFieldAt : String -> Field -> Form e t a -> Field
+setFieldAt qualifiedName field (F model) =
   let
     walkPath path maybeNode =
       case path of
         name :: rest ->
           let
             node = Maybe.withDefault (Group Dict.empty) maybeNode
-            childValue = walkPath rest (getAt name node)
+            childField = walkPath rest (Field.getAt name node)
           in
-            merge (Group (Dict.fromList [ (name, childValue) ])) node
+            merge (Group (Dict.fromList [ (name, childField) ])) node
         [] ->
-          value
+          field
   in
-    walkPath (String.split "." qualifiedName) (Just model.value)
+    walkPath (String.split "." qualifiedName) (Just model.field)
+
+
+{-| -}
+getErrorAt : String -> Form e target action -> Maybe (Error e)
+getErrorAt qualifiedName (F model) =
+  let
+    walkPath name maybeError =
+      case maybeError of
+        Just field ->
+          Error.getAt name field
+        Nothing ->
+          Just EmptyError
+  in
+    List.foldl walkPath (Just model.errors) (String.split "." qualifiedName)
+
+
+isDirty : String -> Form e t a -> Bool
+isDirty qualifiedName (F model) =
+  -- TODO
+  False
+
+
+isSubmitted : Form e t a -> Bool
+isSubmitted (F model) =
+  model.submitted
 
 
 {-| Private. -}
-merge : Value -> Value -> Value
+merge : Field -> Field -> Field
 merge v1 v2 =
   case (v1, v2) of
     (Group g1, Group g2) ->
       Group (Dict.union g1 g2)
-    -- (Group _, _) ->
-    --   v1
-    -- (_, Group _) ->
-    --   v2
     _ ->
       v1
 
-
-getErrorAt : String -> Form e target action -> Maybe (Error e)
-getErrorAt name (F form) =
-  case form.errors of
-    GroupErrors groupErrors ->
-      case Dict.get name groupErrors of
-        Just ve ->
-          case ve of
-            ValueError e -> Just e
-            GroupErrors _ -> Nothing
-        Nothing ->
-          Nothing
-    _ ->
-      Nothing

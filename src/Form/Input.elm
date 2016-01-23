@@ -11,10 +11,8 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes exposing (..)
 
--- import Form.Core as Core exposing (..)
-import Form.Value as Value exposing (..)
-import Form.Error as Error exposing (..)
-import Form exposing (..)
+import Form.Error as Error exposing (Error)
+import Form exposing (Form, Action)
 
 
 
@@ -25,10 +23,10 @@ textInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "text"
-      , value (getStringAt name form |> Maybe.withDefault "")
+      , value (Form.getStringAt name form |> Maybe.withDefault "")
       , on "input"
           targetValue
-          (\v -> Signal.message formAddress (updateStringAt name v))
+          (\v -> Signal.message formAddress (Form.updateStringAt name v))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -41,9 +39,9 @@ selectInput options name form formAddress attrs =
       [ type' "checkbox"
       , on "change"
           targetValue
-          (\v -> Signal.message formAddress (updateStringAt name v))
+          (\v -> Signal.message formAddress (Form.updateStringAt name v))
       ]
-    currentValue = getStringAt name form
+    currentValue = Form.getStringAt name form
     isSelected k =
       case currentValue of
         Just k' -> k' == k
@@ -60,10 +58,10 @@ checkboxInput name form formAddress attrs =
   let
     formAttrs =
       [ type' "checkbox"
-      , checked (getBoolAt name form |> Maybe.withDefault False)
+      , checked (Form.getBoolAt name form |> Maybe.withDefault False)
       , on "change"
           targetChecked
-          (\v -> Signal.message formAddress (updateBoolAt name v))
+          (\v -> Signal.message formAddress (Form.updateBoolAt name v))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -85,13 +83,16 @@ checkboxInput name form formAddress attrs =
 
 validateOnClick : Signal.Address Action -> Attribute
 validateOnClick formAddress =
-  onClick formAddress validate
+  onClick formAddress Form.validate
 
 
 errorMessage : Form e t a -> String -> (Error e -> String) -> Html
 errorMessage form name presenter =
-  case getErrorAt name form of
-    Just error ->
-      div [ class "errors" ] [ text (presenter error) ]
-    Nothing ->
-      text ""
+  if (Form.isDirty name form) || (Form.isSubmitted form) then
+    case Form.getErrorAt name form of
+      Just error ->
+        div [ class "errors" ] [ text (presenter error) ]
+      Nothing ->
+        text ""
+  else
+    text ""

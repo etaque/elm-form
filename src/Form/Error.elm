@@ -1,7 +1,12 @@
-module Form.Error (Error(..)) where
+module Form.Error (Error(..), getAt) where
 
+import Dict exposing (Dict)
+
+
+{-| A validation error. See `Validate.customError` for `CustomError` building. -}
 type Error e
-  = EmptyError
+  = GroupErrors (Dict String (Error e))
+  | EmptyError
   | InvalidString
   | InvalidInt
   | InvalidFloat
@@ -12,3 +17,12 @@ type Error e
   | ShorterThan Int
   | LongerThan Int
   | CustomError e
+
+
+getAt : String -> (Error e) -> Maybe (Error e)
+getAt name error =
+  case error of
+    GroupErrors groupErrors ->
+      Dict.get name groupErrors
+    _ ->
+      Nothing

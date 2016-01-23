@@ -46,9 +46,11 @@ formSetup =
   { validation = form5 User
       ("name" := (string |> map String.trim |> pipeTo nonEmpty))
       ("age" ?= (int `andThen` (minInt 18) |> customError Ooops))
-      ("admin" := bool)
+      ("admin" := bool |> withDefault False)
       ("role" := string)
-      ("profile" := (form2 Profile ("foo" := string) ("bar" := string)))
+      ("profile" := form2 Profile
+        ("foo" := string)
+        ("bar" := string))
   , initialFields = Dict.empty
   , onOk = FormSuccess
   , onErr = NoOp
@@ -91,12 +93,14 @@ view address model =
     formAddress = Signal.forwardTo mailbox.address FormAction
     field name builder =
       div
-        [ class "field" ]
+        [ class "field", style [ ("margin", "10px 0") ] ]
         [ builder name model.form formAddress []
-        , errorMessage model.form name toString
+        , div
+            [ style [("color", "red"), ("margin-top", "5px")] ]
+            [ errorMessage model.form name toString ]
         ]
   in
-    div [ ]
+    div [ style [ ("margin", "50px auto"), ("width", "400px")] ]
       [ field "name" textInput
       , field "age" textInput
       , field "admin" checkboxInput
@@ -108,9 +112,8 @@ view address model =
       , button
           [ validateOnClick formAddress ]
           [ text "Ok" ]
-      , div
-          []
-          [ text (toString model.user) ]
+      , hr [] []
+      , text (toString model.user)
       ]
 
 
