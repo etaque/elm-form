@@ -1,4 +1,4 @@
-module Example where
+module Main where
 
 import Task exposing (Task)
 import String
@@ -32,14 +32,16 @@ type alias Profile =
 type CustomError = Yay | Ooops
 
 type alias Model =
-  { form : Form CustomError User }
+  { form : Form CustomError User
+  , userMaybe : Maybe User
+  }
 
 
 -- Init
 
 init : (Model, Effects Action)
 init =
-  ({ form = Form.initial validation }, Effects.none)
+  ({ form = Form.initial validation, userMaybe = Nothing }, Effects.none)
 
 validation : Validation CustomError User
 validation =
@@ -58,6 +60,7 @@ validation =
 type Action
   = NoOp
   | FormAction Form.Action
+  | SubmitUser User
 
 
 -- Update
@@ -76,11 +79,14 @@ update action ({form} as model) =
     FormAction formAction ->
       ({ model | form = Form.update formAction form}, Effects.none)
 
+    SubmitUser user ->
+      ({ model | userMaybe = Just user }, Effects.none)
+
 
 -- View
 
 view : Signal.Address Action -> Model -> Html
-view address {form} =
+view address {form, userMaybe} =
   let
     formAddress = Signal.forwardTo mailbox.address FormAction
     inputGroup name builder =
@@ -97,6 +103,13 @@ view address {form} =
             Nothing ->
               text ""
         ]
+    submitOnClick =
+      case Form.getOutput form of
+        Just user ->
+          onClick address (SubmitUser user)
+        Nothing ->
+          onClick formAddress Form.submit
+
   in
     div [ style [ ("margin", "50px auto"), ("width", "400px")] ]
       [ inputGroup "name" Input.textInput
@@ -107,10 +120,10 @@ view address {form} =
       , inputGroup "profile.foo" Input.textInput
       , inputGroup "profile.bar" Input.textInput
       , button
-          [ onClick formAddress Form.submit ]
+          [ submitOnClick ]
           [ text "Submit" ]
       , hr [] []
-      , text (toString (Form.getOutput form))
+      , text (toString userMaybe)
       ]
 
 

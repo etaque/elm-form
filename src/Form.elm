@@ -1,6 +1,6 @@
 module Form
   ( Action, Form
-  , updateStringAt, updateBoolAt, validate, submit
+  , updateTextField, updateSelectField, updateCheckField, validate, submit
   , initial, update
   , getFieldAt, getBoolAt, getStringAt, setFieldAt, getErrorAt
   , isSubmitted, isDirtyAt, isVisitedAt, getOutput
@@ -59,13 +59,18 @@ type Action
   | Submit
 
 
-updateStringAt : String -> String -> Action
-updateStringAt name s =
+updateSelectField : String -> String -> Action
+updateSelectField name s =
   UpdateField name (Text s)
 
 
-updateBoolAt : String -> Bool -> Action
-updateBoolAt name b =
+updateTextField : String -> String -> Action
+updateTextField name s =
+  UpdateField name (Text s)
+
+
+updateCheckField : String -> Bool -> Action
+updateCheckField name b =
   UpdateField name (Check b)
 
 
@@ -105,7 +110,7 @@ update action (F model) =
 
     Submit ->
       let
-        validatedModel = updateValidate model
+        validatedModel = updateValidate model |> Debug.log "submitted"
       in
         F { validatedModel | isSubmitted = True }
 
@@ -175,14 +180,18 @@ setFieldAt qualifiedName field (F model) =
 getErrorAt : String -> Form e o -> Maybe (Error e)
 getErrorAt qualifiedName (F model) =
   let
-    walkPath name maybeError =
-      case maybeError of
-        Just field ->
-          Error.getAt name field
+    walkPath path maybeNode =
+      case maybeNode of
+        Just node ->
+          case path of
+            name :: rest ->
+              walkPath rest (Error.getAt name node)
+            [] ->
+              Just node
         Nothing ->
-          Just EmptyError
+          Nothing
   in
-    List.foldl walkPath (Just model.errors) (String.split "." qualifiedName)
+    walkPath (String.split "." qualifiedName) (Just model.errors)
 
 
 getOutput : Form e o -> Maybe o

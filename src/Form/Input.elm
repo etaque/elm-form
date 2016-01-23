@@ -26,7 +26,7 @@ textInput name form formAddress attrs =
       , value (Form.getStringAt name form |> Maybe.withDefault "")
       , on "input"
           targetValue
-          (\v -> Signal.message formAddress (Form.updateStringAt name v))
+          (\v -> Signal.message formAddress (Form.updateTextField name v))
       , onBlur formAddress Form.validate
       ]
   in
@@ -40,7 +40,7 @@ selectInput options name form formAddress attrs =
       [ type' "checkbox"
       , on "change"
           targetValue
-          (\v -> Signal.message formAddress (Form.updateStringAt name v))
+          (\v -> Signal.message formAddress (Form.updateSelectField name v))
       , onBlur formAddress Form.validate
       ]
     currentValue = Form.getStringAt name form
@@ -63,7 +63,7 @@ checkboxInput name form formAddress attrs =
       , checked (Form.getBoolAt name form |> Maybe.withDefault False)
       , on "change"
           targetChecked
-          (\v -> Signal.message formAddress (Form.updateBoolAt name v))
+          (\v -> Signal.message formAddress (Form.updateCheckField name v))
       , onBlur formAddress Form.validate
       ]
   in
