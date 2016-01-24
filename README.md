@@ -6,14 +6,11 @@ __Work in progress__
 
 ## Features
 
-* Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc
-* You get either the desired output value or all field errors
+* Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc ; you either get the desired output value or all field errors
 * HTML inputs helpers for live validation
 * Suite of basic validations, with a way to add your own
 * Unlimited fields! See `:+`
-* Nested fields for record composition
-
-[See example here.](./example/Main.elm)
+* Nested fields for record composition (`foo.bar.baz`)
 
 ```elm
 form6 User
@@ -26,6 +23,8 @@ form6 User
     ("foo" := string `andThen` (includedIn foos))
     ("bar" := string))
 ```
+
+[See complete example here.](./example/Main.elm)
 
 
 ## Usage
