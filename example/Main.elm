@@ -21,9 +21,9 @@ import Form.Input as Input
 type alias User =
   { name : String
   , email : String
-  , age : Maybe Int
+  , age : Int
   , admin : Bool
-  , role : String
+  , role : Maybe String
   , profile : Profile
   }
 
@@ -50,7 +50,6 @@ init =
 initialFields : List (String, Field.Field)
 initialFields =
   [ ("name", Field.text "hey")
-  , ("role", Field.select "a")
   , ("profile", Field.group
        [ ("foo", Field.radio "ho") ]
     )
@@ -61,14 +60,15 @@ foos : List String
 foos =
   [ "hey", "ho" ]
 
+
 validation : Validation CustomError User
 validation =
   form6 User
     ("name" := (string |> map String.trim |> pipeTo nonEmpty))
     ("email" := (string `andThen` email))
-    ("age" ?= (int `andThen` (minInt 18) |> customError Ooops))
+    ("age" := (int `andThen` (minInt 18) |> customError Ooops))
     ("admin" := bool |> defaultValue False)
-    ("role" := string)
+    ("role" ?= string)
     ("profile" := form2 Profile
       ("foo" := string `andThen` (includedIn foos))
       ("bar" := string))

@@ -1,11 +1,28 @@
 module Form.Validate
-  ( Validation, get, map, succeed, andThen, pipeTo, customError, defaultValue
+  ( Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue
   , (:=), (?=), (|:)
   , form1, form2, form3, form4, form5, form6, form7, form8
   , string, int, float, bool, date, maybe
-  , minInt, maxInt, minFloat, maxFloat
-  , minLength, maxLength, nonEmpty, email, format, includedIn
+  , minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, email, format, includedIn
   ) where
+
+{-| Form validation.
+
+# Combinators
+@docs Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue
+
+# Infix operators
+@docs (:=), (?=), (|:)
+
+# Fixed-size forms
+@docs form1, form2, form3, form4, form5, form6, form7, form8
+
+# Type extractors
+@docs string, int, float, bool, date, maybe
+
+# Filters
+@docs minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, email, format, includedIn
+-}
 
 import Result
 import Date exposing (Date)
@@ -44,18 +61,26 @@ andThen validation callback =
 
 {-| Same as `andThen`, but flipped for piping.
 
-    int |> pipeTo (minInt 5)
+    int |> pipeTo (minInt 10)
 -}
 pipeTo : (a -> Validation e b) -> Validation e a -> Validation e b
 pipeTo =
   flip andThen
 
 
+{-| A validation that never fails.
+-}
 succeed : a -> Validation e a
 succeed a field =
   Ok a
 
 
+{-| Incremental form validation for records with more that 8 fields.
+
+    Form.succeed SomeRecord
+      `apply` ("foo" := string)
+      `apply` ("bar" := string)
+-}
 apply : Validation e (a -> b) -> Validation e a -> Validation e b
 apply partialValidation aValidation field =
   case (partialValidation field, aValidation field) of
@@ -64,9 +89,19 @@ apply partialValidation aValidation field =
     (partialResult, aResult) ->
       Err (mergeMany [ getErr partialResult, getErr aResult ])
 
+
+{-| Infix version of `apply`:
+
+    Form.succeed SomeRecord
+      |: ("foo" := string)
+      |: ("bar" := string)
+
+-}
+(|:) : Validation e (a -> b) -> Validation e a -> Validation e b
 (|:) = apply
 
 
+{-| Rescue a failed validation with the supplied value. -}
 defaultValue : a -> Validation e a -> Validation e a
 defaultValue a validation field =
   Ok (Result.withDefault a (validation field))
@@ -102,7 +137,10 @@ ifErr e res =
   Result.formatError (\_ -> e) res
 
 
-{-| get "name" string -}
+{-| Access the given field in the group.
+
+    get "name" string
+-}
 get : String -> Validation e a -> Validation e a
 get key validation =
   let
@@ -117,7 +155,7 @@ get key validation =
     func
 
 
-{-| Validate field.
+{-| Infix version of `get`.
 
     "name" := string
 -}
@@ -125,13 +163,15 @@ get key validation =
 (:=) =
   get
 
-{-| Validate field, wrapped in a `maybe` (Nothing if error).
+
+{-| Access given field, wrapped in a `maybe` (Nothing if error).
 
     "hobby" ?= string
 -}
 (?=) : String -> Validation e a -> Validation e (Maybe a)
 (?=) s v =
   maybe (get s v)
+
 
 {-| Validate a form with one field. -}
 form1 : (a -> field) -> Validation e a -> Validation e field
@@ -293,30 +333,31 @@ maxLength max s field =
     err (ShorterStringThan max)
 
 
-{-| Min field for Int. -}
+{-| Min value for Int. -}
 minInt : Int -> Int -> Validation e Int
 minInt min i field =
   if i >= min then Ok i else err (SmallerIntThan min)
 
 
-{-| Max field for Int. -}
+{-| Max value for Int. -}
 maxInt : Int -> Int -> Validation e Int
 maxInt max i field =
   if i <= max then Ok i else err (GreaterIntThan max)
 
 
-{-| Min field for Float. -}
+{-| Min value for Float. -}
 minFloat : Float -> Float -> Validation e Float
 minFloat min i field =
   if i >= min then Ok i else err (SmallerFloatThan min)
 
 
-{-| Max field for Float. -}
+{-| Max value for Float. -}
 maxFloat : Float -> Float -> Validation e Float
 maxFloat max i field =
   if i <= max then Ok i else err (GreaterFloatThan max)
 
 
+{-| Validates format of the string. -}
 format : String -> Regex -> Validation e String
 format s regex field =
   if Regex.contains regex s then
@@ -332,12 +373,14 @@ validEmailPattern =
     |> Regex.caseInsensitive
 
 
+{-| Check if the string is a valid email address. -}
 email : String -> Validation e String
 email s =
   format s validEmailPattern
     |> formatError (\_ -> InvalidEmail)
 
 
+{-| Check if the string is included in the given list. -}
 includedIn : List String -> String -> Validation e String
 includedIn items s field =
   if List.member s items then

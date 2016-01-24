@@ -1,12 +1,33 @@
 module Form
   ( Action, Form
-  , updateTextField, updateSelectField, updateCheckField, updateRadioField
-  , validate, submit, reset
   , initial, update
-  , getFieldAt, getBoolAt, getStringAt, setFieldAt
+  , getBoolAt, getStringAt
   , getErrors, getErrorAt
   , isSubmitted, isDirtyAt, isVisitedAt, getOutput
+  , validate, submit, reset, updateTextField, updateSelectField, updateCheckField, updateRadioField
   ) where
+
+{-| Simple forms made easy, for Elm.
+
+# Types
+@docs Action, Form
+
+# Init/update lifecyle
+@docs initial, update
+
+# Field value accessors
+@docs getBoolAt, getStringAt
+
+# Error accessors
+@docs getErrors, getErrorAt
+
+# State accessors
+@docs isSubmitted, isDirtyAt, isVisitedAt, getOutput
+
+# Actions builders for view helpers
+@docs validate, submit, reset, updateTextField, updateSelectField, updateCheckField, updateRadioField
+-}
+
 
 import Dict exposing (Dict)
 import Result
@@ -19,10 +40,8 @@ import Form.Field as Field exposing (..)
 import Form.Validate as Validate exposing (Validation)
 
 
-{-| Form to embed in your model, with type parameters being:
-* your custom error type,
-* the type that should be build by the form,
-* the type of the action to call on error/success
+{-| Form to embed in your model, with type parameters being a custom error type to extend
+built-in errors (set to `()` if you don't need it), and the type of the form output.
 -}
 type Form customError output =
   F (Model customError output)
@@ -40,7 +59,7 @@ type alias Model customError output =
   }
 
 
-{-| Initial form state. -}
+{-| Initial form state. See `Form.Field` for initial fields, and `Form.Validate` for validation. -}
 initial : List (String, Field) -> Validation e output -> Form e output
 initial initialFields validation =
   F <|
@@ -63,42 +82,49 @@ type Action
   | Reset (List (String, Field))
 
 
+{-| Action to update the content of a text input at the given qualified path. -}
 updateTextField : String -> String -> Action
 updateTextField name s =
   UpdateField name (Text s)
 
 
+{-| Action to update the state of a select input at the given qualified path. -}
 updateSelectField : String -> String -> Action
 updateSelectField =
   updateTextField
 
 
+{-| Action to update the state of a radio input at the given qualified path. -}
 updateRadioField : String -> String -> Action
 updateRadioField =
   updateTextField
 
 
+{-| Action to update the state of a chekbox input at the given qualified path. -}
 updateCheckField : String -> Bool -> Action
 updateCheckField name b =
   UpdateField name (Check b)
 
 
+{-| Action to trigger validation of the form. -}
 validate : Action
 validate =
   Validate
 
 
+{-| Action to submit the form. -}
 submit : Action
 submit =
   Submit
 
 
+{-| Action to reset the form with the given fields. -}
 reset : List (String, Field) -> Action
 reset =
   Reset
 
 
-{-| Update for direct usage. -}
+{-| Update form state with the given action. -}
 update : Action -> Form e output -> Form e output
 update action (F model) =
   case action of
@@ -139,6 +165,7 @@ update action (F model) =
         F newModel
 
 
+{-| Private. -}
 updateValidate : Model e o -> Model e o
 updateValidate model =
   case model.validation model.fields of
@@ -156,7 +183,7 @@ updateValidate model =
         }
 
 
-{-| -}
+{-| Private. -}
 getFieldAt : String -> Form e o -> Maybe Field
 getFieldAt qualifiedName (F model) =
   let
@@ -170,19 +197,19 @@ getFieldAt qualifiedName (F model) =
     List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
 
 
-{-| -}
+{-| Access string value at given qualified path. -}
 getStringAt : String -> Form e o -> Maybe String
 getStringAt name form =
   getFieldAt name form `Maybe.andThen` asString
 
 
-{-| -}
+{-| Access boolean value at given qualified path. -}
 getBoolAt : String -> Form e o -> Maybe Bool
 getBoolAt name form =
   getFieldAt name form `Maybe.andThen` asBool
 
 
-{-| -}
+{-| Private. -}
 setFieldAt : String -> Field -> Form e o -> Field
 setFieldAt qualifiedName field (F model) =
   let
@@ -200,6 +227,7 @@ setFieldAt qualifiedName field (F model) =
     walkPath (String.split "." qualifiedName) (Just model.fields)
 
 
+{-| Get list of errors on qualified paths. -}
 getErrors : Form e o -> List (String, Error e)
 getErrors (F model) =
   let
@@ -215,7 +243,7 @@ getErrors (F model) =
     walkTree [] model.errors
 
 
-{-| -}
+{-| Get error at qualified path. -}
 getErrorAt : String -> Form e o -> Maybe (Error e)
 getErrorAt qualifiedName (F model) =
   let
@@ -237,21 +265,25 @@ getErrorAt qualifiedName (F model) =
     walkPath (String.split "." qualifiedName) (Just model.errors)
 
 
+{-| Get form output, in case of validation success. -}
 getOutput : Form e o -> Maybe o
 getOutput (F model) =
   model.output
 
 
+{-| Get form submission state. Useful to show errors on unvisited fields. -}
 isSubmitted : Form e o -> Bool
 isSubmitted (F model) =
   model.isSubmitted
 
 
+{-| Get input visited state, given qualified path. -}
 isVisitedAt : String -> Form e o -> Bool
 isVisitedAt qualifiedName (F model) =
   Set.member qualifiedName model.visitedFields
 
 
+{-| Get input dirty state, given qualified path. -}
 isDirtyAt : String -> Form e o -> Bool
 isDirtyAt qualifiedName (F model) =
   Set.member qualifiedName model.dirtyFields
