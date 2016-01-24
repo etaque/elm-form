@@ -49,7 +49,9 @@ fields : List (String, Field.Field)
 fields =
   [ ("name", Field.text "hey")
   , ("role", Field.text "a")
-  , ("profile", Field.group [])
+  , ("profile", Field.group
+       [ ("foo", Field.text "plop") ]
+    )
   ]
 
 
@@ -75,10 +77,6 @@ type Action
 
 -- Update
 
-mailbox : Signal.Mailbox Action
-mailbox =
-  Signal.mailbox NoOp
-
 update : Action -> Model -> (Model, Effects Action)
 update action ({form} as model) =
   case action of
@@ -98,7 +96,7 @@ update action ({form} as model) =
 view : Signal.Address Action -> Model -> Html
 view address {form, userMaybe} =
   let
-    formAddress = Signal.forwardTo mailbox.address FormAction
+    formAddress = Signal.forwardTo address FormAction
     inputGroup name builder =
       div
         [ style [ ("margin", "10px 0") ] ]
@@ -143,7 +141,7 @@ app = StartApp.start
   { init = init
   , update = update
   , view = view
-  , inputs = [ mailbox.signal ]
+  , inputs = [ ]
   }
 
 main =
