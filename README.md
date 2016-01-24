@@ -27,81 +27,53 @@ form6 User
 [See complete example here.](./example/Main.elm)
 
 
-## Usage
-
-
-### Model
-
-Say you have a `User` record for which you want to create a form:
+## Basic usage
 
 ```elm
-type alias User =
-  { name : String
-  , email : String
-  , age : Int
-  }
-```
+module Main where
 
-Then you can add the `form` field to your model (first type parameter is for custom error type, here with `()` we're ignoring it):
+import StartApp
+import Effects exposing (Effects)
+import Html exposing (..)
+import Html.Attributes exposing (..)
+import Html.Events exposing (..)
 
-```elm
 import Form exposing (Form)
+import Form.Validate as Validate exposing (..)
+import Form.Input as Input
+
+
+type alias Player =
+  { email : String
+  , power : Int
+  }
+
+
+-- Add form to your model and actions
 
 type alias Model =
-  { form : Form () User }
-```
+  { form : Form () Player }
 
-Let's add an action case for the form:
-
-```elm
 type Action
   = NoOp
   | FormAction Form.Action
-  | SubmitUser User
-```
 
 
-### Init
+-- Setup form validation
 
-Next is form initialisation. This will require an initial value for fields (`[]`, we'll cover that later), and a validation process.
-
-```elm
-import Form.Validate as Validate exposing (..)
-
-initialForm : Form
-initialForm = 
-  Form.initial [] validation
-
-validation : Validation () User
-validation =
-  form3 User
-    ("name" := (string |> map String.trim) `andThen` nonEmpty)
-    ("email" := string `andThen` email)
-    ("age" := int `andThen` (minInt 18))
-```
-
-So what's going here?
-
-* We want to validate a form for a record with 3 fields
-* `name` is a string that must not be empty after trimmming
-* `email` must be a valid email
-* `age` is an int that must be over 18
-
-
-We are now ready for ~~ignition~~ initialization:
-
-```elm
 init : (Model, Effects Action)
 init =
-  ({ form = initialForm }, Effects.none)
-```
+  ({ form = Form.initial [] validation }, Effects.none)
 
+validation : Validation () Player
+validation =
+  form2 Player
+    ("email" := string `andThen` email)
+    ("power" := int `andThen` (minInt 0))
+    
 
-### Update
+-- Forward form actions to Form.update
 
-This package sells simplicity, you won't be disappointed:
-
-```elm
 update : Action -> Model -> (Model, Effects Action)
 update action ({form} as model) =
   case action of
@@ -113,59 +85,62 @@ update action ({form} as model) =
       ({ model | form = Form.update formAction form}, Effects.none)
 
     SubmitUser user ->
-      -- Successfully validated user! post it to your server, update your model... 
-      (model, Effects.none)
-```
-
-That's all.
+      ({ model | userMaybe = Just user }, Effects.none)
 
 
-### View
-
-SimpleForm provides a few helpers enabled for live validation in `Form.Input` module:
-
-* `textInput`
-* `selectInput`
-* `checkboxInput`
-* `radioInput`
-
-Here is a way to arrange it, the idea is to create your own field decorators.
-
-```elm
-import Form.Input as Input
+-- Render form with Input helpers
 
 view : Signal.Address Action -> Model -> Html
 view address {form} =
   let
-    formAddress = Signal.forwardTo address FormAction
-    inputGroup name builder =
-      div
-        []
-        [ label [] [ text name ]
-        , builder name form formAddress []
-        , case Input.liveErrorAt name form of
-            Just error ->
-              div
-                [ class "error" ]
-                [ text (toString error) ]
-            Nothing ->
-              text ""
-        ]
-    submitOnClick =
-      case Form.getOutput form of
-        Just user ->
-          onClick address (SubmitUser user)
+    formAddress = Signal.forwardTo address FormAction -- Address for Form events
+    errorFor name =
+      case Input.liveErrorAt name form of
+        Just error ->
+          -- replace toString with your own translations
+          div [ class "error" ] [ text (toString error) ] 
         Nothing ->
-          onClick formAddress Form.submit
+          text ""
   in
     div []
-      [ inputGroup "name" Input.textInput
-      , inputGroup "email" Input.textInput
-      , inputGroup "age" Input.textInput
+      [ label [] [ text "Email" ]
+      , Input.textInput "email" form formAddress []
+      , errorFor "email"
+      
+      , label [] [ text "Power" ]
+      , Input.textInput "power" form formAddress []
+      , errorFor "power"
+      
       , button
-          [ submitOnClick ]
+          [ onClick formAddress Form.submit ]
           [ text "Submit" ]
       ]
+
+
+-- Classic StartApp
+
+app = StartApp.start
+  { init = init
+  , update = update
+  , view = view
+  , inputs = [ ]
+  }
+
+main =
+  app.html
+
+port tasks : Signal (Task Effects.Never ())
+port tasks =
+  app.tasks
 ```
 
-But you're not entitled to use `Form.Input`. One can build inputs from scratch with the following primitives in `Form`, see source code.
+
+## Advanced usage
+
+### Incremental validation
+
+### Nested records
+
+### Initial values and reset
+
+### Custom errors
