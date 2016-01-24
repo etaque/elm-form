@@ -197,15 +197,19 @@ getErrorAt : String -> Form e o -> Maybe (Error e)
 getErrorAt qualifiedName (F model) =
   let
     walkPath path maybeNode =
-      case maybeNode of
-        Just node ->
-          case path of
-            name :: rest ->
-              walkPath rest (Error.getAt name node)
-            [] ->
-              Just node
-        Nothing ->
-          Nothing
+      case path of
+        name :: rest ->
+          case maybeNode of
+            Just error ->
+              case error of
+                GroupErrors _ ->
+                  walkPath rest (Error.getAt name error)
+                _ ->
+                  Just error
+            Nothing ->
+              Nothing
+        [] ->
+          maybeNode
   in
     walkPath (String.split "." qualifiedName) (Just model.errors)
 

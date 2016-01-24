@@ -49,9 +49,9 @@ initialFields : List (String, Field.Field)
 initialFields =
   [ ("name", Field.text "hey")
   , ("role", Field.text "a")
-  , ("profile", Field.group
-       [ ("foo", Field.text "plop") ]
-    )
+  -- , ("profile", Field.group
+  --      [ ("foo", Field.text "plop") ]
+  --   )
   ]
 
 
