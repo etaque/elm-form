@@ -108,9 +108,9 @@ get key validation =
       Group fields ->
         case Dict.get key fields of
           Just a -> validation a |> Result.formatError (\e -> groupError key e)
-          Nothing -> Err (groupError key EmptyError)
+          Nothing -> Err (groupError key Empty)
       _ ->
-        Err (groupError key EmptyError)
+        Err (groupError key Empty)
   in
     func
 
@@ -231,7 +231,7 @@ string v =
   case v of
     Text s ->
       if String.isEmpty s then
-        Err EmptyError
+        Err Empty
       else
         Ok s
     _ ->
@@ -268,7 +268,7 @@ maybe validation field =
 nonEmpty : String -> Validation e String
 nonEmpty s field =
   if String.isEmpty s then
-    err EmptyError
+    err Empty
   else
     Ok s
 

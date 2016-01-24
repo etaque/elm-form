@@ -1,6 +1,6 @@
 module Form
   ( Action, Form
-  , updateTextField, updateSelectField, updateCheckField, validate, submit
+  , updateTextField, updateSelectField, updateCheckField, validate, submit, reset
   , initial, update
   , getFieldAt, getBoolAt, getStringAt, setFieldAt, getErrorAt
   , isSubmitted, isDirtyAt, isVisitedAt, getOutput
@@ -57,6 +57,7 @@ type Action
   | UpdateField String Field
   | Validate
   | Submit
+  | Reset (List (String, Field))
 
 
 updateSelectField : String -> String -> Action
@@ -82,6 +83,11 @@ validate =
 submit : Action
 submit =
   Submit
+
+
+reset : List (String, Field) -> Action
+reset =
+  Reset
 
 
 {-| Update for direct usage. -}
@@ -110,9 +116,19 @@ update action (F model) =
 
     Submit ->
       let
-        validatedModel = updateValidate model |> Debug.log "submitted"
+        validatedModel = updateValidate model
       in
         F { validatedModel | isSubmitted = True }
+
+    Reset fields ->
+      let
+        newModel = { model
+          | fields = group fields
+          , dirtyFields = Set.empty
+          , visitedFields = Set.empty
+          }
+      in
+        F newModel
 
 
 updateValidate : Model e o -> Model e o

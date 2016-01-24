@@ -6,7 +6,7 @@ import Dict exposing (Dict)
 {-| A validation error. See `Validate.customError` for `CustomError` building. -}
 type Error e
   = GroupErrors (Dict String (Error e))
-  | EmptyError
+  | Empty
   | InvalidString
   | InvalidInt
   | InvalidFloat

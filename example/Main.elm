@@ -42,11 +42,11 @@ type alias Model =
 
 init : (Model, Effects Action)
 init =
-  ({ form = Form.initial fields validation, userMaybe = Nothing }, Effects.none)
+  ({ form = Form.initial initialFields validation, userMaybe = Nothing }, Effects.none)
 
 
-fields : List (String, Field.Field)
-fields =
+initialFields : List (String, Field.Field)
+initialFields =
   [ ("name", Field.text "hey")
   , ("role", Field.text "a")
   , ("profile", Field.group
@@ -130,6 +130,7 @@ view address {form, userMaybe} =
       , button
           [ submitOnClick ]
           [ text "Submit" ]
+      , button [ onClick formAddress (Form.reset initialFields) ] [ text "Reset" ]
       , hr [] []
       , text (toString userMaybe)
       ]
