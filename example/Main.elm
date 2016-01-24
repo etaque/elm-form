@@ -65,7 +65,7 @@ validation : Validation CustomError User
 validation =
   form6 User
     ("name" := (string |> map String.trim |> pipeTo nonEmpty))
-    ("email" := (string `andThen` validEmail))
+    ("email" := (string `andThen` email))
     ("age" ?= (int `andThen` (minInt 18) |> customError Ooops))
     ("admin" := bool |> defaultValue False)
     ("role" := string)

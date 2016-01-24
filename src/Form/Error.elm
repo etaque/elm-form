@@ -9,6 +9,7 @@ type Error e
   | Empty
   | InvalidString
   | InvalidEmail
+  | InvalidFormat
   | InvalidInt
   | InvalidFloat
   | InvalidBool

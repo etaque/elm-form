@@ -4,7 +4,7 @@ module Form.Validate
   , form1, form2, form3, form4, form5, form6, form7, form8
   , string, int, float, bool, date, maybe
   , minInt, maxInt, minFloat, maxFloat
-  , minLength, maxLength, nonEmpty, validEmail, includedIn
+  , minLength, maxLength, nonEmpty, email, format, includedIn
   ) where
 
 import Result
@@ -317,19 +317,25 @@ maxFloat max i field =
   if i <= max then Ok i else err (GreaterFloatThan max)
 
 
-{-| Private, stolen to elm-validate. -}
+format : String -> Regex -> Validation e String
+format s regex field =
+  if Regex.contains regex s then
+    Ok s
+  else
+    Err InvalidFormat
+
+
+{-| Stolen to elm-validate. -}
 validEmailPattern : Regex
 validEmailPattern =
   Regex.regex "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
     |> Regex.caseInsensitive
 
 
-validEmail : String -> Validation e String
-validEmail s field =
-  if Regex.contains validEmailPattern s then
-    Ok s
-  else
-    Err InvalidEmail
+email : String -> Validation e String
+email s =
+  format s validEmailPattern
+    |> formatError (\_ -> InvalidEmail)
 
 
 includedIn : List String -> String -> Validation e String
