@@ -1,5 +1,5 @@
 module Form.Field
-  ( Field (..), at, asString, asBool, text, check, group
+  ( Field (..), at, asString, asBool, text, select, radio, check, group
   ) where
 
 import Dict exposing (Dict)
@@ -16,6 +16,16 @@ type Field
 text : String -> Field
 text =
   Text
+
+
+select : String -> Field
+select =
+  text
+
+
+radio : String -> Field
+radio =
+  text
 
 
 check : Bool -> Field

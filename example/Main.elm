@@ -19,6 +19,7 @@ import Form.Input as Input
 
 type alias User =
   { name : String
+  , email : String
   , age : Maybe Int
   , admin : Bool
   , role : String
@@ -48,17 +49,18 @@ init =
 initialFields : List (String, Field.Field)
 initialFields =
   [ ("name", Field.text "hey")
-  , ("role", Field.text "a")
-  -- , ("profile", Field.group
-  --      [ ("foo", Field.text "plop") ]
-  --   )
+  , ("role", Field.select "a")
+  , ("profile", Field.group
+       [ ("foo", Field.radio "ho") ]
+    )
   ]
 
 
 validation : Validation CustomError User
 validation =
-  form5 User
+  form6 User
     ("name" := (string |> map String.trim |> pipeTo nonEmpty))
+    ("email" := (string `andThen` validEmail))
     ("age" ?= (int `andThen` (minInt 18) |> customError Ooops))
     ("admin" := bool |> defaultValue False)
     ("role" := string)
@@ -100,8 +102,7 @@ view address {form, userMaybe} =
     inputGroup name builder =
       div
         [ style [ ("margin", "10px 0") ] ]
-        [ label [] [ text name ]
-        , br [] []
+        [ label [ style [ ("display", "block"), ("margin", "5px 0") ] ] [ text name ]
         , builder name form formAddress []
         , case Input.liveErrorAt name form of
             Just error ->
@@ -117,15 +118,16 @@ view address {form, userMaybe} =
           onClick address (SubmitUser user)
         Nothing ->
           onClick formAddress Form.submit
-
   in
     div [ style [ ("margin", "50px auto"), ("width", "400px")] ]
       [ inputGroup "name" Input.textInput
+      , inputGroup "email" Input.textInput
       , inputGroup "age" Input.textInput
       , inputGroup "admin" Input.checkboxInput
       , inputGroup "role" <|
           Input.selectInput [ ("", "--"), ("a", "Option A"), ("b", "Option B") ]
-      , inputGroup "profile.foo" Input.textInput
+      , inputGroup "profile.foo" <|
+          Input.radioGroup [ ("hey", "Hey"), ("ho", "Ho") ] []
       , inputGroup "profile.bar" Input.textInput
       , button
           [ submitOnClick ]

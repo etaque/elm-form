@@ -1,6 +1,7 @@
 module Form
   ( Action, Form
-  , updateTextField, updateSelectField, updateCheckField, validate, submit, reset
+  , updateTextField, updateSelectField, updateCheckField, updateRadioField
+  , validate, submit, reset
   , initial, update
   , getFieldAt, getBoolAt, getStringAt, setFieldAt, getErrorAt
   , isSubmitted, isDirtyAt, isVisitedAt, getOutput
@@ -60,14 +61,19 @@ type Action
   | Reset (List (String, Field))
 
 
-updateSelectField : String -> String -> Action
-updateSelectField name s =
-  UpdateField name (Text s)
-
-
 updateTextField : String -> String -> Action
 updateTextField name s =
   UpdateField name (Text s)
+
+
+updateSelectField : String -> String -> Action
+updateSelectField =
+  updateTextField
+
+
+updateRadioField : String -> String -> Action
+updateRadioField =
+  updateTextField
 
 
 updateCheckField : String -> Bool -> Action

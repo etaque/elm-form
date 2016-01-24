@@ -8,14 +8,17 @@ type Error e
   = GroupErrors (Dict String (Error e))
   | Empty
   | InvalidString
+  | InvalidEmail
   | InvalidInt
   | InvalidFloat
   | InvalidBool
   | InvalidDate
-  | SmallerThan Int
-  | GreaterThan Int
-  | ShorterThan Int
-  | LongerThan Int
+  | SmallerIntThan Int
+  | GreaterIntThan Int
+  | SmallerFloatThan Float
+  | GreaterFloatThan Float
+  | ShorterStringThan Int
+  | LongerStringThan Int
   | CustomError e
 
 

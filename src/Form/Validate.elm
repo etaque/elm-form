@@ -3,13 +3,14 @@ module Form.Validate
   , (:=), (?=), (|:)
   , form1, form2, form3, form4, form5, form6, form7, form8
   , string, int, float, bool, date, maybe
-  , minInt, maxInt, minLength, maxLength, nonEmpty
+  , minInt, maxInt, minLength, maxLength, nonEmpty, validEmail
   ) where
 
 import Result
 import Date exposing (Date)
 import Dict exposing (Dict)
 import String
+import Regex exposing (Regex)
 
 import Form.Error as Error exposing (Error(..))
 import Form.Field as Field exposing (Field(..))
@@ -279,7 +280,7 @@ minLength min s field =
   if String.length s >= min then
     Ok s
   else
-    err (ShorterThan min)
+    err (ShorterStringThan min)
 
 
 {-| Max length for String. -}
@@ -288,16 +289,44 @@ maxLength max s field =
   if String.length s <= max then
     Ok s
   else
-    err (ShorterThan max)
+    err (ShorterStringThan max)
 
 
 {-| Min field for Int. -}
 minInt : Int -> Int -> Validation e Int
-minInt min i =
-  \field -> if i >= min then Ok i else err (SmallerThan min)
+minInt min i field =
+  if i >= min then Ok i else err (SmallerIntThan min)
 
 
 {-| Max field for Int. -}
 maxInt : Int -> Int -> Validation e Int
-maxInt max i =
-  \field -> if i <= max then Ok i else err (GreaterThan max)
+maxInt max i field =
+  if i <= max then Ok i else err (GreaterIntThan max)
+
+
+{-| Min field for Float. -}
+minFloat : Float -> Float -> Validation e Float
+minFloat min i field =
+  if i >= min then Ok i else err (SmallerFloatThan min)
+
+
+{-| Max field for Float. -}
+maxFloat : Float -> Float -> Validation e Float
+maxFloat max i field =
+  if i <= max then Ok i else err (GreaterFloatThan max)
+
+
+{-| Private, stolen to elm-validate. -}
+validEmailPattern : Regex
+validEmailPattern =
+  Regex.regex "^[a-zA-Z0-9.!#$%&'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"
+    |> Regex.caseInsensitive
+
+
+validEmail : String -> Validation e String
+validEmail s field =
+  if Regex.contains validEmailPattern s then
+    Ok s
+  else
+    Err InvalidEmail
+
