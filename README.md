@@ -139,8 +139,61 @@ port tasks =
 
 ### Incremental validation
 
+Use `Form.apply`, or the `|:` infix version:
+
+```elm
+Form.succeed Player
+  |: ("email" := string `andThen` email)
+  |: ("power" := int)
+```
+
 ### Nested records
+
+* Validation:
+
+```elm
+validation =
+  form2 Player
+    ("email" := string `andThen` email)
+    ("power" := int `andThen` (minInt 0))
+    ("options" := form2 Options
+      ("foo" := string)
+      ("bar" := string))
+```
+
+* View:
+
+```elm
+Input.textInput "options.foo" form formAddress []
+```
 
 ### Initial values and reset
 
-### Custom errors
+* At form initialization:
+
+```elm
+import Form.Field as Field
+
+initialFields : List (String, Field)
+initialFields =
+  [ ("power", Field.text "10")
+  , ("options", Field.group
+      [ ("foo", Field.text "blah")
+      , ("bar", Field.text "meh")
+      ]
+    )
+  ]
+
+initialForm : Form
+initialForm =
+  Form.initial initialFields validation
+```
+
+* On demand:
+
+```elm
+button [ onClick formAddress (Form.reset initialFields) ] [ text "Reset" ]
+```
+
+
+### Custom validation and errors
