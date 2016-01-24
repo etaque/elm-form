@@ -1,8 +1,8 @@
-# elm-simple-form
+# Elm SimpleForm
 
 Simple forms made easy, for Elm.
 
-__Work in progress__
+_Work in progress_
 
 ## Features
 
@@ -93,7 +93,10 @@ update action ({form} as model) =
 view : Signal.Address Action -> Model -> Html
 view address {form} =
   let
-    formAddress = Signal.forwardTo address FormAction -- Address for Form events
+    -- Address for Form events
+    formAddress = Signal.forwardTo address FormAction
+
+    -- error presenter
     errorFor name =
       case Input.liveErrorAt name form of
         Just error ->
@@ -117,7 +120,7 @@ view address {form} =
       ]
 
 
--- Classic StartApp
+-- Classic StartApp wiring
 
 app = StartApp.start
   { init = init
@@ -139,7 +142,7 @@ port tasks =
 
 ### Incremental validation
 
-Use `Form.apply`, or the `|:` infix version:
+Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version:
 
 ```elm
 Form.succeed Player
@@ -165,6 +168,7 @@ validation =
 
 ```elm
 Input.textInput "options.foo" form formAddress []
+Input.liveErrorAt "options.foo" form
 ```
 
 ### Initial values and reset
@@ -189,6 +193,8 @@ initialForm =
   Form.initial initialFields validation
 ```
 
+See `Form.Field` functions for more options.
+
 * On demand:
 
 ```elm
@@ -196,4 +202,14 @@ button [ onClick formAddress (Form.reset initialFields) ] [ text "Reset" ]
 ```
 
 
-### Custom validation and errors
+### Custom errors
+
+```elm
+type LocalError = Fatal | NotSoBad
+
+validation : Validation LocalError Foo
+validation =
+  ("foo" := string |> customError Fatal)
+
+-- creates `Form.Error.CustomError Fatal`
+```
