@@ -1,10 +1,11 @@
 module Form.Input
   ( Input, textInput, checkboxInput, selectInput, radioInput, radioGroup
-  , liveErrorAt
+  , liveErrorAt, dumpErrors
   ) where
 
 import Signal exposing (Address)
 import Maybe exposing (andThen)
+import String
 
 import Html exposing (..)
 import Html.Events exposing (..)
@@ -94,6 +95,17 @@ radioGroup options groupAttrs name form addr attrs =
   in
     div groupAttrs (List.map item options)
 
+
+
+dumpErrors : Form e o -> Html
+dumpErrors form =
+  let
+    line (name, error) =
+      name ++ ": " ++ (toString error)
+  in
+    pre
+      []
+      [ text (Form.getErrors form |> List.map line |> String.join "\n") ]
 
 
 liveErrorAt : String -> Form e o -> Maybe (Error e)

@@ -3,7 +3,8 @@ module Form
   , updateTextField, updateSelectField, updateCheckField, updateRadioField
   , validate, submit, reset
   , initial, update
-  , getFieldAt, getBoolAt, getStringAt, setFieldAt, getErrorAt
+  , getFieldAt, getBoolAt, getStringAt, setFieldAt
+  , getErrors, getErrorAt
   , isSubmitted, isDirtyAt, isVisitedAt, getOutput
   ) where
 
@@ -11,6 +12,7 @@ import Dict exposing (Dict)
 import Result
 import String
 import Set exposing (Set)
+import String
 
 import Form.Error as Error exposing (..)
 import Form.Field as Field exposing (..)
@@ -196,6 +198,21 @@ setFieldAt qualifiedName field (F model) =
           field
   in
     walkPath (String.split "." qualifiedName) (Just model.fields)
+
+
+getErrors : Form e o -> List (String, Error e)
+getErrors (F model) =
+  let
+    mapGroupItem path (name, error) =
+      walkTree (path ++ [ name] ) error
+    walkTree path node =
+      case node of
+        GroupErrors errors ->
+          List.concatMap (mapGroupItem path) (Dict.toList errors)
+        _ ->
+          [ (String.join "." path, node) ]
+  in
+    walkTree [] model.errors
 
 
 {-| -}

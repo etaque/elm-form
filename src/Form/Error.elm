@@ -19,6 +19,7 @@ type Error e
   | GreaterFloatThan Float
   | ShorterStringThan Int
   | LongerStringThan Int
+  | NotIncludedIn
   | CustomError e
 
 

@@ -8,6 +8,7 @@ import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
+import String
 
 import Form exposing (Form)
 import Form.Field as Field
@@ -56,6 +57,10 @@ initialFields =
   ]
 
 
+foos : List String
+foos =
+  [ "hey", "ho" ]
+
 validation : Validation CustomError User
 validation =
   form6 User
@@ -65,7 +70,7 @@ validation =
     ("admin" := bool |> defaultValue False)
     ("role" := string)
     ("profile" := form2 Profile
-      ("foo" := string)
+      ("foo" := string `andThen` (includedIn foos))
       ("bar" := string))
 
 
@@ -127,7 +132,7 @@ view address {form, userMaybe} =
       , inputGroup "role" <|
           Input.selectInput [ ("", "--"), ("a", "Option A"), ("b", "Option B") ]
       , inputGroup "profile.foo" <|
-          Input.radioGroup [ ("hey", "Hey"), ("ho", "Ho") ] []
+          Input.radioGroup (List.map (\i -> (i, String.toUpper i)) foos) []
       , inputGroup "profile.bar" Input.textInput
       , button
           [ submitOnClick ]
@@ -135,6 +140,7 @@ view address {form, userMaybe} =
       , button [ onClick formAddress (Form.reset initialFields) ] [ text "Reset" ]
       , hr [] []
       , text (toString userMaybe)
+      , Input.dumpErrors form
       ]
 
 
