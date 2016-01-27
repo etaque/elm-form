@@ -13042,7 +13042,7 @@ Elm.Model.make = function (_elm) {
       return {name: a,email: b,age: c,admin: d,role: e,profile: f};
    });
    var Ooops = {ctor: "Ooops"};
-   var validation = A7($Form$Validate.form6,
+   var validate = A7($Form$Validate.form6,
    User,
    A2($Form$Validate.andThen,
    A2($Form$Validate._op[":="],
@@ -13089,7 +13089,7 @@ Elm.Model.make = function (_elm) {
                               ,Profile: Profile
                               ,initialFields: initialFields
                               ,foos: foos
-                              ,validation: validation};
+                              ,validate: validate};
 };
 Elm.View = Elm.View || {};
 Elm.View.Bootstrap = Elm.View.Bootstrap || {};
@@ -13380,7 +13380,7 @@ Elm.Update.make = function (_elm) {
    var init = {ctor: "_Tuple2"
               ,_0: {form: A2($Form.initial,
                    $Model.initialFields,
-                   $Model.validation)
+                   $Model.validate)
                    ,userMaybe: $Maybe.Nothing}
               ,_1: $Effects.none};
    return _elm.Update.values = {_op: _op

@@ -63,10 +63,10 @@ type Action
 
 init : (Model, Effects Action)
 init =
-  ({ form = Form.initial [] validation }, Effects.none)
+  ({ form = Form.initial [] validate }, Effects.none)
 
-validation : Validation () Form
-validation =
+validate : Validate () Form
+validate =
   form2 Foo
     ("bar" := string `andThen` email)
     ("baz" := bool)
@@ -161,7 +161,7 @@ Form.succeed Player
 * Validation:
 
 ```elm
-validation =
+validate =
   form2 Player
     ("email" := string `andThen` email)
     ("power" := int `andThen` (minInt 0))
@@ -173,8 +173,7 @@ validation =
 * View:
 
 ```elm
-Input.textInput "options.foo" form formAddress []
-Input.liveErrorAt "options.foo" form
+Input.textInput (Form.getFieldAsString "options.foo" form) formAddress []
 ```
 
 ### Initial values and reset
@@ -196,7 +195,7 @@ initialFields =
 
 initialForm : Form
 initialForm =
-  Form.initial initialFields validation
+  Form.initial initialFields validate
 ```
 
 See `Form.Field` functions for more options.
@@ -213,8 +212,8 @@ button [ onClick formAddress (Form.reset initialFields) ] [ text "Reset" ]
 ```elm
 type LocalError = Fatal | NotSoBad
 
-validation : Validation LocalError Foo
-validation =
+validate : Validate LocalError Foo
+validate =
   ("foo" := string |> customError Fatal)
 
 -- creates `Form.Error.CustomError Fatal`

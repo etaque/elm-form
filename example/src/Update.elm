@@ -1,18 +1,14 @@
 module Update where
 
-import Task exposing (Task)
 import Effects exposing (Effects)
-import String
-
 import Form exposing (Form)
-import Form.Validate as Validate exposing (..)
 
 import Model exposing (..)
 
 
 init : (Model, Effects Action)
 init =
-  ({ form = Form.initial initialFields validation, userMaybe = Nothing }, Effects.none)
+  ({ form = Form.initial initialFields validate, userMaybe = Nothing }, Effects.none)
 
 
 update : Action -> Model -> (Model, Effects Action)

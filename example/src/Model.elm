@@ -49,8 +49,8 @@ foos =
   [ "hey", "ho" ]
 
 
-validation : Validation CustomError User
-validation =
+validate : Validate CustomError User
+validate =
   form6 User
     ("name" := (string |> map String.trim) `andThen` nonEmpty)
     ("email" := string `andThen` email)
