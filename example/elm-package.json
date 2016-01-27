@@ -4,7 +4,7 @@
     "repository": "https://github.com/etaque/elm-simple-form.git",
     "license": "BSD3",
     "source-directories": [
-        ".",
+        "src/",
         "../src/"
     ],
     "exposed-modules": [],

@@ -1,5 +1,5 @@
 module Form.Input
-  ( Input, textInput, checkboxInput, selectInput, radioInput, radioGroup
+  ( Input, textInput, textArea, checkboxInput, selectInput, radioInput, radioGroup
   , liveErrorAt, dumpErrors
   ) where
 
@@ -33,6 +33,19 @@ textInput name form addr attrs =
       ]
   in
     input (formAttrs ++ attrs) []
+
+
+textArea : Input e o
+textArea name form addr attrs =
+  let
+    formAttrs =
+      [ on "input"
+          targetValue
+          (\v -> Signal.message addr (Form.updateTextField name v))
+      , onBlur addr Form.validate
+      ]
+  in
+    Html.textarea (formAttrs ++ attrs) [ text (Form.getStringAt name form |> Maybe.withDefault "") ]
 
 
 selectInput : List (String, String) -> Input e o
