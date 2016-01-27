@@ -1,7 +1,15 @@
 module Form.Input
-  ( Input, textInput, textArea, checkboxInput, selectInput, radioInput, radioGroup
-  , liveErrorAt, dumpErrors
+  ( Input, textInput, textArea, checkboxInput, selectInput, radioInput
+  , dumpErrors
   ) where
+
+{-|
+@docs Input
+
+@docs textInput, textArea, checkboxInput, selectInput, radioInput
+
+@docs dumpErrors
+-}
 
 import Signal exposing (Address)
 import Maybe exposing (andThen)
@@ -11,121 +19,105 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
 
-import Form.Error as Error exposing (Error)
-import Form exposing (Form, Action)
+import Form exposing (Form, Action, FieldState)
 
 
 {-| An input render Html from a field name, a form and address for actions. -}
-type alias Input e o = String -> Form e o -> Address Action -> List Attribute -> Html
+type alias Input e a = FieldState e a -> Address Action -> List Attribute -> Html
 
--- input helpers
 
-textInput : Input e o
-textInput name form addr attrs =
+(?=) = flip Maybe.withDefault
+
+
+{-| Text input. -}
+textInput : Input e String
+textInput state addr attrs =
   let
     formAttrs =
       [ type' "text"
-      , value (Form.getStringAt name form |> Maybe.withDefault "")
+      , value (state.value ?= "")
       , on "input"
           targetValue
-          (\v -> Signal.message addr (Form.updateTextField name v))
+          (\v -> Signal.message addr (Form.updateTextField state.path v))
       , onBlur addr Form.validate
       ]
   in
     input (formAttrs ++ attrs) []
 
 
-textArea : Input e o
-textArea name form addr attrs =
+{-| Textarea. -}
+textArea : Input e String
+textArea state addr attrs =
   let
     formAttrs =
       [ on "input"
           targetValue
-          (\v -> Signal.message addr (Form.updateTextField name v))
+          (\v -> Signal.message addr (Form.updateTextField state.path v))
       , onBlur addr Form.validate
       ]
+    value = state.value ?= ""
   in
-    Html.textarea (formAttrs ++ attrs) [ text (Form.getStringAt name form |> Maybe.withDefault "") ]
+    Html.textarea (formAttrs ++ attrs) [ text value ]
 
 
-selectInput : List (String, String) -> Input e o
-selectInput options name form addr attrs =
+{-| Select input. -}
+selectInput : List (String, String) -> Input e String
+selectInput options state addr attrs =
   let
     formAttrs =
       [ type' "checkbox"
       , on "change"
           targetValue
-          (\v -> Signal.message addr (Form.updateSelectField name v))
+          (\v -> Signal.message addr (Form.updateSelectField state.path v))
       , onBlur addr Form.validate
       ]
-    currentValue = Form.getStringAt name form
-    isSelected k =
-      case currentValue of
-        Just k' -> k' == k
-        Nothing -> False
     buildOption (k, v) =
-      option [ value k, selected (isSelected k) ] [ text v ]
+      option [ value k, selected (state.value == Just k) ] [ text v ]
   in
-    select (formAttrs ++ attrs) <|
-      List.map buildOption options
+    select (formAttrs ++ attrs) (List.map buildOption options)
 
 
-checkboxInput : Input e o
-checkboxInput name form addr attrs =
+{-| Checkbox input. -}
+checkboxInput : Input e Bool
+checkboxInput state addr attrs =
   let
     formAttrs =
       [ type' "checkbox"
-      , checked (Form.getBoolAt name form |> Maybe.withDefault False)
+      , checked (state.value ?= False)
       , on "change"
           targetChecked
-          (\v -> Signal.message addr (Form.updateCheckField name v))
+          (\v -> Signal.message addr (Form.updateCheckField state.path v))
       , onBlur addr Form.validate
       ]
   in
     input (formAttrs ++ attrs) []
 
 
-radioInput : String -> Input e o
-radioInput value name form addr attrs =
+{-| Radio input. -}
+radioInput : String -> Input e String
+radioInput value state addr attrs =
   let
     formAttrs =
       [ type' "radio"
-      , HtmlAttr.name name
-      , checked (Form.getStringAt name form == Just value)
+      , HtmlAttr.name value
+      , checked (state.value == Just value)
       , on "change"
           targetValue
-          (\v -> Signal.message addr (Form.updateRadioField name v))
+          (\v -> Signal.message addr (Form.updateRadioField state.path v))
       ]
   in
     input (formAttrs ++ attrs) []
 
 
-radioGroup : List (String, String) -> List Attribute -> Input e o
-radioGroup options groupAttrs name form addr attrs =
-  let
-    item (v, l) =
-      label [ for v ] [ text l, radioInput v name form addr attrs ]
-  in
-    div groupAttrs (List.map item options)
-
-
-
+{-| Dump all form errors in a `<pre>` tag. Useful for debugging. -}
 dumpErrors : Form e o -> Html
 dumpErrors form =
   let
     line (name, error) =
       name ++ ": " ++ (toString error)
+    content =
+      Form.getErrors form |> List.map line |> String.join "\n"
   in
-    pre
-      []
-      [ text (Form.getErrors form |> List.map line |> String.join "\n") ]
+    pre [] [ text content ]
 
-
-liveErrorAt : String -> Form e o -> Maybe (Error e)
-liveErrorAt name form =
-  if Form.isSubmitted form ||
-      (Form.isVisitedAt name form && not (Form.isDirtyAt name form)) then
-    Form.getErrorAt name form
-  else
-    Nothing
 

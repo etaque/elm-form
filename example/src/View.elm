@@ -30,27 +30,27 @@ view address {form, userMaybe} =
       ]
       [ row
           [ col' 6
-              [ textGroup "name" "Name" form formAddress ]
+              [ textGroup "Name" (Form.getFieldAsString "name" form) formAddress ]
           , col' 6
               [ selectGroup [ ("", "--"), ("a", "Option A"), ("b", "Option B") ]
-                  "role" "Role" form formAddress ]
+                   "Role" (Form.getFieldAsString "role" form) formAddress ]
           ]
       , row
           [ col' 6
-              [ textGroup "age" "Age" form formAddress ]
+              [ textGroup "Age" (Form.getFieldAsString "age" form) formAddress ]
           , col' 6
-              [ textGroup "email" "Email address" form formAddress ]
+              [ textGroup "Email address" (Form.getFieldAsString "email" form) formAddress ]
           ]
       , row
           [ col' 6
-            [ checkboxGroup "admin" "Administrator" form formAddress ]
+            [ checkboxGroup "Administrator" (Form.getFieldAsBool "admin" form) formAddress ]
           , col' 6
             [ radioGroup (List.map (\i -> (i, String.toUpper i)) foos)
-                "profile.foo" "Foo" form formAddress ]
+                "Foo" (Form.getFieldAsString "profile.foo" form) formAddress ]
           ]
       , row
           [ col' 12
-            [ textAreaGroup "profile.bar" "Bar" form formAddress ]
+            [ textAreaGroup "Bar" (Form.getFieldAsString "profile.bar" form) formAddress ]
           ]
       , div
           []

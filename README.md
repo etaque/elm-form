@@ -43,16 +43,16 @@ import Form.Validate as Validate exposing (..)
 import Form.Input as Input
 
 
-type alias Player =
-  { email : String
-  , power : Int
+type alias Foo =
+  { bar : String
+  , baz : Bool
   }
 
 
 -- Add form to your model and actions
 
 type alias Model =
-  { form : Form () Player }
+  { form : Form () Foo }
 
 type Action
   = NoOp
@@ -65,11 +65,11 @@ init : (Model, Effects Action)
 init =
   ({ form = Form.initial [] validation }, Effects.none)
 
-validation : Validation () Player
+validation : Validation () Form
 validation =
-  form2 Player
-    ("email" := string `andThen` email)
-    ("power" := int `andThen` (minInt 0))
+  form2 Foo
+    ("bar" := string `andThen` email)
+    ("baz" := bool)
     
 
 -- Forward form actions to Form.update
@@ -97,22 +97,28 @@ view address {form} =
     formAddress = Signal.forwardTo address FormAction
 
     -- error presenter
-    errorFor name =
-      case Input.liveErrorAt name form of
+    errorFor field =
+      case field.liveError of
         Just error ->
           -- replace toString with your own translations
           div [ class "error" ] [ text (toString error) ] 
         Nothing ->
           text ""
+          
+    -- fields states
+    bar = Form.getFieldAsString "bar" form
+    baz = Form.getFieldAsBool "baz" form
   in
     div []
-      [ label [] [ text "Email" ]
-      , Input.textInput "email" form formAddress []
-      , errorFor "email"
+      [ label [] [ text "Bar" ]
+      , Input.textInput bar formAddress []
+      , errorFor bar
       
-      , label [] [ text "Power" ]
-      , Input.textInput "power" form formAddress []
-      , errorFor "power"
+      , label [] 
+          [ Input.checkboxInput baz formAddress []
+          , text "Baz"
+          ]
+      , errorFor baz
       
       , button
           [ onClick formAddress Form.submit ]
