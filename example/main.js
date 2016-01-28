@@ -9909,6 +9909,15 @@ Elm.Form.Validate.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var customValidation = F3(function (validation,callback,field) {
+      return A2($Result.andThen,validation(field),callback);
+   });
+   var succeed = F2(function (a,field) {
+      return $Result.Ok(a);
+   });
+   var fail = F2(function (error,field) {
+      return $Result.Err(error);
+   });
    var includedIn = F3(function (items,s,field) {
       return A2($List.member,
       s,
@@ -9920,32 +9929,104 @@ Elm.Form.Validate.make = function (_elm) {
       regex,
       s) ? $Result.Ok(s) : $Result.Err($Form$Error.InvalidFormat);
    });
+   var maxFloat = F3(function (max,i,field) {
+      return _U.cmp(i,
+      max) < 1 ? $Result.Ok(i) : $Result.Err($Form$Error.GreaterFloatThan(max));
+   });
+   var minFloat = F3(function (min,i,field) {
+      return _U.cmp(i,
+      min) > -1 ? $Result.Ok(i) : $Result.Err($Form$Error.SmallerFloatThan(min));
+   });
+   var maxInt = F3(function (max,i,field) {
+      return _U.cmp(i,
+      max) < 1 ? $Result.Ok(i) : $Result.Err($Form$Error.GreaterIntThan(max));
+   });
+   var minInt = F3(function (min,i,field) {
+      return _U.cmp(i,
+      min) > -1 ? $Result.Ok(i) : $Result.Err($Form$Error.SmallerIntThan(min));
+   });
+   var maxLength = F3(function (max,s,field) {
+      return _U.cmp($String.length(s),
+      max) < 1 ? $Result.Ok(s) : $Result.Err($Form$Error.ShorterStringThan(max));
+   });
+   var minLength = F3(function (min,s,field) {
+      return _U.cmp($String.length(s),
+      min) > -1 ? $Result.Ok(s) : $Result.Err($Form$Error.ShorterStringThan(min));
+   });
+   var nonEmpty = F2(function (s,field) {
+      return $String.isEmpty(s) ? $Result.Err($Form$Error.Empty) : $Result.Ok(s);
+   });
    var maybe = F2(function (validation,field) {
       return $Result.Ok($Result.toMaybe(validation(field)));
    });
-   var bool = function (v) {
+   var date = function (v) {
       var _p0 = v;
-      if (_p0.ctor === "Check") {
-            return $Result.Ok(_p0._0);
+      if (_p0.ctor === "Text") {
+            return A2($Result.formatError,
+            function (_p1) {
+               return $Form$Error.InvalidDate;
+            },
+            $Date.fromString(_p0._0));
+         } else {
+            return $Result.Err($Form$Error.InvalidDate);
+         }
+   };
+   var bool = function (v) {
+      var _p2 = v;
+      if (_p2.ctor === "Check") {
+            return $Result.Ok(_p2._0);
          } else {
             return $Result.Ok(false);
          }
    };
+   var string = function (v) {
+      var _p3 = v;
+      if (_p3.ctor === "Text") {
+            var _p4 = _p3._0;
+            return $String.isEmpty(_p4) ? $Result.Err($Form$Error.Empty) : $Result.Ok(_p4);
+         } else {
+            return $Result.Err($Form$Error.InvalidString);
+         }
+   };
+   var $float = function (v) {
+      var _p5 = v;
+      if (_p5.ctor === "Text") {
+            return A2($Result.formatError,
+            function (_p6) {
+               return $Form$Error.InvalidFloat;
+            },
+            $String.toFloat(_p5._0));
+         } else {
+            return $Result.Err($Form$Error.InvalidInt);
+         }
+   };
+   var $int = function (v) {
+      var _p7 = v;
+      if (_p7.ctor === "Text") {
+            return A2($Result.formatError,
+            function (_p8) {
+               return $Form$Error.InvalidInt;
+            },
+            $String.toInt(_p7._0));
+         } else {
+            return $Result.Err($Form$Error.InvalidInt);
+         }
+   };
    var getErr = function (res) {
-      var _p1 = res;
-      if (_p1.ctor === "Ok") {
+      var _p9 = res;
+      if (_p9.ctor === "Ok") {
             return $Maybe.Nothing;
          } else {
-            return $Maybe.Just(_p1._0);
+            return $Maybe.Just(_p9._0);
          }
    };
    var groupErrorsUnion = F2(function (e1,e2) {
-      var _p2 = {ctor: "_Tuple2",_0: e1,_1: e2};
-      if (_p2.ctor === "_Tuple2" && _p2._0.ctor === "GroupErrors" && _p2._1.ctor === "GroupErrors")
+      var _p10 = {ctor: "_Tuple2",_0: e1,_1: e2};
+      if (_p10.ctor === "_Tuple2" && _p10._0.ctor === "GroupErrors" && _p10._1.ctor === "GroupErrors")
       {
             return $Form$Error.GroupErrors(A2($Dict.union,
-            _p2._0._0,
-            _p2._1._0));
+            _p10._0._0,
+            _p10._1._0));
          } else {
             return e2;
          }
@@ -9956,118 +10037,37 @@ Elm.Form.Validate.make = function (_elm) {
       $Form$Error.GroupErrors($Dict.empty),
       A2($List.filterMap,$Basics.identity,errors));
    };
-   var ifErr = F2(function (e,res) {
-      return A2($Result.formatError,
-      function (_p3) {
-         return e;
-      },
-      res);
-   });
-   var err = function (e) {    return $Result.Err(e);};
-   var $int = function (v) {
-      var _p4 = v;
-      if (_p4.ctor === "Text") {
-            return A2(ifErr,
-            $Form$Error.InvalidInt,
-            $String.toInt(_p4._0));
-         } else {
-            return err($Form$Error.InvalidInt);
-         }
-   };
-   var $float = function (v) {
-      var _p5 = v;
-      if (_p5.ctor === "Text") {
-            return A2(ifErr,
-            $Form$Error.InvalidFloat,
-            $String.toFloat(_p5._0));
-         } else {
-            return err($Form$Error.InvalidInt);
-         }
-   };
-   var string = function (v) {
-      var _p6 = v;
-      if (_p6.ctor === "Text") {
-            var _p7 = _p6._0;
-            return $String.isEmpty(_p7) ? $Result.Err($Form$Error.Empty) : $Result.Ok(_p7);
-         } else {
-            return err($Form$Error.InvalidString);
-         }
-   };
-   var date = function (v) {
-      var _p8 = v;
-      if (_p8.ctor === "Text") {
-            return A2(ifErr,
-            $Form$Error.InvalidDate,
-            $Date.fromString(_p8._0));
-         } else {
-            return err($Form$Error.InvalidDate);
-         }
-   };
-   var nonEmpty = F2(function (s,field) {
-      return $String.isEmpty(s) ? err($Form$Error.Empty) : $Result.Ok(s);
-   });
-   var minLength = F3(function (min,s,field) {
-      return _U.cmp($String.length(s),
-      min) > -1 ? $Result.Ok(s) : err($Form$Error.ShorterStringThan(min));
-   });
-   var maxLength = F3(function (max,s,field) {
-      return _U.cmp($String.length(s),
-      max) < 1 ? $Result.Ok(s) : err($Form$Error.ShorterStringThan(max));
-   });
-   var minInt = F3(function (min,i,field) {
-      return _U.cmp(i,
-      min) > -1 ? $Result.Ok(i) : err($Form$Error.SmallerIntThan(min));
-   });
-   var maxInt = F3(function (max,i,field) {
-      return _U.cmp(i,
-      max) < 1 ? $Result.Ok(i) : err($Form$Error.GreaterIntThan(max));
-   });
-   var minFloat = F3(function (min,i,field) {
-      return _U.cmp(i,
-      min) > -1 ? $Result.Ok(i) : err($Form$Error.SmallerFloatThan(min));
-   });
-   var maxFloat = F3(function (max,i,field) {
-      return _U.cmp(i,
-      max) < 1 ? $Result.Ok(i) : err($Form$Error.GreaterFloatThan(max));
-   });
    var groupError = F2(function (name,e) {
       return $Form$Error.GroupErrors($Dict.fromList(_U.list([{ctor: "_Tuple2"
                                                              ,_0: name
                                                              ,_1: e}])));
    });
-   var get = F2(function (key,validation) {
-      var func = function (v) {
-         var _p9 = v;
-         if (_p9.ctor === "Group") {
-               var _p10 = A2($Dict.get,key,_p9._0);
-               if (_p10.ctor === "Just") {
-                     return A2($Result.formatError,
-                     function (e) {
-                        return A2(groupError,key,e);
-                     },
-                     validation(_p10._0));
-                  } else {
-                     return $Result.Err(A2(groupError,key,$Form$Error.Empty));
-                  }
-            } else {
-               return $Result.Err(A2(groupError,key,$Form$Error.Empty));
-            }
-      };
-      return func;
+   var get = F3(function (key,validation,field) {
+      var _p11 = field;
+      if (_p11.ctor === "Group") {
+            var _p12 = A2($Dict.get,key,_p11._0);
+            if (_p12.ctor === "Just") {
+                  return A2($Result.formatError,
+                  function (e) {
+                     return A2(groupError,key,e);
+                  },
+                  validation(_p12._0));
+               } else {
+                  return $Result.Err(A2(groupError,key,$Form$Error.Empty));
+               }
+         } else {
+            return $Result.Err(A2(groupError,key,$Form$Error.Empty));
+         }
    });
    _op[":="] = get;
    _op["?="] = F2(function (s,v) {    return maybe(A2(get,s,v));});
+   var customError = $Form$Error.CustomError;
    var formatError = F3(function (f,validation,field) {
       return A2($Result.formatError,f,validation(field));
    });
-   var customError = function (e) {
-      return formatError(function (_p11) {
-         return $Form$Error.CustomError(e);
-      });
-   };
    var email = function (s) {
       return A2(formatError,
-      function (_p12) {
+      function (_p13) {
          return $Form$Error.InvalidEmail;
       },
       A2(format,s,validEmailPattern));
@@ -10078,20 +10078,17 @@ Elm.Form.Validate.make = function (_elm) {
       validation(field)));
    });
    var apply = F3(function (partialValidation,aValidation,field) {
-      var _p13 = {ctor: "_Tuple2"
+      var _p14 = {ctor: "_Tuple2"
                  ,_0: partialValidation(field)
                  ,_1: aValidation(field)};
-      if (_p13._0.ctor === "Ok" && _p13._1.ctor === "Ok") {
-            return $Result.Ok(_p13._0._0(_p13._1._0));
+      if (_p14._0.ctor === "Ok" && _p14._1.ctor === "Ok") {
+            return $Result.Ok(_p14._0._0(_p14._1._0));
          } else {
-            return $Result.Err(mergeMany(_U.list([getErr(_p13._0)
-                                                 ,getErr(_p13._1)])));
+            return $Result.Err(mergeMany(_U.list([getErr(_p14._0)
+                                                 ,getErr(_p14._1)])));
          }
    });
    _op["|:"] = apply;
-   var succeed = F2(function (a,field) {
-      return $Result.Ok(a);
-   });
    var andThen = F3(function (validation,callback,field) {
       return A2($Result.andThen,
       validation(field),
@@ -10128,7 +10125,6 @@ Elm.Form.Validate.make = function (_elm) {
    return _elm.Form.Validate.values = {_op: _op
                                       ,get: get
                                       ,map: map
-                                      ,succeed: succeed
                                       ,andThen: andThen
                                       ,pipeTo: pipeTo
                                       ,apply: apply
@@ -10157,7 +10153,10 @@ Elm.Form.Validate.make = function (_elm) {
                                       ,nonEmpty: nonEmpty
                                       ,email: email
                                       ,format: format
-                                      ,includedIn: includedIn};
+                                      ,includedIn: includedIn
+                                      ,fail: fail
+                                      ,succeed: succeed
+                                      ,customValidation: customValidation};
 };
 Elm.Form = Elm.Form || {};
 Elm.Form.make = function (_elm) {
@@ -13028,6 +13027,13 @@ Elm.Model.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var customString = function (options) {
+      return A2($Form$Validate.customValidation,
+      $Form$Validate.string,
+      function (s) {
+         return $Result.Ok(s);
+      });
+   };
    var foos = _U.list(["hey","ho"]);
    var initialFields = _U.list([{ctor: "_Tuple2"
                                 ,_0: "name"
@@ -13041,7 +13047,17 @@ Elm.Model.make = function (_elm) {
    var User = F6(function (a,b,c,d,e,f) {
       return {name: a,email: b,age: c,admin: d,role: e,profile: f};
    });
-   var Ooops = {ctor: "Ooops"};
+   var AlreadyTaken = {ctor: "AlreadyTaken"};
+   var asyncCheck = F2(function (serverIsOk,s) {
+      return serverIsOk ? $Form$Validate.succeed(s) : $Form$Validate.fail($Form$Validate.customError(AlreadyTaken));
+   });
+   var Nope = {ctor: "Nope"};
+   var naturalInt = A2($Form$Validate.customValidation,
+   $Form$Validate.$int,
+   function (i) {
+      return _U.cmp(i,
+      0) > 0 ? $Result.Ok(i) : $Result.Err($Form$Validate.customError(Nope));
+   });
    var validate = A7($Form$Validate.form6,
    User,
    A2($Form$Validate.andThen,
@@ -13052,11 +13068,7 @@ Elm.Model.make = function (_elm) {
    A2($Form$Validate.andThen,
    A2($Form$Validate._op[":="],"email",$Form$Validate.string),
    $Form$Validate.email),
-   A2($Form$Validate.customError,
-   Ooops,
-   A2($Form$Validate.andThen,
-   A2($Form$Validate._op[":="],"age",$Form$Validate.$int),
-   $Form$Validate.minInt(18))),
+   A2($Form$Validate._op[":="],"age",naturalInt),
    A2($Form$Validate.defaultValue,
    false,
    A2($Form$Validate._op[":="],"admin",$Form$Validate.bool)),
@@ -13068,7 +13080,10 @@ Elm.Model.make = function (_elm) {
    A2($Form$Validate.andThen,
    A2($Form$Validate._op[":="],"foo",$Form$Validate.string),
    $Form$Validate.includedIn(foos)),
-   A2($Form$Validate._op[":="],"bar",$Form$Validate.string))));
+   A2($Form$Validate.andThen,
+   A2($Form$Validate._op[":="],"bar",$Form$Validate.string),
+   asyncCheck(true)))));
+   var Ooops = {ctor: "Ooops"};
    var Model = F2(function (a,b) {
       return {form: a,userMaybe: b};
    });
@@ -13085,11 +13100,16 @@ Elm.Model.make = function (_elm) {
                               ,SubmitUser: SubmitUser
                               ,Model: Model
                               ,Ooops: Ooops
+                              ,Nope: Nope
+                              ,AlreadyTaken: AlreadyTaken
                               ,User: User
                               ,Profile: Profile
                               ,initialFields: initialFields
                               ,foos: foos
-                              ,validate: validate};
+                              ,validate: validate
+                              ,customString: customString
+                              ,naturalInt: naturalInt
+                              ,asyncCheck: asyncCheck};
 };
 Elm.View = Elm.View || {};
 Elm.View.Bootstrap = Elm.View.Bootstrap || {};

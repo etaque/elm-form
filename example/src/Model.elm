@@ -16,7 +16,7 @@ type alias Model =
   , userMaybe : Maybe User
   }
 
-type CustomError = Ooops
+type CustomError = Ooops | Nope | AlreadyTaken
 
 
 type alias User =
@@ -49,17 +49,33 @@ foos =
   [ "hey", "ho" ]
 
 
-validate : Validate CustomError User
+validate : Validation CustomError User
 validate =
   form6 User
     ("name" := (string |> map String.trim) `andThen` nonEmpty)
     ("email" := string `andThen` email)
-    ("age" := int `andThen` (minInt 18) |> customError Ooops)
+    ("age" := naturalInt)
     ("admin" := bool |> defaultValue False)
     ("role" ?= string)
     ("profile" := form2 Profile
       ("foo" := string `andThen` (includedIn foos))
-      ("bar" := string))
+      ("bar" := string `andThen` (asyncCheck True)))
 
 
+customString : List String -> Validation CustomError String
+customString options =
+  customValidation string (\s -> Ok s)
+
+
+-- eq. to: int `andThen` (minInt 0)
+naturalInt : Validation CustomError Int
+naturalInt =
+  customValidation int (\i -> if i > 0 then Ok i else Err (customError Nope))
+
+
+asyncCheck : Bool -> String -> Validation CustomError String
+asyncCheck serverIsOk s =
+  if serverIsOk
+    then succeed s
+    else fail (customError AlreadyTaken)
 
