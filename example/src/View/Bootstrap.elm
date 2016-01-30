@@ -19,33 +19,43 @@ col' i content =
   div [ class ("col-xs-" ++ toString i) ] content
 
 
-type alias GroupBuilder a = String -> FieldState CustomError a -> Signal.Address Form.Action -> Html
+type alias GroupBuilder a = String -> Signal.Address Form.Action -> FieldState CustomError a -> Html
+
+
+formGroup : String -> Maybe (Error CustomError) -> List Html -> Html
+formGroup label' maybeError inputs =
+  div
+    [ class ("row form-group " ++ (errorClass maybeError)) ]
+    [ col' 3
+        [ label [ class "control-label" ] [ text label' ] ]
+    , col' 5
+         inputs
+    , col' 4
+        [ errorMessage maybeError ]
+    ]
+
+
+formActions : List Html -> Html
+formActions content =
+  row
+    [ div [ class "col-xs-offset-3 col-xs-9" ] content ]
 
 
 textGroup : GroupBuilder String
-textGroup label' state address =
-  div
-    [ class ("form-group " ++ errorClass state.liveError) ]
-    [ label [] [ text label' ]
-    , Input.textInput state address [ class "form-control" ]
-    , errorMessage state.liveError
-    ]
+textGroup label' address state =
+  formGroup label' state.liveError
+    [ Input.textInput state address [ class "form-control" ] ]
 
 
 textAreaGroup : GroupBuilder String
-textAreaGroup label' state address =
-  div
-    [ class ("form-group " ++ errorClass state.liveError) ]
-    [ label [] [ text label' ]
-    , Input.textArea state address [ class "form-control" ]
-    , errorMessage state.liveError
-    ]
+textAreaGroup label' address state =
+  formGroup label' state.liveError
+    [ Input.textArea state address [ class "form-control" ] ]
 
 
 checkboxGroup : GroupBuilder Bool
-checkboxGroup label' state address =
-  div
-    [ class ("form-group " ++ errorClass state.liveError) ]
+checkboxGroup label' address state =
+  formGroup "" state.liveError
     [ div
         [ class "checkbox" ]
         [ label []
@@ -57,17 +67,13 @@ checkboxGroup label' state address =
 
 
 selectGroup : List (String, String) -> GroupBuilder String
-selectGroup options label' state address =
-  div
-    [ class ("form-group " ++ errorClass state.liveError) ]
-    [ label [] [ text label' ]
-    , Input.selectInput options state address [ class "form-control" ]
-    , errorMessage state.liveError
-    ]
+selectGroup options label' address state =
+  formGroup label' state.liveError
+    [ Input.selectInput options state address [ class "form-control" ] ]
 
 
 radioGroup : List (String, String) -> GroupBuilder String
-radioGroup options label' state address =
+radioGroup options label' address state =
   let
     item (v, l) =
       label
@@ -76,22 +82,8 @@ radioGroup options label' state address =
         , text l
         ]
   in
-    div
-      [ class ("form-group " ++ errorClass state.liveError) ]
-      [ label [] [ text label' ]
-      , div [] (List.map item options)
-      , errorMessage state.liveError
-      ]
-
-
--- formGroup : String -> Maybe (Error CustomError) -> Html -> Html
--- formGroup label' maybeError field =
---   div
---     [ class ("form-group " ++ (errorClass maybeError)) ]
---     [ label [ class "control-label" ] [ text label' ]
---     , field
---     , errorMessage maybeError
---     ]
+    formGroup label' state.liveError
+      (List.map item options)
 
 
 errorClass : Maybe error -> String
@@ -103,8 +95,10 @@ errorMessage : Maybe (Error CustomError) -> Html
 errorMessage maybeError =
   case maybeError of
     Just error ->
-      span
+      p
         [ class "help-block" ]
         [ text (toString error) ]
     Nothing ->
-      text ""
+      span
+        [ class "help-block" ]
+        [ text " " ] -- &#8199;

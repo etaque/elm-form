@@ -2,10 +2,7 @@ module Form
   ( Action, Form, FieldState
   , initial, update
   , getFieldAsString, getFieldAsBool
-  -- , getBoolAt, getStringAt
-  , getErrors --, getErrorAt
-  , isSubmitted --, isDirtyAt, isVisitedAt
-  , getOutput
+  , getErrors, isSubmitted, getOutput
   , validate, submit, reset
   , updateTextField, updateSelectField, updateCheckField, updateRadioField
   ) where
@@ -198,12 +195,13 @@ update action (F model) =
           | fields = group fields
           , dirtyFields = Set.empty
           , visitedFields = Set.empty
+          , isSubmitted = False
+          , errors = GroupErrors Dict.empty
           }
       in
         F newModel
 
 
-{-| Private. -}
 updateValidate : Model e o -> Model e o
 updateValidate model =
   case model.validation model.fields of
@@ -221,7 +219,6 @@ updateValidate model =
         }
 
 
-{-| Private. -}
 getFieldAt : String -> Form e o -> Maybe Field
 getFieldAt qualifiedName (F model) =
   let
@@ -235,19 +232,16 @@ getFieldAt qualifiedName (F model) =
     List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
 
 
-{-| Access string value at given qualified path. -}
 getStringAt : String -> Form e o -> Maybe String
 getStringAt name form =
   getFieldAt name form `Maybe.andThen` asString
 
 
-{-| Access boolean value at given qualified path. -}
 getBoolAt : String -> Form e o -> Maybe Bool
 getBoolAt name form =
   getFieldAt name form `Maybe.andThen` asBool
 
 
-{-| Private. -}
 setFieldAt : String -> Field -> Form e o -> Field
 setFieldAt qualifiedName field (F model) =
   let
@@ -263,6 +257,18 @@ setFieldAt qualifiedName field (F model) =
           field
   in
     walkPath (String.split "." qualifiedName) (Just model.fields)
+
+
+{-| Get form output, in case of validation success. -}
+getOutput : Form e o -> Maybe o
+getOutput (F model) =
+  model.output
+
+
+{-| Get form submission state. Useful to show errors on unvisited fields. -}
+isSubmitted : Form e o -> Bool
+isSubmitted (F model) =
+  model.isSubmitted
 
 
 {-| Get list of errors on qualified paths. -}
@@ -281,7 +287,6 @@ getErrors (F model) =
     walkTree [] model.errors
 
 
-{-| Get error at qualified path. -}
 getErrorAt : String -> Form e o -> Maybe (Error e)
 getErrorAt qualifiedName (F model) =
   let
@@ -310,31 +315,16 @@ getLiveErrorAt name form =
     else Nothing
 
 
-{-| Get form output, in case of validation success. -}
-getOutput : Form e o -> Maybe o
-getOutput (F model) =
-  model.output
-
-
-{-| Get form submission state. Useful to show errors on unvisited fields. -}
-isSubmitted : Form e o -> Bool
-isSubmitted (F model) =
-  model.isSubmitted
-
-
-{-| Get input visited state, given qualified path. -}
 isVisitedAt : String -> Form e o -> Bool
 isVisitedAt qualifiedName (F model) =
   Set.member qualifiedName model.visitedFields
 
 
-{-| Get input dirty state, given qualified path. -}
 isDirtyAt : String -> Form e o -> Bool
 isDirtyAt qualifiedName (F model) =
   Set.member qualifiedName model.dirtyFields
 
 
-{-| Private. -}
 merge : Field -> Field -> Field
 merge v1 v2 =
   case (v1, v2) of

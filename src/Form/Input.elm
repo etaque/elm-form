@@ -1,12 +1,12 @@
 module Form.Input
-  ( Input, textInput, textArea, checkboxInput, selectInput, radioInput
+  ( Input, baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput
   , dumpErrors
   ) where
 
 {-|
 @docs Input
 
-@docs textInput, textArea, checkboxInput, selectInput, radioInput
+@docs baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput
 
 @docs dumpErrors
 -}
@@ -29,12 +29,12 @@ type alias Input e a = FieldState e a -> Address Action -> List Attribute -> Htm
 (?=) = flip Maybe.withDefault
 
 
-{-| Text input. -}
-textInput : Input e String
-textInput state addr attrs =
+{-| Untyped input, first param is `type` attribute. -}
+baseInput : String -> Input e String
+baseInput t state addr attrs =
   let
     formAttrs =
-      [ type' "text"
+      [ type' t
       , value (state.value ?= "")
       , on "input"
           targetValue
@@ -43,6 +43,18 @@ textInput state addr attrs =
       ]
   in
     input (formAttrs ++ attrs) []
+
+
+{-| Text input. -}
+textInput : Input e String
+textInput =
+  baseInput "text"
+
+
+{-| Password input. -}
+passwordInput : Input e String
+passwordInput =
+  baseInput "password"
 
 
 {-| Textarea. -}

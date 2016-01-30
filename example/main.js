@@ -10232,31 +10232,23 @@ Elm.Form.make = function (_elm) {
       var _p4 = _p3;
       return A2($Set.member,qualifiedName,_p4._0.visitedFields);
    });
-   var isSubmitted = function (_p5) {
+   var getErrorAt = F2(function (qualifiedName,_p5) {
       var _p6 = _p5;
-      return _p6._0.isSubmitted;
-   };
-   var getOutput = function (_p7) {
-      var _p8 = _p7;
-      return _p8._0.output;
-   };
-   var getErrorAt = F2(function (qualifiedName,_p9) {
-      var _p10 = _p9;
       var walkPath = F2(function (path,maybeNode) {
          walkPath: while (true) {
-            var _p11 = path;
-            if (_p11.ctor === "::") {
-                  var _p12 = maybeNode;
-                  if (_p12.ctor === "Just") {
-                        var _p14 = _p12._0;
-                        var _p13 = _p14;
-                        if (_p13.ctor === "GroupErrors") {
-                              var _v9 = _p11._1,_v10 = A2($Form$Error.getAt,_p11._0,_p14);
-                              path = _v9;
-                              maybeNode = _v10;
+            var _p7 = path;
+            if (_p7.ctor === "::") {
+                  var _p8 = maybeNode;
+                  if (_p8.ctor === "Just") {
+                        var _p10 = _p8._0;
+                        var _p9 = _p10;
+                        if (_p9.ctor === "GroupErrors") {
+                              var _v7 = _p7._1,_v8 = A2($Form$Error.getAt,_p7._0,_p10);
+                              path = _v7;
+                              maybeNode = _v8;
                               continue walkPath;
                            } else {
-                              return $Maybe.Just(_p14);
+                              return $Maybe.Just(_p10);
                            }
                      } else {
                         return $Maybe.Nothing;
@@ -10268,8 +10260,34 @@ Elm.Form.make = function (_elm) {
       });
       return A2(walkPath,
       A2($String.split,".",qualifiedName),
-      $Maybe.Just(_p10._0.errors));
+      $Maybe.Just(_p6._0.errors));
    });
+   var getErrors = function (_p11) {
+      var _p12 = _p11;
+      var mapGroupItem = F2(function (path,_p13) {
+         var _p14 = _p13;
+         return A2(walkTree,
+         A2($Basics._op["++"],path,_U.list([_p14._0])),
+         _p14._1);
+      });
+      var walkTree = F2(function (path,node) {
+         var _p15 = node;
+         if (_p15.ctor === "GroupErrors") {
+               return A2($List.concatMap,
+               mapGroupItem(path),
+               $Dict.toList(_p15._0));
+            } else {
+               return _U.list([{ctor: "_Tuple2"
+                               ,_0: A2($String.join,".",path)
+                               ,_1: node}]);
+            }
+      });
+      return A2(walkTree,_U.list([]),_p12._0.errors);
+   };
+   var isSubmitted = function (_p16) {
+      var _p17 = _p16;
+      return _p17._0.isSubmitted;
+   };
    var getLiveErrorAt = F2(function (name,form) {
       return isSubmitted(form) || A2(isVisitedAt,
       name,
@@ -10277,27 +10295,9 @@ Elm.Form.make = function (_elm) {
       name,
       form) : $Maybe.Nothing;
    });
-   var getErrors = function (_p15) {
-      var _p16 = _p15;
-      var mapGroupItem = F2(function (path,_p17) {
-         var _p18 = _p17;
-         return A2(walkTree,
-         A2($Basics._op["++"],path,_U.list([_p18._0])),
-         _p18._1);
-      });
-      var walkTree = F2(function (path,node) {
-         var _p19 = node;
-         if (_p19.ctor === "GroupErrors") {
-               return A2($List.concatMap,
-               mapGroupItem(path),
-               $Dict.toList(_p19._0));
-            } else {
-               return _U.list([{ctor: "_Tuple2"
-                               ,_0: A2($String.join,".",path)
-                               ,_1: node}]);
-            }
-      });
-      return A2(walkTree,_U.list([]),_p16._0.errors);
+   var getOutput = function (_p18) {
+      var _p19 = _p18;
+      return _p19._0.output;
    };
    var setFieldAt = F3(function (qualifiedName,field,_p20) {
       var _p21 = _p20;
@@ -10439,7 +10439,9 @@ Elm.Form.make = function (_elm) {
          default: var newModel = _U.update(_p32,
            {fields: $Form$Field.group(_p30._0)
            ,dirtyFields: $Set.empty
-           ,visitedFields: $Set.empty});
+           ,visitedFields: $Set.empty
+           ,isSubmitted: false
+           ,errors: $Form$Error.GroupErrors($Dict.empty)});
            return F(newModel);}
    });
    return _elm.Form.values = {_op: _op
@@ -12926,8 +12928,8 @@ Elm.Form.Input.make = function (_elm) {
       A2($List.map,buildOption,options));
    });
    _op["?="] = $Basics.flip($Maybe.withDefault);
-   var textInput = F3(function (state,addr,attrs) {
-      var formAttrs = _U.list([$Html$Attributes.type$("text")
+   var baseInput = F4(function (t,state,addr,attrs) {
+      var formAttrs = _U.list([$Html$Attributes.type$(t)
                               ,$Html$Attributes.value(A2(_op["?="],state.value,""))
                               ,A3($Html$Events.on,
                               "input",
@@ -12942,6 +12944,8 @@ Elm.Form.Input.make = function (_elm) {
       A2($Basics._op["++"],formAttrs,attrs),
       _U.list([]));
    });
+   var textInput = baseInput("text");
+   var passwordInput = baseInput("password");
    var textArea = F3(function (state,addr,attrs) {
       var value = A2(_op["?="],state.value,"");
       var formAttrs = _U.list([A3($Html$Events.on,
@@ -12974,7 +12978,9 @@ Elm.Form.Input.make = function (_elm) {
       _U.list([]));
    });
    return _elm.Form.Input.values = {_op: _op
+                                   ,baseInput: baseInput
                                    ,textInput: textInput
+                                   ,passwordInput: passwordInput
                                    ,textArea: textArea
                                    ,checkboxInput: checkboxInput
                                    ,selectInput: selectInput
@@ -13196,11 +13202,13 @@ Elm.View.Bootstrap.make = function (_elm) {
    var errorMessage = function (maybeError) {
       var _p0 = maybeError;
       if (_p0.ctor === "Just") {
-            return A2($Html.span,
+            return A2($Html.p,
             _U.list([$Html$Attributes.$class("help-block")]),
             _U.list([$Html.text($Basics.toString(_p0._0))]));
          } else {
-            return $Html.text("");
+            return A2($Html.span,
+            _U.list([$Html$Attributes.$class("help-block")]),
+            _U.list([$Html.text(" ")]));
          }
    };
    var errorClass = function (maybeError) {
@@ -13212,7 +13220,66 @@ Elm.View.Bootstrap.make = function (_elm) {
       },
       maybeError));
    };
-   var radioGroup = F4(function (options,label$,state,address) {
+   var col$ = F2(function (i,content) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
+      "col-xs-",
+      $Basics.toString(i)))]),
+      content);
+   });
+   var formGroup = F3(function (label$,maybeError,inputs) {
+      return A2($Html.div,
+      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
+      "row form-group ",
+      errorClass(maybeError)))]),
+      _U.list([A2(col$,
+              3,
+              _U.list([A2($Html.label,
+              _U.list([$Html$Attributes.$class("control-label")]),
+              _U.list([$Html.text(label$)]))]))
+              ,A2(col$,5,inputs)
+              ,A2(col$,4,_U.list([errorMessage(maybeError)]))]));
+   });
+   var textGroup = F3(function (label$,address,state) {
+      return A3(formGroup,
+      label$,
+      state.liveError,
+      _U.list([A3($Form$Input.textInput,
+      state,
+      address,
+      _U.list([$Html$Attributes.$class("form-control")]))]));
+   });
+   var textAreaGroup = F3(function (label$,address,state) {
+      return A3(formGroup,
+      label$,
+      state.liveError,
+      _U.list([A3($Form$Input.textArea,
+      state,
+      address,
+      _U.list([$Html$Attributes.$class("form-control")]))]));
+   });
+   var checkboxGroup = F3(function (label$,address,state) {
+      return A3(formGroup,
+      "",
+      state.liveError,
+      _U.list([A2($Html.div,
+      _U.list([$Html$Attributes.$class("checkbox")]),
+      _U.list([A2($Html.label,
+      _U.list([]),
+      _U.list([A3($Form$Input.checkboxInput,state,address,_U.list([]))
+              ,$Html.text(label$)]))]))]));
+   });
+   var selectGroup = F4(function (options,label$,address,state) {
+      return A3(formGroup,
+      label$,
+      state.liveError,
+      _U.list([A4($Form$Input.selectInput,
+      options,
+      state,
+      address,
+      _U.list([$Html$Attributes.$class("form-control")]))]));
+   });
+   var radioGroup = F4(function (options,label$,address,state) {
       var item = function (_p2) {
          var _p3 = _p2;
          return A2($Html.label,
@@ -13224,86 +13291,26 @@ Elm.View.Bootstrap.make = function (_elm) {
                  _U.list([$Html$Attributes.value(_p3._0)]))
                  ,$Html.text(_p3._1)]));
       };
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
-      "form-group ",
-      errorClass(state.liveError)))]),
-      _U.list([A2($Html.label,
-              _U.list([]),
-              _U.list([$Html.text(label$)]))
-              ,A2($Html.div,_U.list([]),A2($List.map,item,options))
-              ,errorMessage(state.liveError)]));
-   });
-   var selectGroup = F4(function (options,label$,state,address) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
-      "form-group ",
-      errorClass(state.liveError)))]),
-      _U.list([A2($Html.label,
-              _U.list([]),
-              _U.list([$Html.text(label$)]))
-              ,A4($Form$Input.selectInput,
-              options,
-              state,
-              address,
-              _U.list([$Html$Attributes.$class("form-control")]))
-              ,errorMessage(state.liveError)]));
-   });
-   var checkboxGroup = F3(function (label$,state,address) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
-      "form-group ",
-      errorClass(state.liveError)))]),
-      _U.list([A2($Html.div,
-      _U.list([$Html$Attributes.$class("checkbox")]),
-      _U.list([A2($Html.label,
-      _U.list([]),
-      _U.list([A3($Form$Input.checkboxInput,state,address,_U.list([]))
-              ,$Html.text(label$)]))]))]));
-   });
-   var textAreaGroup = F3(function (label$,state,address) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
-      "form-group ",
-      errorClass(state.liveError)))]),
-      _U.list([A2($Html.label,
-              _U.list([]),
-              _U.list([$Html.text(label$)]))
-              ,A3($Form$Input.textArea,
-              state,
-              address,
-              _U.list([$Html$Attributes.$class("form-control")]))
-              ,errorMessage(state.liveError)]));
-   });
-   var textGroup = F3(function (label$,state,address) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
-      "form-group ",
-      errorClass(state.liveError)))]),
-      _U.list([A2($Html.label,
-              _U.list([]),
-              _U.list([$Html.text(label$)]))
-              ,A3($Form$Input.textInput,
-              state,
-              address,
-              _U.list([$Html$Attributes.$class("form-control")]))
-              ,errorMessage(state.liveError)]));
-   });
-   var col$ = F2(function (i,content) {
-      return A2($Html.div,
-      _U.list([$Html$Attributes.$class(A2($Basics._op["++"],
-      "col-xs-",
-      $Basics.toString(i)))]),
-      content);
+      return A3(formGroup,
+      label$,
+      state.liveError,
+      A2($List.map,item,options));
    });
    var row = function (content) {
       return A2($Html.div,
       _U.list([$Html$Attributes.$class("row")]),
       content);
    };
+   var formActions = function (content) {
+      return row(_U.list([A2($Html.div,
+      _U.list([$Html$Attributes.$class("col-xs-offset-3 col-xs-9")]),
+      content)]));
+   };
    return _elm.View.Bootstrap.values = {_op: _op
                                        ,row: row
                                        ,col$: col$
+                                       ,formGroup: formGroup
+                                       ,formActions: formActions
                                        ,textGroup: textGroup
                                        ,textAreaGroup: textAreaGroup
                                        ,checkboxGroup: checkboxGroup
@@ -13321,7 +13328,6 @@ Elm.View.make = function (_elm) {
    $Basics = Elm.Basics.make(_elm),
    $Debug = Elm.Debug.make(_elm),
    $Form = Elm.Form.make(_elm),
-   $Form$Input = Elm.Form.Input.make(_elm),
    $Html = Elm.Html.make(_elm),
    $Html$Attributes = Elm.Html.Attributes.make(_elm),
    $Html$Events = Elm.Html.Events.make(_elm),
@@ -13336,92 +13342,75 @@ Elm.View.make = function (_elm) {
    var view = F2(function (address,_p0) {
       var _p1 = _p0;
       var _p3 = _p1.form;
+      var superpowerOptions = A2($List.map,
+      function (i) {
+         return {ctor: "_Tuple2",_0: i,_1: $String.toUpper(i)};
+      },
+      $Model.superpowers);
+      var roleOptions = A2($List._op["::"],
+      {ctor: "_Tuple2",_0: "",_1: "--"},
+      A2($List.map,
+      function (i) {
+         return {ctor: "_Tuple2",_0: i,_1: $String.toUpper(i)};
+      },
+      $Model.roles));
       var formAddress = A2($Signal.forwardTo,
       address,
       $Model.FormAction);
       return A2($Html.div,
-      _U.list([$Html$Attributes.$class("form-vertical")
+      _U.list([$Html$Attributes.$class("form-horizontal")
               ,$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
                                                ,_0: "margin"
                                                ,_1: "50px auto"}
                                               ,{ctor: "_Tuple2",_0: "width",_1: "600px"}]))]),
       _U.list([A2($Html.legend,
               _U.list([]),
-              _U.list([$Html.text("SimpleForm example")]))
-              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-                                           6,
-                                           _U.list([A3($View$Bootstrap.textGroup,
-                                           "Name",
-                                           A2($Form.getFieldAsString,"name",_p3),
-                                           formAddress)]))
-                                           ,A2($View$Bootstrap.col$,
-                                           6,
-                                           _U.list([A3($View$Bootstrap.textGroup,
-                                           "Email address",
-                                           A2($Form.getFieldAsString,"email",_p3),
-                                           formAddress)]))]))
-              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-              12,
-              _U.list([A3($View$Bootstrap.checkboxGroup,
+              _U.list([$Html.text("Elm Simple Form example")]))
+              ,A3($View$Bootstrap.textGroup,
+              "Name",
+              formAddress,
+              A2($Form.getFieldAsString,"name",_p3))
+              ,A3($View$Bootstrap.textGroup,
+              "Email address",
+              formAddress,
+              A2($Form.getFieldAsString,"email",_p3))
+              ,A3($View$Bootstrap.checkboxGroup,
               "Administrator",
-              A2($Form.getFieldAsBool,"admin",_p3),
-              formAddress)]))]))
-              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-                                           4,
-                                           _U.list([A3($View$Bootstrap.textGroup,
-                                           "Website",
-                                           A2($Form.getFieldAsString,"profile.website",_p3),
-                                           formAddress)]))
-                                           ,A2($View$Bootstrap.col$,
-                                           4,
-                                           _U.list([A4($View$Bootstrap.selectGroup,
-                                           A2($List._op["::"],
-                                           {ctor: "_Tuple2",_0: "",_1: "--"},
-                                           A2($List.map,
-                                           function (i) {
-                                              return {ctor: "_Tuple2",_0: i,_1: $String.toUpper(i)};
-                                           },
-                                           $Model.roles)),
-                                           "Role",
-                                           A2($Form.getFieldAsString,"profile.role",_p3),
-                                           formAddress)]))
-                                           ,A2($View$Bootstrap.col$,
-                                           4,
-                                           _U.list([A4($View$Bootstrap.radioGroup,
-                                           A2($List.map,
-                                           function (i) {
-                                              return {ctor: "_Tuple2",_0: i,_1: $String.toUpper(i)};
-                                           },
-                                           $Model.superpowers),
-                                           "Superpower",
-                                           A2($Form.getFieldAsString,"profile.superpower",_p3),
-                                           formAddress)]))]))
-              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-              6,
-              _U.list([A3($View$Bootstrap.textGroup,
+              formAddress,
+              A2($Form.getFieldAsBool,"admin",_p3))
+              ,A3($View$Bootstrap.textGroup,
+              "Website",
+              formAddress,
+              A2($Form.getFieldAsString,"profile.website",_p3))
+              ,A4($View$Bootstrap.selectGroup,
+              roleOptions,
+              "Role",
+              formAddress,
+              A2($Form.getFieldAsString,"profile.role",_p3))
+              ,A4($View$Bootstrap.radioGroup,
+              superpowerOptions,
+              "Superpower",
+              formAddress,
+              A2($Form.getFieldAsString,"profile.superpower",_p3))
+              ,A3($View$Bootstrap.textGroup,
               "Age",
-              A2($Form.getFieldAsString,"profile.age",_p3),
-              formAddress)]))]))
-              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-              12,
-              _U.list([A3($View$Bootstrap.textAreaGroup,
+              formAddress,
+              A2($Form.getFieldAsString,"profile.age",_p3))
+              ,A3($View$Bootstrap.textAreaGroup,
               "Bio",
-              A2($Form.getFieldAsString,"profile.bio",_p3),
-              formAddress)]))]))
-              ,A2($Html.hr,_U.list([]),_U.list([]))
-              ,A2($Html.p,
-              _U.list([]),
-              _U.list([A2($Html.button,
-                      _U.list([A2($Html$Events.onClick,formAddress,$Form.submit)
-                              ,$Html$Attributes.$class("btn btn-primary")]),
-                      _U.list([$Html.text("Submit")]))
-                      ,$Html.text(" ")
-                      ,A2($Html.button,
-                      _U.list([A2($Html$Events.onClick,
-                              formAddress,
-                              $Form.reset($Model.initialFields))
-                              ,$Html$Attributes.$class("btn btn-default")]),
-                      _U.list([$Html.text("Reset")]))]))
+              formAddress,
+              A2($Form.getFieldAsString,"profile.bio",_p3))
+              ,$View$Bootstrap.formActions(_U.list([A2($Html.button,
+                                                   _U.list([A2($Html$Events.onClick,formAddress,$Form.submit)
+                                                           ,$Html$Attributes.$class("btn btn-primary")]),
+                                                   _U.list([$Html.text("Submit")]))
+                                                   ,$Html.text(" ")
+                                                   ,A2($Html.button,
+                                                   _U.list([A2($Html$Events.onClick,
+                                                           formAddress,
+                                                           $Form.reset($Model.initialFields))
+                                                           ,$Html$Attributes.$class("btn btn-default")]),
+                                                   _U.list([$Html.text("Reset")]))]))
               ,function () {
                  var _p2 = $Form.getOutput(_p3);
                  if (_p2.ctor === "Just") {
@@ -13431,8 +13420,7 @@ Elm.View.make = function (_elm) {
                     } else {
                        return $Html.text("");
                     }
-              }()
-              ,$Form$Input.dumpErrors(_p3)]));
+              }()]));
    });
    return _elm.View.values = {_op: _op,view: view};
 };
