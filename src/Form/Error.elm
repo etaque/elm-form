@@ -14,6 +14,7 @@ type Error e
   | Empty
   | InvalidString
   | InvalidEmail
+  | InvalidUrl
   | InvalidFormat
   | InvalidInt
   | InvalidFloat

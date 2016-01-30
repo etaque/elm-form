@@ -21,6 +21,7 @@ type Field
   = Group (Dict String Field)
   | Text String
   | Check Bool
+  | EmptyField
 
 
 {-| Build a text field value. -}

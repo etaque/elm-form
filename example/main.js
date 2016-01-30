@@ -9799,6 +9799,7 @@ Elm.Form.Error.make = function (_elm) {
    var InvalidFloat = {ctor: "InvalidFloat"};
    var InvalidInt = {ctor: "InvalidInt"};
    var InvalidFormat = {ctor: "InvalidFormat"};
+   var InvalidUrl = {ctor: "InvalidUrl"};
    var InvalidEmail = {ctor: "InvalidEmail"};
    var InvalidString = {ctor: "InvalidString"};
    var Empty = {ctor: "Empty"};
@@ -9811,6 +9812,7 @@ Elm.Form.Error.make = function (_elm) {
                                    ,Empty: Empty
                                    ,InvalidString: InvalidString
                                    ,InvalidEmail: InvalidEmail
+                                   ,InvalidUrl: InvalidUrl
                                    ,InvalidFormat: InvalidFormat
                                    ,InvalidInt: InvalidInt
                                    ,InvalidFloat: InvalidFloat
@@ -9865,6 +9867,7 @@ Elm.Form.Field.make = function (_elm) {
             return $Maybe.Nothing;
          }
    });
+   var EmptyField = {ctor: "EmptyField"};
    var Check = function (a) {    return {ctor: "Check",_0: a};};
    var check = Check;
    var Text = function (a) {    return {ctor: "Text",_0: a};};
@@ -9886,7 +9889,8 @@ Elm.Form.Field.make = function (_elm) {
                                    ,group: group
                                    ,Group: Group
                                    ,Text: Text
-                                   ,Check: Check};
+                                   ,Check: Check
+                                   ,EmptyField: EmptyField};
 };
 Elm.Form = Elm.Form || {};
 Elm.Form.Validate = Elm.Form.Validate || {};
@@ -9909,6 +9913,25 @@ Elm.Form.Validate.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $String = Elm.String.make(_elm);
    var _op = {};
+   var oneOf = F2(function (validations,field) {
+      var walkResults = F2(function (result,combined) {
+         var _p0 = {ctor: "_Tuple2",_0: combined,_1: result};
+         if (_p0.ctor === "_Tuple2" && _p0._0.ctor === "Ok") {
+               return combined;
+            } else {
+               return result;
+            }
+      });
+      var results = A2($List.map,
+      function (v) {
+         return v(field);
+      },
+      validations);
+      return A3($List.foldl,
+      walkResults,
+      $Result.Err($Form$Error.Empty),
+      results);
+   });
    var customValidation = F3(function (validation,callback,field) {
       return A2($Result.andThen,validation(field),callback);
    });
@@ -9923,6 +9946,7 @@ Elm.Form.Validate.make = function (_elm) {
       s,
       items) ? $Result.Ok(s) : $Result.Err($Form$Error.NotIncludedIn);
    });
+   var validUrlPattern = $Regex.caseInsensitive($Regex.regex("^(https?://)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\w \\.-]*)*/?$"));
    var validEmailPattern = $Regex.caseInsensitive($Regex.regex("^[a-zA-Z0-9.!#$%&\'*+\\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$"));
    var format = F3(function (s,regex,field) {
       return A2($Regex.contains,
@@ -9960,73 +9984,82 @@ Elm.Form.Validate.make = function (_elm) {
       return $Result.Ok($Result.toMaybe(validation(field)));
    });
    var date = function (v) {
-      var _p0 = v;
-      if (_p0.ctor === "Text") {
+      var _p1 = v;
+      if (_p1.ctor === "Text") {
             return A2($Result.formatError,
-            function (_p1) {
+            function (_p2) {
                return $Form$Error.InvalidDate;
             },
-            $Date.fromString(_p0._0));
+            $Date.fromString(_p1._0));
          } else {
             return $Result.Err($Form$Error.InvalidDate);
          }
    };
    var bool = function (v) {
-      var _p2 = v;
-      if (_p2.ctor === "Check") {
-            return $Result.Ok(_p2._0);
+      var _p3 = v;
+      if (_p3.ctor === "Check") {
+            return $Result.Ok(_p3._0);
          } else {
             return $Result.Ok(false);
          }
    };
+   var emptyString = function (v) {
+      var _p4 = v;
+      if (_p4.ctor === "Text") {
+            var _p5 = _p4._0;
+            return $String.isEmpty(_p5) ? $Result.Ok(_p5) : $Result.Err($Form$Error.InvalidString);
+         } else {
+            return $Result.Ok("");
+         }
+   };
    var string = function (v) {
-      var _p3 = v;
-      if (_p3.ctor === "Text") {
-            var _p4 = _p3._0;
-            return $String.isEmpty(_p4) ? $Result.Err($Form$Error.Empty) : $Result.Ok(_p4);
+      var _p6 = v;
+      if (_p6.ctor === "Text") {
+            var _p7 = _p6._0;
+            return $String.isEmpty(_p7) ? $Result.Err($Form$Error.Empty) : $Result.Ok(_p7);
          } else {
             return $Result.Err($Form$Error.InvalidString);
          }
    };
    var $float = function (v) {
-      var _p5 = v;
-      if (_p5.ctor === "Text") {
+      var _p8 = v;
+      if (_p8.ctor === "Text") {
             return A2($Result.formatError,
-            function (_p6) {
+            function (_p9) {
                return $Form$Error.InvalidFloat;
             },
-            $String.toFloat(_p5._0));
+            $String.toFloat(_p8._0));
          } else {
             return $Result.Err($Form$Error.InvalidInt);
          }
    };
    var $int = function (v) {
-      var _p7 = v;
-      if (_p7.ctor === "Text") {
+      var _p10 = v;
+      if (_p10.ctor === "Text") {
             return A2($Result.formatError,
-            function (_p8) {
+            function (_p11) {
                return $Form$Error.InvalidInt;
             },
-            $String.toInt(_p7._0));
+            $String.toInt(_p10._0));
          } else {
             return $Result.Err($Form$Error.InvalidInt);
          }
    };
    var getErr = function (res) {
-      var _p9 = res;
-      if (_p9.ctor === "Ok") {
+      var _p12 = res;
+      if (_p12.ctor === "Ok") {
             return $Maybe.Nothing;
          } else {
-            return $Maybe.Just(_p9._0);
+            return $Maybe.Just(_p12._0);
          }
    };
    var groupErrorsUnion = F2(function (e1,e2) {
-      var _p10 = {ctor: "_Tuple2",_0: e1,_1: e2};
-      if (_p10.ctor === "_Tuple2" && _p10._0.ctor === "GroupErrors" && _p10._1.ctor === "GroupErrors")
+      var _p13 = {ctor: "_Tuple2",_0: e1,_1: e2};
+      if (_p13.ctor === "_Tuple2" && _p13._0.ctor === "GroupErrors" && _p13._1.ctor === "GroupErrors")
       {
             return $Form$Error.GroupErrors(A2($Dict.union,
-            _p10._0._0,
-            _p10._1._0));
+            _p13._0._0,
+            _p13._1._0));
          } else {
             return e2;
          }
@@ -10037,27 +10070,16 @@ Elm.Form.Validate.make = function (_elm) {
       $Form$Error.GroupErrors($Dict.empty),
       A2($List.filterMap,$Basics.identity,errors));
    };
-   var groupError = F2(function (name,e) {
-      return $Form$Error.GroupErrors($Dict.fromList(_U.list([{ctor: "_Tuple2"
-                                                             ,_0: name
-                                                             ,_1: e}])));
-   });
    var get = F3(function (key,validation,field) {
-      var _p11 = field;
-      if (_p11.ctor === "Group") {
-            var _p12 = A2($Dict.get,key,_p11._0);
-            if (_p12.ctor === "Just") {
-                  return A2($Result.formatError,
-                  function (e) {
-                     return A2(groupError,key,e);
-                  },
-                  validation(_p12._0));
-               } else {
-                  return $Result.Err(A2(groupError,key,$Form$Error.Empty));
-               }
-         } else {
-            return $Result.Err(A2(groupError,key,$Form$Error.Empty));
-         }
+      return A2($Result.formatError,
+      function (e) {
+         return $Form$Error.GroupErrors($Dict.fromList(_U.list([{ctor: "_Tuple2"
+                                                                ,_0: key
+                                                                ,_1: e}])));
+      },
+      validation(A2($Maybe.withDefault,
+      $Form$Field.EmptyField,
+      A2($Form$Field.at,key,field))));
    });
    _op[":="] = get;
    _op["?="] = F2(function (s,v) {    return maybe(A2(get,s,v));});
@@ -10065,13 +10087,6 @@ Elm.Form.Validate.make = function (_elm) {
    var formatError = F3(function (f,validation,field) {
       return A2($Result.formatError,f,validation(field));
    });
-   var email = function (s) {
-      return A2(formatError,
-      function (_p13) {
-         return $Form$Error.InvalidEmail;
-      },
-      A2(format,s,validEmailPattern));
-   };
    var defaultValue = F3(function (a,validation,field) {
       return $Result.Ok(A2($Result.withDefault,
       a,
@@ -10097,6 +10112,24 @@ Elm.Form.Validate.make = function (_elm) {
       });
    });
    var pipeTo = $Basics.flip(andThen);
+   var email = A2(andThen,
+   string,
+   function (s) {
+      return A2(formatError,
+      function (_p15) {
+         return $Form$Error.InvalidEmail;
+      },
+      A2(format,s,validEmailPattern));
+   });
+   var url = A2(andThen,
+   string,
+   function (s) {
+      return A2(formatError,
+      function (_p16) {
+         return $Form$Error.InvalidUrl;
+      },
+      A2(format,s,validUrlPattern));
+   });
    var map = F3(function (f,validation,field) {
       return A2($Result.map,f,validation(field));
    });
@@ -10144,6 +10177,9 @@ Elm.Form.Validate.make = function (_elm) {
                                       ,bool: bool
                                       ,date: date
                                       ,maybe: maybe
+                                      ,email: email
+                                      ,url: url
+                                      ,emptyString: emptyString
                                       ,minInt: minInt
                                       ,maxInt: maxInt
                                       ,minFloat: minFloat
@@ -10151,12 +10187,12 @@ Elm.Form.Validate.make = function (_elm) {
                                       ,minLength: minLength
                                       ,maxLength: maxLength
                                       ,nonEmpty: nonEmpty
-                                      ,email: email
                                       ,format: format
                                       ,includedIn: includedIn
                                       ,fail: fail
                                       ,succeed: succeed
-                                      ,customValidation: customValidation};
+                                      ,customValidation: customValidation
+                                      ,oneOf: oneOf};
 };
 Elm.Form = Elm.Form || {};
 Elm.Form.make = function (_elm) {
@@ -13024,17 +13060,10 @@ Elm.Model.make = function (_elm) {
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $String = Elm.String.make(_elm);
+   $Signal = Elm.Signal.make(_elm);
    var _op = {};
-   var customString = function (options) {
-      return A2($Form$Validate.customValidation,
-      $Form$Validate.string,
-      function (s) {
-         return $Result.Ok(s);
-      });
-   };
-   var foos = _U.list(["hey","ho"]);
+   var superpowers = _U.list(["flying","invisible"]);
+   var roles = _U.list(["role1","role2"]);
    var initialFields = _U.list([{ctor: "_Tuple2"
                                 ,_0: "name"
                                 ,_1: $Form$Field.text("hey")}
@@ -13043,9 +13072,24 @@ Elm.Model.make = function (_elm) {
                                 ,_1: $Form$Field.group(_U.list([{ctor: "_Tuple2"
                                                                 ,_0: "foo"
                                                                 ,_1: $Form$Field.radio("ho")}]))}]);
-   var Profile = F2(function (a,b) {    return {foo: a,bar: b};});
-   var User = F6(function (a,b,c,d,e,f) {
-      return {name: a,email: b,age: c,admin: d,role: e,profile: f};
+   var Invisible = {ctor: "Invisible"};
+   var Flying = {ctor: "Flying"};
+   var Profile = F5(function (a,b,c,d,e) {
+      return {website: a,role: b,superpower: c,age: d,bio: e};
+   });
+   var User = F4(function (a,b,c,d) {
+      return {name: a,email: b,admin: c,profile: d};
+   });
+   var InvalidSuperpower = {ctor: "InvalidSuperpower"};
+   var validateSuperpower = A2($Form$Validate.customValidation,
+   $Form$Validate.string,
+   function (s) {
+      var _p0 = s;
+      switch (_p0)
+      {case "flying": return $Result.Ok(Flying);
+         case "invisible": return $Result.Ok(Invisible);
+         default:
+         return $Result.Err($Form$Validate.customError(InvalidSuperpower));}
    });
    var AlreadyTaken = {ctor: "AlreadyTaken"};
    var asyncCheck = F2(function (serverIsOk,s) {
@@ -13058,31 +13102,42 @@ Elm.Model.make = function (_elm) {
       return _U.cmp(i,
       0) > 0 ? $Result.Ok(i) : $Result.Err($Form$Validate.customError(Nope));
    });
-   var validate = A7($Form$Validate.form6,
+   var validateProfile = A2($Form$Validate._op["|:"],
+   A2($Form$Validate._op["|:"],
+   A2($Form$Validate._op["|:"],
+   A2($Form$Validate._op["|:"],
+   A2($Form$Validate._op["|:"],
+   $Form$Validate.succeed(Profile),
+   A2($Form$Validate._op[":="],
+   "website",
+   $Form$Validate.oneOf(_U.list([A2($Form$Validate.map,
+                                function (_p1) {
+                                   return $Maybe.Nothing;
+                                },
+                                $Form$Validate.emptyString)
+                                ,A2($Form$Validate.map,$Maybe.Just,$Form$Validate.url)])))),
+   A2($Form$Validate._op[":="],
+   "role",
+   A2($Form$Validate.andThen,
+   $Form$Validate.string,
+   $Form$Validate.includedIn(roles)))),
+   A2($Form$Validate._op[":="],"superpower",validateSuperpower)),
+   A2($Form$Validate._op[":="],"age",naturalInt)),
+   A2($Form$Validate.defaultValue,
+   "",
+   A2($Form$Validate._op[":="],"bio",$Form$Validate.string)));
+   var validate = A5($Form$Validate.form4,
    User,
    A2($Form$Validate.andThen,
-   A2($Form$Validate._op[":="],
-   "name",
-   A2($Form$Validate.map,$String.trim,$Form$Validate.string)),
+   A2($Form$Validate._op[":="],"name",$Form$Validate.string),
    $Form$Validate.nonEmpty),
    A2($Form$Validate.andThen,
-   A2($Form$Validate._op[":="],"email",$Form$Validate.string),
-   $Form$Validate.email),
-   A2($Form$Validate._op[":="],"age",naturalInt),
+   A2($Form$Validate._op[":="],"email",$Form$Validate.email),
+   asyncCheck(true)),
    A2($Form$Validate.defaultValue,
    false,
    A2($Form$Validate._op[":="],"admin",$Form$Validate.bool)),
-   A2($Form$Validate._op["?="],"role",$Form$Validate.string),
-   A2($Form$Validate._op[":="],
-   "profile",
-   A3($Form$Validate.form2,
-   Profile,
-   A2($Form$Validate.andThen,
-   A2($Form$Validate._op[":="],"foo",$Form$Validate.string),
-   $Form$Validate.includedIn(foos)),
-   A2($Form$Validate.andThen,
-   A2($Form$Validate._op[":="],"bar",$Form$Validate.string),
-   asyncCheck(true)))));
+   A2($Form$Validate._op[":="],"profile",validateProfile));
    var Ooops = {ctor: "Ooops"};
    var Model = F2(function (a,b) {
       return {form: a,userMaybe: b};
@@ -13102,12 +13157,17 @@ Elm.Model.make = function (_elm) {
                               ,Ooops: Ooops
                               ,Nope: Nope
                               ,AlreadyTaken: AlreadyTaken
+                              ,InvalidSuperpower: InvalidSuperpower
                               ,User: User
                               ,Profile: Profile
+                              ,Flying: Flying
+                              ,Invisible: Invisible
                               ,initialFields: initialFields
-                              ,foos: foos
+                              ,roles: roles
+                              ,superpowers: superpowers
                               ,validate: validate
-                              ,customString: customString
+                              ,validateProfile: validateProfile
+                              ,validateSuperpower: validateSuperpower
                               ,naturalInt: naturalInt
                               ,asyncCheck: asyncCheck};
 };
@@ -13155,15 +13215,13 @@ Elm.View.Bootstrap.make = function (_elm) {
    var radioGroup = F4(function (options,label$,state,address) {
       var item = function (_p2) {
          var _p3 = _p2;
-         var _p4 = _p3._0;
          return A2($Html.label,
-         _U.list([$Html$Attributes.$for(_p4)
-                 ,$Html$Attributes.$class("radio-inline")]),
+         _U.list([$Html$Attributes.$class("radio-inline")]),
          _U.list([A4($Form$Input.radioInput,
-                 _p4,
+                 state.path,
                  state,
                  address,
-                 _U.list([]))
+                 _U.list([$Html$Attributes.value(_p3._0)]))
                  ,$Html.text(_p3._1)]));
       };
       return A2($Html.div,
@@ -13281,42 +13339,20 @@ Elm.View.make = function (_elm) {
       var formAddress = A2($Signal.forwardTo,
       address,
       $Model.FormAction);
-      var submitOnClick = function () {
-         var _p2 = $Form.getOutput(_p3);
-         if (_p2.ctor === "Just") {
-               return A2($Html$Events.onClick,
-               address,
-               $Model.SubmitUser(_p2._0));
-            } else {
-               return A2($Html$Events.onClick,formAddress,$Form.submit);
-            }
-      }();
       return A2($Html.div,
       _U.list([$Html$Attributes.$class("form-vertical")
               ,$Html$Attributes.style(_U.list([{ctor: "_Tuple2"
                                                ,_0: "margin"
                                                ,_1: "50px auto"}
                                               ,{ctor: "_Tuple2",_0: "width",_1: "600px"}]))]),
-      _U.list([$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
+      _U.list([A2($Html.legend,
+              _U.list([]),
+              _U.list([$Html.text("SimpleForm example")]))
+              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
                                            6,
                                            _U.list([A3($View$Bootstrap.textGroup,
                                            "Name",
                                            A2($Form.getFieldAsString,"name",_p3),
-                                           formAddress)]))
-                                           ,A2($View$Bootstrap.col$,
-                                           6,
-                                           _U.list([A4($View$Bootstrap.selectGroup,
-                                           _U.list([{ctor: "_Tuple2",_0: "",_1: "--"}
-                                                   ,{ctor: "_Tuple2",_0: "a",_1: "Option A"}
-                                                   ,{ctor: "_Tuple2",_0: "b",_1: "Option B"}]),
-                                           "Role",
-                                           A2($Form.getFieldAsString,"role",_p3),
-                                           formAddress)]))]))
-              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-                                           6,
-                                           _U.list([A3($View$Bootstrap.textGroup,
-                                           "Age",
-                                           A2($Form.getFieldAsString,"age",_p3),
                                            formAddress)]))
                                            ,A2($View$Bootstrap.col$,
                                            6,
@@ -13325,32 +13361,58 @@ Elm.View.make = function (_elm) {
                                            A2($Form.getFieldAsString,"email",_p3),
                                            formAddress)]))]))
               ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
-                                           6,
-                                           _U.list([A3($View$Bootstrap.checkboxGroup,
-                                           "Administrator",
-                                           A2($Form.getFieldAsBool,"admin",_p3),
+              12,
+              _U.list([A3($View$Bootstrap.checkboxGroup,
+              "Administrator",
+              A2($Form.getFieldAsBool,"admin",_p3),
+              formAddress)]))]))
+              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
+                                           4,
+                                           _U.list([A3($View$Bootstrap.textGroup,
+                                           "Website",
+                                           A2($Form.getFieldAsString,"profile.website",_p3),
                                            formAddress)]))
                                            ,A2($View$Bootstrap.col$,
-                                           6,
+                                           4,
+                                           _U.list([A4($View$Bootstrap.selectGroup,
+                                           A2($List._op["::"],
+                                           {ctor: "_Tuple2",_0: "",_1: "--"},
+                                           A2($List.map,
+                                           function (i) {
+                                              return {ctor: "_Tuple2",_0: i,_1: $String.toUpper(i)};
+                                           },
+                                           $Model.roles)),
+                                           "Role",
+                                           A2($Form.getFieldAsString,"profile.role",_p3),
+                                           formAddress)]))
+                                           ,A2($View$Bootstrap.col$,
+                                           4,
                                            _U.list([A4($View$Bootstrap.radioGroup,
                                            A2($List.map,
                                            function (i) {
                                               return {ctor: "_Tuple2",_0: i,_1: $String.toUpper(i)};
                                            },
-                                           $Model.foos),
-                                           "Foo",
-                                           A2($Form.getFieldAsString,"profile.foo",_p3),
+                                           $Model.superpowers),
+                                           "Superpower",
+                                           A2($Form.getFieldAsString,"profile.superpower",_p3),
                                            formAddress)]))]))
+              ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
+              6,
+              _U.list([A3($View$Bootstrap.textGroup,
+              "Age",
+              A2($Form.getFieldAsString,"profile.age",_p3),
+              formAddress)]))]))
               ,$View$Bootstrap.row(_U.list([A2($View$Bootstrap.col$,
               12,
               _U.list([A3($View$Bootstrap.textAreaGroup,
-              "Bar",
-              A2($Form.getFieldAsString,"profile.bar",_p3),
+              "Bio",
+              A2($Form.getFieldAsString,"profile.bio",_p3),
               formAddress)]))]))
-              ,A2($Html.div,
+              ,A2($Html.hr,_U.list([]),_U.list([]))
+              ,A2($Html.p,
               _U.list([]),
               _U.list([A2($Html.button,
-                      _U.list([submitOnClick
+                      _U.list([A2($Html$Events.onClick,formAddress,$Form.submit)
                               ,$Html$Attributes.$class("btn btn-primary")]),
                       _U.list([$Html.text("Submit")]))
                       ,$Html.text(" ")
@@ -13360,8 +13422,16 @@ Elm.View.make = function (_elm) {
                               $Form.reset($Model.initialFields))
                               ,$Html$Attributes.$class("btn btn-default")]),
                       _U.list([$Html.text("Reset")]))]))
-              ,A2($Html.hr,_U.list([]),_U.list([]))
-              ,$Html.text($Basics.toString(_p1.userMaybe))
+              ,function () {
+                 var _p2 = $Form.getOutput(_p3);
+                 if (_p2.ctor === "Just") {
+                       return A2($Html.p,
+                       _U.list([$Html$Attributes.$class("alert alert-success")]),
+                       _U.list([$Html.text($Basics.toString(_p2._0))]));
+                    } else {
+                       return $Html.text("");
+                    }
+              }()
               ,$Form$Input.dumpErrors(_p3)]));
    });
    return _elm.View.values = {_op: _op,view: view};

@@ -71,8 +71,8 @@ radioGroup options label' state address =
   let
     item (v, l) =
       label
-        [ for v, class "radio-inline" ]
-        [ Input.radioInput v state address []
+        [ class "radio-inline" ]
+        [ Input.radioInput state.path state address [ value v ]
         , text l
         ]
   in

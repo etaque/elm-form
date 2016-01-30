@@ -7,7 +7,7 @@ import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
 import Form exposing (Form)
-import Form.Input as Input
+import Form.Input
 
 import Model exposing (..)
 import View.Bootstrap exposing (..)
@@ -17,45 +17,47 @@ view : Signal.Address Action -> Model -> Html
 view address {form, userMaybe} =
   let
     formAddress = Signal.forwardTo address FormAction
-    submitOnClick =
-      case Form.getOutput form of
-        Just user ->
-          onClick address (SubmitUser user)
-        Nothing ->
-          onClick formAddress Form.submit
   in
     div
       [ class "form-vertical"
       , style [ ("margin", "50px auto"), ("width", "600px")]
       ]
-      [ row
-          [ col' 6
-              [ textGroup "Name" (Form.getFieldAsString "name" form) formAddress ]
-          , col' 6
-              [ selectGroup [ ("", "--"), ("a", "Option A"), ("b", "Option B") ]
-                   "Role" (Form.getFieldAsString "role" form) formAddress ]
-          ]
+      [ legend [] [ text "SimpleForm example" ]
       , row
           [ col' 6
-              [ textGroup "Age" (Form.getFieldAsString "age" form) formAddress ]
+              [ textGroup "Name" (Form.getFieldAsString "name" form) formAddress ]
           , col' 6
               [ textGroup "Email address" (Form.getFieldAsString "email" form) formAddress ]
           ]
       , row
+          [ col' 12
+              [ checkboxGroup "Administrator" (Form.getFieldAsBool "admin" form) formAddress
+              ]
+          ]
+      , row
+          [ col' 4
+              [ textGroup "Website" (Form.getFieldAsString "profile.website" form) formAddress ]
+          , col' 4
+              [ selectGroup (("", "--") :: (List.map (\i -> (i, String.toUpper i)) roles))
+                   "Role" (Form.getFieldAsString "profile.role" form) formAddress ]
+          , col' 4
+              [ radioGroup (List.map (\i -> (i, String.toUpper i)) superpowers)
+                "Superpower" (Form.getFieldAsString "profile.superpower" form) formAddress ]
+          ]
+      , row
           [ col' 6
-            [ checkboxGroup "Administrator" (Form.getFieldAsBool "admin" form) formAddress ]
-          , col' 6
-            [ radioGroup (List.map (\i -> (i, String.toUpper i)) foos)
-                "Foo" (Form.getFieldAsString "profile.foo" form) formAddress ]
+              [ textGroup "Age" (Form.getFieldAsString "profile.age" form) formAddress ]
           ]
       , row
           [ col' 12
-            [ textAreaGroup "Bar" (Form.getFieldAsString "profile.bar" form) formAddress ]
+              [ textAreaGroup "Bio" (Form.getFieldAsString "profile.bio" form) formAddress
+              ]
           ]
-      , div
+      , hr [] []
+      , p
           []
           [ button
-              [ submitOnClick
+              [ onClick formAddress Form.submit
               , class "btn btn-primary"
               ]
               [ text "Submit" ]
@@ -67,9 +69,13 @@ view address {form, userMaybe} =
               [ text "Reset" ]
           ]
 
-      , hr [] []
-      , text (toString userMaybe)
-      , Input.dumpErrors form
+      , case Form.getOutput form of
+          Just user ->
+            p [ class "alert alert-success" ] [ text (toString user) ]
+          Nothing ->
+            text ""
+
+      , Form.Input.dumpErrors form
       ]
 
 

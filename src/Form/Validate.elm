@@ -2,9 +2,9 @@ module Form.Validate
   ( Validation, get, map, andThen, pipeTo, apply, customError, defaultValue
   , (:=), (?=), (|:)
   , form1, form2, form3, form4, form5, form6, form7, form8
-  , string, int, float, bool, date, maybe
-  , minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, email, format, includedIn
-  , fail, succeed, customValidation
+  , string, int, float, bool, date, maybe, email, url, emptyString
+  , minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn
+  , fail, succeed, customValidation, oneOf
   ) where
 
 {-| Form validation.
@@ -19,13 +19,13 @@ module Form.Validate
 @docs form1, form2, form3, form4, form5, form6, form7, form8
 
 # Type extractors
-@docs string, int, float, bool, date, maybe
+@docs string, int, float, bool, date, maybe, email, url, emptyString
 
 # Common filters
-@docs minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, email, format, includedIn
+@docs minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn
 
 # Custom validations
-@docs fail, succeed, customValidation
+@docs fail, succeed, customValidation, oneOf
 -}
 
 import Result
@@ -116,25 +116,17 @@ customError =
   CustomError
 
 
-{-| private -}
-groupError : String -> Error e -> Error e
-groupError name e =
-  GroupErrors <| Dict.fromList [ (name, e) ]
-
-
 {-| Access the given field in the group.
 
     get "name" string
 -}
 get : String -> Validation e a -> Validation e a
 get key validation field =
-  case field of
-    Group fields ->
-      case Dict.get key fields of
-        Just a -> validation a |> Result.formatError (\e -> groupError key e)
-        Nothing -> Err (groupError key Empty)
-    _ ->
-      Err (groupError key Empty)
+  Field.at key field
+    |> Maybe.withDefault EmptyField
+    |> validation
+    |> Result.formatError
+        (\e -> GroupErrors (Dict.fromList [ (key, e) ]))
 
 
 {-| Infix version of `get`.
@@ -264,6 +256,21 @@ string v =
       Err InvalidString
 
 
+{-| Validate an empty string, otherwise failing with InvalidString.
+Useful with `oneOf` for optional fields with format validation.
+-}
+emptyString : Validation e String
+emptyString v =
+  case v of
+    Text s ->
+      if String.isEmpty s then
+        Ok s
+      else
+        Err InvalidString
+    _ ->
+      Ok ""
+
+
 {-| Validation a Bool. -}
 bool : Validation e Bool
 bool v =
@@ -359,10 +366,25 @@ validEmailPattern =
 
 
 {-| Check if the string is a valid email address. -}
-email : String -> Validation e String
-email s =
-  format s validEmailPattern
-    |> formatError (\_ -> InvalidEmail)
+email : Validation e String
+email =
+  string `andThen` (\s ->
+    format s validEmailPattern
+      |> formatError (\_ -> InvalidEmail))
+
+
+validUrlPattern : Regex
+validUrlPattern =
+  Regex.regex "^(https?://)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\w \\.-]*)*/?$"
+    |> Regex.caseInsensitive
+
+
+{-| Check if the string is a valid URL. -}
+url : Validation e String
+url =
+  string `andThen` (\s ->
+    format s validUrlPattern
+      |> formatError (\_ -> InvalidUrl))
 
 
 {-| Check if the string is included in the given list. -}
@@ -391,3 +413,18 @@ customValidation : Validation e a -> (a -> Result (Error e) b) -> Validation e b
 customValidation validation callback field =
   validation field `Result.andThen` callback
 
+
+{-| First successful validation wins, from left to right. -}
+oneOf : List (Validation e a) -> Validation e a
+oneOf validations field =
+  let
+    results = List.map (\v -> v field) validations
+    walkResults result combined =
+      case (combined, result) of
+        (Ok _, _) ->
+          combined
+        _ ->
+          result
+
+  in
+    List.foldl walkResults (Err Empty) results

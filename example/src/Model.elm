@@ -5,6 +5,7 @@ import String
 import Form exposing (Form)
 import Form.Field as Field
 import Form.Validate as Validate exposing (..)
+import Form.Error as Error exposing (..)
 
 
 type Action =
@@ -16,23 +17,28 @@ type alias Model =
   , userMaybe : Maybe User
   }
 
-type CustomError = Ooops | Nope | AlreadyTaken
+type CustomError =
+  Ooops | Nope | AlreadyTaken | InvalidSuperpower
 
 
 type alias User =
   { name : String
   , email : String
-  , age : Int
   , admin : Bool
-  , role : Maybe String
   , profile : Profile
   }
 
 
 type alias Profile =
-  { foo : String
-  , bar : String
+  { website : Maybe String
+  , role : String
+  , superpower : Superpower
+  , age : Int
+  , bio : String
   }
+
+
+type Superpower = Flying | Invisible
 
 
 initialFields : List (String, Field.Field)
@@ -44,28 +50,50 @@ initialFields =
   ]
 
 
-foos : List String
-foos =
-  [ "hey", "ho" ]
+roles : List String
+roles =
+  [ "role1", "role2" ]
+
+
+superpowers : List String
+superpowers =
+  [ "flying", "invisible" ]
 
 
 validate : Validation CustomError User
 validate =
-  form6 User
-    ("name" := (string |> map String.trim) `andThen` nonEmpty)
-    ("email" := string `andThen` email)
-    ("age" := naturalInt)
+  form4 User
+    ("name" := string `andThen` nonEmpty)
+    ("email" := email `andThen` (asyncCheck True))
     ("admin" := bool |> defaultValue False)
-    ("role" ?= string)
-    ("profile" := form2 Profile
-      ("foo" := string `andThen` (includedIn foos))
-      ("bar" := string `andThen` (asyncCheck True)))
+    ("profile" := validateProfile)
 
 
-customString : List String -> Validation CustomError String
-customString options =
-  customValidation string (\s -> Ok s)
+validateProfile : Validation CustomError Profile
+validateProfile =
+  succeed Profile
+    |: ("website" := oneOf
+          [ emptyString |> map (\_ -> Nothing)
+          , url |> map Just
+          ])
+    |: ("role" := (string `andThen` (includedIn roles)))
+    |: ("superpower" := validateSuperpower)
+    |: ("age" := naturalInt)
+    |: ("bio" := string |> defaultValue "")
 
+
+validateSuperpower : Validation CustomError Superpower
+validateSuperpower =
+  customValidation string
+    (\s ->
+      case s of
+        "flying" ->
+          Ok Flying
+        "invisible" ->
+          Ok Invisible
+        _ ->
+          Err (customError InvalidSuperpower)
+    )
 
 -- eq. to: int `andThen` (minInt 0)
 naturalInt : Validation CustomError Int
