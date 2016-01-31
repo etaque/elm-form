@@ -41,8 +41,10 @@ import Form.Field as Field exposing (..)
 import Form.Validate as Validate exposing (Validation)
 
 
-{-| Form to embed in your model, with type parameters being a custom error type to extend
-built-in errors (set to `()` if you don't need it), and the type of the form output.
+{-| Form to embed in your model. Type parameters are:
+
+ * `customError` - a custom error type to extend built-in errors (set to `()` if you don't need it)
+ * `output` - the type of the validation output.
 -}
 type Form customError output =
   F (Model customError output)
@@ -79,14 +81,14 @@ initial initialFields validation =
 {-| Field state containing all necessary data for view and update,
 can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
 
- * `path` -- qualified path of the field in the form, with dots for nested fields
- * `value` -- a `Maybe` of the requested type
- * `error` -- a `Maybe` of the field error
- * `liveError` -- same but with added logic for live validation
+ * `path` - qualified path of the field in the form, with dots for nested fields (`field.subfield`)
+ * `value` - a `Maybe` of the requested type
+ * `error` - a `Maybe` of the field error
+ * `liveError` - same but with added logic for live validation
     (see [`getLiveErrorAt`](https://github.com/etaque/elm-simple-form/blob/master/src/Form.elm) impl)
- * `isDirty` -- if the field content has been changed since last validation
- * `isVisited` -- if the field has got the focus since form init/reset
- * `hasFocus` -- if the field is currently focused
+ * `isDirty` - if the field content has been changed since last validation
+ * `isVisited` - if the field has got the focus since form init/reset
+ * `hasFocus` - if the field is currently focused
  -}
 type alias FieldState e a =
   { path : String
@@ -123,7 +125,7 @@ getField getValue path form =
   }
 
 
-{-| Form action -}
+{-| Form actions for `update`. -}
 type Action
   = NoOp
   | UpdateFocus String
