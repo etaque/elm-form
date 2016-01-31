@@ -10224,31 +10224,35 @@ Elm.Form.make = function (_elm) {
             return v1;
          }
    });
-   var isDirtyAt = F2(function (qualifiedName,_p1) {
+   var getFocus = function (_p1) {
       var _p2 = _p1;
-      return A2($Set.member,qualifiedName,_p2._0.dirtyFields);
-   });
-   var isVisitedAt = F2(function (qualifiedName,_p3) {
+      return _p2._0.focus;
+   };
+   var isDirtyAt = F2(function (qualifiedName,_p3) {
       var _p4 = _p3;
-      return A2($Set.member,qualifiedName,_p4._0.visitedFields);
+      return A2($Set.member,qualifiedName,_p4._0.dirtyFields);
    });
-   var getErrorAt = F2(function (qualifiedName,_p5) {
+   var isVisitedAt = F2(function (qualifiedName,_p5) {
       var _p6 = _p5;
+      return A2($Set.member,qualifiedName,_p6._0.visitedFields);
+   });
+   var getErrorAt = F2(function (qualifiedName,_p7) {
+      var _p8 = _p7;
       var walkPath = F2(function (path,maybeNode) {
          walkPath: while (true) {
-            var _p7 = path;
-            if (_p7.ctor === "::") {
-                  var _p8 = maybeNode;
-                  if (_p8.ctor === "Just") {
-                        var _p10 = _p8._0;
-                        var _p9 = _p10;
-                        if (_p9.ctor === "GroupErrors") {
-                              var _v7 = _p7._1,_v8 = A2($Form$Error.getAt,_p7._0,_p10);
-                              path = _v7;
-                              maybeNode = _v8;
+            var _p9 = path;
+            if (_p9.ctor === "::") {
+                  var _p10 = maybeNode;
+                  if (_p10.ctor === "Just") {
+                        var _p12 = _p10._0;
+                        var _p11 = _p12;
+                        if (_p11.ctor === "GroupErrors") {
+                              var _v8 = _p9._1,_v9 = A2($Form$Error.getAt,_p9._0,_p12);
+                              path = _v8;
+                              maybeNode = _v9;
                               continue walkPath;
                            } else {
-                              return $Maybe.Just(_p10);
+                              return $Maybe.Just(_p12);
                            }
                      } else {
                         return $Maybe.Nothing;
@@ -10260,33 +10264,33 @@ Elm.Form.make = function (_elm) {
       });
       return A2(walkPath,
       A2($String.split,".",qualifiedName),
-      $Maybe.Just(_p6._0.errors));
+      $Maybe.Just(_p8._0.errors));
    });
-   var getErrors = function (_p11) {
-      var _p12 = _p11;
-      var mapGroupItem = F2(function (path,_p13) {
-         var _p14 = _p13;
+   var getErrors = function (_p13) {
+      var _p14 = _p13;
+      var mapGroupItem = F2(function (path,_p15) {
+         var _p16 = _p15;
          return A2(walkTree,
-         A2($Basics._op["++"],path,_U.list([_p14._0])),
-         _p14._1);
+         A2($Basics._op["++"],path,_U.list([_p16._0])),
+         _p16._1);
       });
       var walkTree = F2(function (path,node) {
-         var _p15 = node;
-         if (_p15.ctor === "GroupErrors") {
+         var _p17 = node;
+         if (_p17.ctor === "GroupErrors") {
                return A2($List.concatMap,
                mapGroupItem(path),
-               $Dict.toList(_p15._0));
+               $Dict.toList(_p17._0));
             } else {
                return _U.list([{ctor: "_Tuple2"
                                ,_0: A2($String.join,".",path)
                                ,_1: node}]);
             }
       });
-      return A2(walkTree,_U.list([]),_p12._0.errors);
+      return A2(walkTree,_U.list([]),_p14._0.errors);
    };
-   var isSubmitted = function (_p16) {
-      var _p17 = _p16;
-      return _p17._0.isSubmitted;
+   var isSubmitted = function (_p18) {
+      var _p19 = _p18;
+      return _p19._0.isSubmitted;
    };
    var getLiveErrorAt = F2(function (name,form) {
       return isSubmitted(form) || A2(isVisitedAt,
@@ -10295,25 +10299,25 @@ Elm.Form.make = function (_elm) {
       name,
       form) : $Maybe.Nothing;
    });
-   var getOutput = function (_p18) {
-      var _p19 = _p18;
-      return _p19._0.output;
-   };
-   var setFieldAt = F3(function (qualifiedName,field,_p20) {
+   var getOutput = function (_p20) {
       var _p21 = _p20;
+      return _p21._0.output;
+   };
+   var setFieldAt = F3(function (qualifiedName,field,_p22) {
+      var _p23 = _p22;
       var walkPath = F2(function (path,maybeNode) {
-         var _p22 = path;
-         if (_p22.ctor === "::") {
-               var _p23 = _p22._0;
+         var _p24 = path;
+         if (_p24.ctor === "::") {
+               var _p25 = _p24._0;
                var node = A2($Maybe.withDefault,
                $Form$Field.Group($Dict.empty),
                maybeNode);
                var childField = A2(walkPath,
-               _p22._1,
-               A2($Form$Field.at,_p23,node));
+               _p24._1,
+               A2($Form$Field.at,_p25,node));
                return A2(merge,
                $Form$Field.Group($Dict.fromList(_U.list([{ctor: "_Tuple2"
-                                                         ,_0: _p23
+                                                         ,_0: _p25
                                                          ,_1: childField}]))),
                node);
             } else {
@@ -10322,21 +10326,21 @@ Elm.Form.make = function (_elm) {
       });
       return A2(walkPath,
       A2($String.split,".",qualifiedName),
-      $Maybe.Just(_p21._0.fields));
+      $Maybe.Just(_p23._0.fields));
    });
-   var getFieldAt = F2(function (qualifiedName,_p24) {
-      var _p25 = _p24;
+   var getFieldAt = F2(function (qualifiedName,_p26) {
+      var _p27 = _p26;
       var walkPath = F2(function (name,maybeField) {
-         var _p26 = maybeField;
-         if (_p26.ctor === "Just") {
-               return A2($Form$Field.at,name,_p26._0);
+         var _p28 = maybeField;
+         if (_p28.ctor === "Just") {
+               return A2($Form$Field.at,name,_p28._0);
             } else {
                return $Maybe.Nothing;
             }
       });
       return A3($List.foldl,
       walkPath,
-      $Maybe.Just(_p25._0.fields),
+      $Maybe.Just(_p27._0.fields),
       A2($String.split,".",qualifiedName));
    });
    var getStringAt = F2(function (name,form) {
@@ -10350,15 +10354,15 @@ Elm.Form.make = function (_elm) {
       $Form$Field.asBool);
    });
    var updateValidate = function (model) {
-      var _p27 = model.validation(model.fields);
-      if (_p27.ctor === "Ok") {
+      var _p29 = model.validation(model.fields);
+      if (_p29.ctor === "Ok") {
             return _U.update(model,
             {errors: $Form$Error.GroupErrors($Dict.empty)
             ,dirtyFields: $Set.empty
-            ,output: $Maybe.Just(_p27._0)});
+            ,output: $Maybe.Just(_p29._0)});
          } else {
             return _U.update(model,
-            {errors: _p27._0
+            {errors: _p29._0
             ,dirtyFields: $Set.empty
             ,output: $Maybe.Nothing});
          }
@@ -10380,6 +10384,10 @@ Elm.Form.make = function (_elm) {
    var updateCheckField = F2(function (name,b) {
       return A2(UpdateField,name,$Form$Field.Check(b));
    });
+   var UpdateFocus = function (a) {
+      return {ctor: "UpdateFocus",_0: a};
+   };
+   var updateFocus = UpdateFocus;
    var NoOp = {ctor: "NoOp"};
    var getField = F3(function (getValue,path,form) {
       return {path: path
@@ -10387,30 +10395,34 @@ Elm.Form.make = function (_elm) {
              ,error: A2(getErrorAt,path,form)
              ,liveError: A2(getLiveErrorAt,path,form)
              ,isDirty: A2(isDirtyAt,path,form)
-             ,isVisited: A2(isVisitedAt,path,form)};
+             ,isVisited: A2(isVisitedAt,path,form)
+             ,hasFocus: _U.eq(getFocus(form),$Maybe.Just(path))};
    });
    var getFieldAsBool = getField(getBoolAt);
    var getFieldAsString = getField(getStringAt);
-   var FieldState = F6(function (a,b,c,d,e,f) {
+   var FieldState = F7(function (a,b,c,d,e,f,g) {
       return {path: a
              ,value: b
              ,error: c
              ,liveError: d
              ,isDirty: e
-             ,isVisited: f};
+             ,isVisited: f
+             ,hasFocus: g};
    });
-   var Model = F7(function (a,b,c,d,e,f,g) {
+   var Model = F8(function (a,b,c,d,e,f,g,h) {
       return {fields: a
-             ,dirtyFields: b
-             ,visitedFields: c
-             ,isSubmitted: d
-             ,output: e
-             ,errors: f
-             ,validation: g};
+             ,focus: b
+             ,dirtyFields: c
+             ,visitedFields: d
+             ,isSubmitted: e
+             ,output: f
+             ,errors: g
+             ,validation: h};
    });
    var F = function (a) {    return {ctor: "F",_0: a};};
    var initial = F2(function (initialFields,validation) {
       return F({fields: $Form$Field.group(initialFields)
+               ,focus: $Maybe.Nothing
                ,dirtyFields: $Set.empty
                ,visitedFields: $Set.empty
                ,isSubmitted: false
@@ -10418,26 +10430,29 @@ Elm.Form.make = function (_elm) {
                ,errors: $Form$Error.GroupErrors($Dict.empty)
                ,validation: validation});
    });
-   var update = F2(function (action,_p28) {
-      var _p29 = _p28;
-      var _p32 = _p29._0;
-      var _p30 = action;
-      switch (_p30.ctor)
-      {case "NoOp": return F(_p32);
-         case "UpdateField": var _p31 = _p30._0;
-           var newVisitedFields = A2($Set.insert,_p31,_p32.visitedFields);
-           var newDirtyFields = A2($Set.insert,_p31,_p32.dirtyFields);
-           var newFields = A3(setFieldAt,_p31,_p30._1,F(_p32));
-           var newModel = _U.update(_p32,
+   var update = F2(function (action,_p30) {
+      var _p31 = _p30;
+      var _p34 = _p31._0;
+      var _p32 = action;
+      switch (_p32.ctor)
+      {case "NoOp": return F(_p34);
+         case "UpdateFocus": var newModel = _U.update(_p34,
+           {focus: $Maybe.Just(_p32._0)});
+           return F(newModel);
+         case "UpdateField": var _p33 = _p32._0;
+           var newVisitedFields = A2($Set.insert,_p33,_p34.visitedFields);
+           var newDirtyFields = A2($Set.insert,_p33,_p34.dirtyFields);
+           var newFields = A3(setFieldAt,_p33,_p32._1,F(_p34));
+           var newModel = _U.update(_p34,
            {fields: newFields
            ,dirtyFields: newDirtyFields
-           ,visitedFields: newDirtyFields});
+           ,visitedFields: newVisitedFields});
            return F(newModel);
-         case "Validate": return F(updateValidate(_p32));
-         case "Submit": var validatedModel = updateValidate(_p32);
+         case "Validate": return F(updateValidate(_p34));
+         case "Submit": var validatedModel = updateValidate(_p34);
            return F(_U.update(validatedModel,{isSubmitted: true}));
-         default: var newModel = _U.update(_p32,
-           {fields: $Form$Field.group(_p30._0)
+         default: var newModel = _U.update(_p34,
+           {fields: $Form$Field.group(_p32._0)
            ,dirtyFields: $Set.empty
            ,visitedFields: $Set.empty
            ,isSubmitted: false
@@ -10449,9 +10464,11 @@ Elm.Form.make = function (_elm) {
                              ,update: update
                              ,getFieldAsString: getFieldAsString
                              ,getFieldAsBool: getFieldAsBool
+                             ,getFocus: getFocus
                              ,getErrors: getErrors
                              ,isSubmitted: isSubmitted
                              ,getOutput: getOutput
+                             ,updateFocus: updateFocus
                              ,validate: validate
                              ,submit: submit
                              ,reset: reset
@@ -12891,6 +12908,7 @@ Elm.Form.Input.make = function (_elm) {
       var formAttrs = _U.list([$Html$Attributes.type$("radio")
                               ,$Html$Attributes.name(value)
                               ,$Html$Attributes.checked(_U.eq(state.value,$Maybe.Just(value)))
+                              ,A2($Html$Events.onFocus,addr,$Form.updateFocus(state.path))
                               ,A3($Html$Events.on,
                               "change",
                               $Html$Events.targetValue,
@@ -12922,6 +12940,7 @@ Elm.Form.Input.make = function (_elm) {
                                  addr,
                                  A2($Form.updateSelectField,state.path,v));
                               })
+                              ,A2($Html$Events.onFocus,addr,$Form.updateFocus(state.path))
                               ,A2($Html$Events.onBlur,addr,$Form.validate)]);
       return A2($Html.select,
       A2($Basics._op["++"],formAttrs,attrs),
@@ -12939,6 +12958,7 @@ Elm.Form.Input.make = function (_elm) {
                                  addr,
                                  A2($Form.updateTextField,state.path,v));
                               })
+                              ,A2($Html$Events.onFocus,addr,$Form.updateFocus(state.path))
                               ,A2($Html$Events.onBlur,addr,$Form.validate)]);
       return A2($Html.input,
       A2($Basics._op["++"],formAttrs,attrs),
@@ -12956,7 +12976,8 @@ Elm.Form.Input.make = function (_elm) {
                                  addr,
                                  A2($Form.updateTextField,state.path,v));
                               })
-                              ,A2($Html$Events.onBlur,addr,$Form.validate)]);
+                              ,A2($Html$Events.onBlur,addr,$Form.validate)
+                              ,A2($Html$Events.onFocus,addr,$Form.updateFocus(state.path))]);
       return A2($Html.textarea,
       A2($Basics._op["++"],formAttrs,attrs),
       _U.list([$Html.text(value)]));
@@ -12972,6 +12993,7 @@ Elm.Form.Input.make = function (_elm) {
                                  addr,
                                  A2($Form.updateCheckField,state.path,v));
                               })
+                              ,A2($Html$Events.onFocus,addr,$Form.updateFocus(state.path))
                               ,A2($Html$Events.onBlur,addr,$Form.validate)]);
       return A2($Html.input,
       A2($Basics._op["++"],formAttrs,attrs),

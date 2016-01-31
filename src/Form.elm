@@ -2,8 +2,8 @@ module Form
   ( Action, Form, FieldState
   , initial, update
   , getFieldAsString, getFieldAsBool
-  , getErrors, isSubmitted, getOutput
-  , validate, submit, reset
+  , getFocus, getErrors, isSubmitted, getOutput
+  , updateFocus, validate, submit, reset
   , updateTextField, updateSelectField, updateCheckField, updateRadioField
   ) where
 
@@ -20,10 +20,10 @@ with state lifecycle and input helpers for the views.
 @docs getFieldAsString, getFieldAsBool
 
 # Global state accessors
-@docs isSubmitted, getErrors, getOutput
+@docs getFocus, isSubmitted, getErrors, getOutput
 
 # Field actions
-@docs updateTextField, updateSelectField, updateCheckField, updateRadioField
+@docs updateFocus, updateTextField, updateSelectField, updateCheckField, updateRadioField
 
 # Global actions
 @docs validate, submit, reset
@@ -51,6 +51,7 @@ type Form customError output =
 {-| Private -}
 type alias Model customError output =
   { fields : Field
+  , focus : Maybe String
   , dirtyFields : Set String
   , visitedFields : Set String
   , isSubmitted : Bool
@@ -65,6 +66,7 @@ initial : List (String, Field) -> Validation e output -> Form e output
 initial initialFields validation =
   F <|
     { fields = group initialFields
+    , focus = Nothing
     , dirtyFields = Set.empty
     , visitedFields = Set.empty
     , isSubmitted = False
@@ -84,6 +86,7 @@ can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
     (see [`getLiveErrorAt`](https://github.com/etaque/elm-simple-form/blob/master/src/Form.elm) impl)
  * `isDirty` -- if the field content has been changed since last validation
  * `isVisited` -- if the field has got the focus since form init/reset
+ * `hasFocus` -- if the field is currently focused
  -}
 type alias FieldState e a =
   { path : String
@@ -92,6 +95,7 @@ type alias FieldState e a =
   , liveError : Maybe (Error e)
   , isDirty : Bool
   , isVisited : Bool
+  , hasFocus : Bool
   }
 
 
@@ -115,17 +119,24 @@ getField getValue path form =
   , liveError = getLiveErrorAt path form
   , isDirty = isDirtyAt path form
   , isVisited = isVisitedAt path form
+  , hasFocus = getFocus form == Just path
   }
-
 
 
 {-| Form action -}
 type Action
   = NoOp
+  | UpdateFocus String
   | UpdateField String Field
   | Validate
   | Submit
   | Reset (List (String, Field))
+
+
+{-| Action to indicate which field currently has focus. -}
+updateFocus : String -> Action
+updateFocus =
+  UpdateFocus
 
 
 {-| Action to update the content of a text input at the given qualified path. -}
@@ -178,6 +189,12 @@ update action (F model) =
     NoOp ->
       F model
 
+    UpdateFocus name ->
+      let
+        newModel = { model | focus = Just name }
+      in
+        F newModel
+
     UpdateField name field ->
       let
         newFields = setFieldAt name field (F model)
@@ -186,7 +203,7 @@ update action (F model) =
         newModel = { model
           | fields = newFields
           , dirtyFields = newDirtyFields
-          , visitedFields = newDirtyFields
+          , visitedFields = newVisitedFields
           }
       in
         F newModel
@@ -334,6 +351,12 @@ isVisitedAt qualifiedName (F model) =
 isDirtyAt : String -> Form e o -> Bool
 isDirtyAt qualifiedName (F model) =
   Set.member qualifiedName model.dirtyFields
+
+
+{-| Return currently focused field, if any. -}
+getFocus : Form e o -> Maybe String
+getFocus (F model) =
+  model.focus
 
 
 merge : Field -> Field -> Field
