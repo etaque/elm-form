@@ -22,7 +22,9 @@ import Html.Attributes as HtmlAttr exposing (..)
 import Form exposing (Form, Action, FieldState)
 
 
-{-| An input render Html from a field name, a form and address for actions. -}
+{-| An input render Html from a field state, a form and address for actions.
+All input functions using this type alias are pre-wired with event handlers.
+-}
 type alias Input e a = FieldState e a -> Address Action -> List Attribute -> Html
 
 

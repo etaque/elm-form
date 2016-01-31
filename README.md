@@ -7,24 +7,12 @@ _Work in progress_
 ## Features
 
 * Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc ; you either get the desired output value or all field errors
-* HTML inputs helpers for live validation
+* HTML inputs helpers with pre-wired handlers for live validation
 * Suite of basic validations, with a way to add your own
-* Unlimited fields! See `:+`
+* Unlimited fields! See `:+` infix operator (or `apply` function)
 * Nested fields for record composition (`foo.bar.baz`)
 
-```elm
-form6 User
-  ("name" := (string |> map String.trim) `andThen` nonEmpty)
-  ("email" := string `andThen` email)
-  ("age" := int `andThen` (minInt 18) |> customError Ooops)
-  ("admin" := bool |> defaultValue False)
-  ("role" ?= string)
-  ("profile" := form2 Profile
-    ("foo" := string `andThen` (includedIn foos))
-    ("bar" := string))
-```
-
-[See complete example here.](./example/Main.elm)
+[See complete example here.](./example/)
 
 
 ## Basic usage
@@ -68,7 +56,7 @@ init =
 validate : Validate () Form
 validate =
   form2 Foo
-    ("bar" := string `andThen` email)
+    ("bar" := email)
     ("baz" := bool)
     
 
@@ -83,9 +71,6 @@ update action ({form} as model) =
 
     FormAction formAction ->
       ({ model | form = Form.update formAction form}, Effects.none)
-
-    SubmitUser user ->
-      ({ model | userMaybe = Just user }, Effects.none)
 
 
 -- Render form with Input helpers
@@ -115,9 +100,10 @@ view address {form} =
       , errorFor bar
       
       , label [] 
-          [ Input.checkboxInput baz formAddress []
-          , text "Baz"
-          ]
+      , Input.checkboxInput baz formAddress []
+      , text "Baz"
+      ]
+
       , errorFor baz
       
       , button
