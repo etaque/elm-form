@@ -17,10 +17,12 @@ _Work in progress_
 
 ## Basic usage
 
+
 ```elm
 module Main where
 
 import StartApp
+import Task exposing (Task)
 import Effects exposing (Effects)
 import Html exposing (..)
 import Html.Attributes exposing (..)
@@ -30,6 +32,8 @@ import Form exposing (Form)
 import Form.Validate as Validate exposing (..)
 import Form.Input as Input
 
+
+-- your expected form output
 
 type alias Foo =
   { bar : String
@@ -42,9 +46,8 @@ type alias Foo =
 type alias Model =
   { form : Form () Foo }
 
-type Action
-  = NoOp
-  | FormAction Form.Action
+type Action =
+  NoOp | FormAction Form.Action
 
 
 -- Setup form validation
@@ -53,12 +56,13 @@ init : (Model, Effects Action)
 init =
   ({ form = Form.initial [] validate }, Effects.none)
 
-validate : Validate () Form
+
+validate : Validation () Foo
 validate =
   form2 Foo
     ("bar" := email)
     ("baz" := bool)
-    
+
 
 -- Forward form actions to Form.update
 
@@ -86,10 +90,10 @@ view address {form} =
       case field.liveError of
         Just error ->
           -- replace toString with your own translations
-          div [ class "error" ] [ text (toString error) ] 
+          div [ class "error" ] [ text (toString error) ]
         Nothing ->
           text ""
-          
+
     -- fields states
     bar = Form.getFieldAsString "bar" form
     baz = Form.getFieldAsBool "baz" form
@@ -98,13 +102,13 @@ view address {form} =
       [ label [] [ text "Bar" ]
       , Input.textInput bar formAddress []
       , errorFor bar
-      
-      , label [] 
+
+      , label []
           [ Input.checkboxInput baz formAddress []
           , text "Baz"
           ]
       , errorFor baz
-      
+
       , button
           [ onClick formAddress Form.submit ]
           [ text "Submit" ]

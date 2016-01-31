@@ -1,11 +1,8 @@
 module Model where
 
-import String
-
 import Form exposing (Form)
 import Form.Field as Field
 import Form.Validate as Validate exposing (..)
-import Form.Error as Error exposing (..)
 
 
 type Action =
@@ -94,6 +91,7 @@ validateSuperpower =
         _ ->
           Err (customError InvalidSuperpower)
     )
+
 
 -- eq. to: int `andThen` (minInt 0)
 naturalInt : Validation CustomError Int
