@@ -7,7 +7,8 @@ module Form
   , updateTextField, updateSelectField, updateCheckField, updateRadioField
   ) where
 
-{-| Simple forms made easy, for Elm.
+{-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
+with state lifecycle and input helpers for the views.
 
 # Types
 @docs Action, Form, FieldState
@@ -73,7 +74,17 @@ initial initialFields validation =
     }
 
 
-{-| Field state containing all necessary data for view and update. -}
+{-| Field state containing all necessary data for view and update,
+can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
+
+ * `path` -- qualified path of the field in the form, with dots for nested fields
+ * `value` -- a `Maybe` of the requested type
+ * `error` -- a `Maybe` of the field error
+ * `liveError` -- same but with added logic for live validation
+    (see [`getLiveErrorAt`](https://github.com/etaque/elm-simple-form/blob/master/src/Form.elm) impl)
+ * `isDirty` -- if the field content has been changed since last validation
+ * `isVisited` -- if the field has got the focus since form init/reset
+ -}
 type alias FieldState e a =
   { path : String
   , value : Maybe a

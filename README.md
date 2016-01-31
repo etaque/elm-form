@@ -100,10 +100,9 @@ view address {form} =
       , errorFor bar
       
       , label [] 
-      , Input.checkboxInput baz formAddress []
-      , text "Baz"
-      ]
-
+          [ Input.checkboxInput baz formAddress []
+          , text "Baz"
+          ]
       , errorFor baz
       
       , button
@@ -131,6 +130,14 @@ port tasks =
 
 
 ## Advanced usage
+
+### Custom inputs
+
+ * For rendering, `Form.getFieldAsString`/`Bool` provides a `FieldState` record with all required fields (see package doc).
+
+ * For event handling, use one of the `Form.update(*)Field` provided.
+
+Overall, having a look at current [helpers source code](https://github.com/etaque/elm-simple-form/blob/master/src/Form/Input.elm) should give you a good idea of the thing.
 
 ### Incremental validation
 
