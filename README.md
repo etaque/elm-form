@@ -2,7 +2,8 @@
 
 Simple forms made easy, for Elm.
 
-_Work in progress_
+    elm package install etaque/elm-simple-form
+
 
 ## Features
 
@@ -12,7 +13,7 @@ _Work in progress_
 * Unlimited fields! See `:+` infix operator (or `apply` function)
 * Nested fields for record composition (`foo.bar.baz`)
 
-[See complete example here.](./example/)
+[See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](./example/))
 
 
 ## Basic usage
