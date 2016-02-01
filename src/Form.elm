@@ -3,7 +3,7 @@ module Form
   , initial, update
   , getFieldAsString, getFieldAsBool
   , getFocus, getErrors, isSubmitted, getOutput
-  , updateFocus, validate, submit, reset
+  , onFocus, onBlur, validate, submit, reset
   , updateTextField, updateSelectField, updateCheckField, updateRadioField
   ) where
 
@@ -23,7 +23,7 @@ with state lifecycle and input helpers for the views.
 @docs getFocus, isSubmitted, getErrors, getOutput
 
 # Field actions
-@docs updateFocus, updateTextField, updateSelectField, updateCheckField, updateRadioField
+@docs onFocus, onBlur, updateTextField, updateSelectField, updateCheckField, updateRadioField
 
 # Global actions
 @docs validate, submit, reset
@@ -55,7 +55,7 @@ type alias Model customError output =
   { fields : Field
   , focus : Maybe String
   , dirtyFields : Set String
-  , visitedFields : Set String
+  , changedFields : Set String
   , isSubmitted : Bool
   , output : Maybe output
   , errors : Error customError
@@ -70,7 +70,7 @@ initial initialFields validation =
     { fields = group initialFields
     , focus = Nothing
     , dirtyFields = Set.empty
-    , visitedFields = Set.empty
+    , changedFields = Set.empty
     , isSubmitted = False
     , output = Nothing
     , errors = GroupErrors Dict.empty
@@ -87,7 +87,7 @@ can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
  * `liveError` - same but with added logic for live validation
     (see [`getLiveErrorAt`](https://github.com/etaque/elm-simple-form/blob/master/src/Form.elm) impl)
  * `isDirty` - if the field content has been changed since last validation
- * `isVisited` - if the field has got the focus since form init/reset
+ * `isChanged` - if the field value has changed since last init/reset
  * `hasFocus` - if the field is currently focused
  -}
 type alias FieldState e a =
@@ -96,7 +96,7 @@ type alias FieldState e a =
   , error : Maybe (Error e)
   , liveError : Maybe (Error e)
   , isDirty : Bool
-  , isVisited : Bool
+  , isChanged : Bool
   , hasFocus : Bool
   }
 
@@ -120,7 +120,7 @@ getField getValue path form =
   , error = getErrorAt path form
   , liveError = getLiveErrorAt path form
   , isDirty = isDirtyAt path form
-  , isVisited = isVisitedAt path form
+  , isChanged = isChangedAt path form
   , hasFocus = getFocus form == Just path
   }
 
@@ -128,17 +128,24 @@ getField getValue path form =
 {-| Form actions for `update`. -}
 type Action
   = NoOp
-  | UpdateFocus String
+  | OnFocus String
+  | OnBlur String
   | UpdateField String Field
   | Validate
   | Submit
   | Reset (List (String, Field))
 
 
-{-| Action to indicate which field currently has focus. -}
-updateFocus : String -> Action
-updateFocus =
-  UpdateFocus
+{-| Field got focus. -}
+onFocus : String -> Action
+onFocus =
+  OnFocus
+
+
+{-| Field lost focus. -}
+onBlur : String -> Action
+onBlur =
+  OnBlur
 
 
 {-| Action to update the content of a text input at the given qualified path. -}
@@ -191,21 +198,27 @@ update action (F model) =
     NoOp ->
       F model
 
-    UpdateFocus name ->
+    OnFocus name ->
       let
         newModel = { model | focus = Just name }
       in
         F newModel
 
+    OnBlur name ->
+      let
+        newModel = { model | focus = Nothing }
+      in
+        F (updateValidate newModel)
+
     UpdateField name field ->
       let
         newFields = setFieldAt name field (F model)
         newDirtyFields = Set.insert name model.dirtyFields
-        newVisitedFields = Set.insert name model.visitedFields
+        newChangedFields = Set.insert name model.changedFields
         newModel = { model
           | fields = newFields
           , dirtyFields = newDirtyFields
-          , visitedFields = newVisitedFields
+          , changedFields = newChangedFields
           }
       in
         F newModel
@@ -224,7 +237,7 @@ update action (F model) =
         newModel = { model
           | fields = group fields
           , dirtyFields = Set.empty
-          , visitedFields = Set.empty
+          , changedFields = Set.empty
           , isSubmitted = False
           , errors = GroupErrors Dict.empty
           }
@@ -295,7 +308,7 @@ getOutput (F model) =
   model.output
 
 
-{-| Get form submission state. Useful to show errors on unvisited fields. -}
+{-| Get form submission state. Useful to show errors on unchanged fields. -}
 isSubmitted : Form e o -> Bool
 isSubmitted (F model) =
   model.isSubmitted
@@ -340,14 +353,14 @@ getErrorAt qualifiedName (F model) =
 
 getLiveErrorAt : String -> Form e o -> Maybe (Error e)
 getLiveErrorAt name form =
-  if isSubmitted form || (isVisitedAt name form && not (isDirtyAt name form))
+  if isSubmitted form || (isChangedAt name form && not (isDirtyAt name form))
     then getErrorAt name form
     else Nothing
 
 
-isVisitedAt : String -> Form e o -> Bool
-isVisitedAt qualifiedName (F model) =
-  Set.member qualifiedName model.visitedFields
+isChangedAt : String -> Form e o -> Bool
+isChangedAt qualifiedName (F model) =
+  Set.member qualifiedName model.changedFields
 
 
 isDirtyAt : String -> Form e o -> Bool

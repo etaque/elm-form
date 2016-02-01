@@ -41,8 +41,8 @@ baseInput t state addr attrs =
       , on "input"
           targetValue
           (\v -> Signal.message addr (Form.updateTextField state.path v))
-      , onFocus addr (Form.updateFocus state.path)
-      , onBlur addr Form.validate
+      , onFocus addr (Form.onFocus state.path)
+      , onBlur addr (Form.onBlur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -68,8 +68,8 @@ textArea state addr attrs =
       [ on "input"
           targetValue
           (\v -> Signal.message addr (Form.updateTextField state.path v))
-      , onBlur addr Form.validate
-      , onFocus addr (Form.updateFocus state.path)
+      , onFocus addr (Form.onFocus state.path)
+      , onBlur addr (Form.onBlur state.path)
       ]
     value = state.value ?= ""
   in
@@ -85,8 +85,8 @@ selectInput options state addr attrs =
       , on "change"
           targetValue
           (\v -> Signal.message addr (Form.updateSelectField state.path v))
-      , onFocus addr (Form.updateFocus state.path)
-      , onBlur addr Form.validate
+      , onFocus addr (Form.onFocus state.path)
+      , onBlur addr (Form.onBlur state.path)
       ]
     buildOption (k, v) =
       option [ value k, selected (state.value == Just k) ] [ text v ]
@@ -104,8 +104,8 @@ checkboxInput state addr attrs =
       , on "change"
           targetChecked
           (\v -> Signal.message addr (Form.updateCheckField state.path v))
-      , onFocus addr (Form.updateFocus state.path)
-      , onBlur addr Form.validate
+      , onFocus addr (Form.onFocus state.path)
+      , onBlur addr (Form.onBlur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -119,7 +119,8 @@ radioInput value state addr attrs =
       [ type' "radio"
       , HtmlAttr.name value
       , checked (state.value == Just value)
-      , onFocus addr (Form.updateFocus state.path)
+      , onFocus addr (Form.onFocus state.path)
+      , onBlur addr (Form.onBlur state.path)
       , on "change"
           targetValue
           (\v -> Signal.message addr (Form.updateRadioField state.path v))
