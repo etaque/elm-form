@@ -137,6 +137,8 @@ get key validation field =
 (:=) =
   get
 
+infixl 5 :=
+
 
 {-| Access given field, wrapped in a `maybe` (Nothing if error).
 
