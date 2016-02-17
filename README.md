@@ -10,7 +10,7 @@ Simple forms made easy, for Elm.
 * Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc ; you either get the desired output value or all field errors
 * HTML inputs helpers with pre-wired handlers for live validation
 * Suite of basic validations, with a way to add your own
-* Unlimited fields! See `:+` infix operator (or `apply` function)
+* Unlimited fields! See `|:` infix operator (or `apply` function)
 * Nested fields for record composition (`foo.bar.baz`)
 
 [See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](./example/))
