@@ -111,7 +111,7 @@ view address {form} =
       , errorFor baz
 
       , button
-          [ onClick formAddress Form.submit ]
+          [ onClick formAddress Form.OnSubmit ]
           [ text "Submit" ]
       ]
 
@@ -140,7 +140,7 @@ port tasks =
 
  * For rendering, `Form.getFieldAsString`/`Bool` provides a `FieldState` record with all required fields (see package doc).
 
- * For event handling, use one of the `Form.update(*)Field` provided.
+ * For event handling, see all field related actions in `Form.Action` type.
 
 Overall, having a look at current [helpers source code](https://github.com/etaque/elm-simple-form/blob/master/src/Form/Input.elm) should give you a good idea of the thing.
 
@@ -183,10 +183,10 @@ import Form.Field as Field
 
 initialFields : List (String, Field)
 initialFields =
-  [ ("power", Field.text "10")
+  [ ("power", Field.Text "10")
   , ("options", Field.group
-      [ ("foo", Field.text "blah")
-      , ("bar", Field.text "meh")
+      [ ("foo", Field.Text "blah")
+      , ("bar", Field.Text "meh")
       ]
     )
   ]
@@ -196,7 +196,7 @@ initialForm =
   Form.initial initialFields validate
 ```
 
-See `Form.Field` functions for more options.
+See `Form.Field` type for more options.
 
 * On demand:
 
