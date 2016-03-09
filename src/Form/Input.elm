@@ -14,7 +14,8 @@ import String
 import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
-import Form exposing (Form, Action, FieldState)
+import Form exposing (Form, Action, FieldState, Action (OnInput, OnFocus, OnBlur))
+import Form.Field exposing (Field(..))
 
 
 {-| An input render Html from a field state, a form and address for actions.
@@ -30,8 +31,8 @@ type alias Input e a =
 
 {-| Untyped input, first param is `type` attribute.
 -}
-baseInput : String -> Input e String
-baseInput t state addr attrs =
+baseInput : String -> (String -> Field) -> Input e String
+baseInput t toField state addr attrs =
   let
     formAttrs =
       [ type' t
@@ -39,9 +40,9 @@ baseInput t state addr attrs =
       , on
           "input"
           targetValue
-          (\v -> Signal.message addr (Form.updateTextField state.path v))
-      , onFocus addr (Form.onFocus state.path)
-      , onBlur addr (Form.onBlur state.path)
+          (\v -> Signal.message addr (OnInput state.path (toField v)))
+      , onFocus addr (OnFocus state.path)
+      , onBlur addr (OnBlur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -51,14 +52,14 @@ baseInput t state addr attrs =
 -}
 textInput : Input e String
 textInput =
-  baseInput "text"
+  baseInput "text" Text
 
 
 {-| Password input.
 -}
 passwordInput : Input e String
 passwordInput =
-  baseInput "password"
+  baseInput "password" Text
 
 
 {-| Textarea.
@@ -70,9 +71,9 @@ textArea state addr attrs =
       [ on
           "input"
           targetValue
-          (\v -> Signal.message addr (Form.updateTextField state.path v))
-      , onFocus addr (Form.onFocus state.path)
-      , onBlur addr (Form.onBlur state.path)
+          (\v -> Signal.message addr (OnInput state.path (Textarea v)))
+      , onFocus addr (OnFocus state.path)
+      , onBlur addr (OnBlur state.path)
       ]
 
     value =
@@ -91,9 +92,9 @@ selectInput options state addr attrs =
       , on
           "change"
           targetValue
-          (\v -> Signal.message addr (Form.updateSelectField state.path v))
-      , onFocus addr (Form.onFocus state.path)
-      , onBlur addr (Form.onBlur state.path)
+          (\v -> Signal.message addr (OnInput state.path (Select v)))
+      , onFocus addr (OnFocus state.path)
+      , onBlur addr (OnBlur state.path)
       ]
 
     buildOption ( k, v ) =
@@ -113,9 +114,9 @@ checkboxInput state addr attrs =
       , on
           "change"
           targetChecked
-          (\v -> Signal.message addr (Form.updateCheckField state.path v))
-      , onFocus addr (Form.onFocus state.path)
-      , onBlur addr (Form.onBlur state.path)
+          (\v -> Signal.message addr (OnInput state.path (Check v)))
+      , onFocus addr (OnFocus state.path)
+      , onBlur addr (OnBlur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -130,12 +131,12 @@ radioInput value state addr attrs =
       [ type' "radio"
       , HtmlAttr.name value
       , checked (state.value == Just value)
-      , onFocus addr (Form.onFocus state.path)
-      , onBlur addr (Form.onBlur state.path)
+      , onFocus addr (OnFocus state.path)
+      , onBlur addr (OnBlur state.path)
       , on
           "change"
           targetValue
-          (\v -> Signal.message addr (Form.updateRadioField state.path v))
+          (\v -> Signal.message addr (OnInput state.path (Radio v)))
       ]
   in
     input (formAttrs ++ attrs) []

@@ -54,13 +54,13 @@ view address {form, userMaybe} =
 
       , formActions
           [ button
-              [ onClick formAddress Form.submit
+              [ onClick formAddress Form.OnSubmit
               , class "btn btn-primary"
               ]
               [ text "Submit" ]
           , text " "
           , button
-              [ onClick formAddress (Form.reset initialFields)
+              [ onClick formAddress (Form.Reset initialFields)
               , class "btn btn-default"
               ]
               [ text "Reset" ]

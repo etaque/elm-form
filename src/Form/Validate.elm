@@ -238,12 +238,12 @@ getErr res =
 -}
 int : Validation e Int
 int v =
-  case v of
-    Text s ->
+  case Field.asString v of
+    Just s ->
       String.toInt s
         |> Result.formatError (\_ -> InvalidInt)
 
-    _ ->
+    Nothing ->
       Err InvalidInt
 
 
@@ -251,12 +251,12 @@ int v =
 -}
 float : Validation e Float
 float v =
-  case v of
-    Text s ->
+  case Field.asString v of
+    Just s ->
       String.toFloat s
         |> Result.formatError (\_ -> InvalidFloat)
 
-    _ ->
+    Nothing ->
       Err InvalidInt
 
 
@@ -264,14 +264,14 @@ float v =
 -}
 string : Validation e String
 string v =
-  case v of
-    Text s ->
+  case Field.asString v of
+    Just s ->
       if String.isEmpty s then
         Err Empty
       else
         Ok s
 
-    _ ->
+    Nothing ->
       Err InvalidString
 
 
@@ -280,14 +280,14 @@ Useful with `oneOf` for optional fields with format validation.
 -}
 emptyString : Validation e String
 emptyString v =
-  case v of
-    Text s ->
+  case Field.asString v of
+    Just s ->
       if String.isEmpty s then
         Ok s
       else
         Err InvalidString
 
-    _ ->
+    Nothing ->
       Ok ""
 
 
@@ -295,11 +295,11 @@ emptyString v =
 -}
 bool : Validation e Bool
 bool v =
-  case v of
-    Check b ->
+  case Field.asBool v of
+    Just b ->
       Ok b
 
-    _ ->
+    Nothing ->
       Ok False
 
 
@@ -307,12 +307,12 @@ bool v =
 -}
 date : Validation e Date
 date v =
-  case v of
-    Text s ->
+  case Field.asString v of
+    Just s ->
       Date.fromString s
         |> Result.formatError (\_ -> InvalidDate)
 
-    _ ->
+    Nothing ->
       Err InvalidDate
 
 
