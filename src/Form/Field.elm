@@ -1,14 +1,12 @@
-module Form.Field (Field(..), at, asString, asBool, text, select, radio, check, group) where
+module Form.Field (Field(..), group, at, asString, asBool) where
 
 {-| Read and write field values.
 
-@docs Field (..)
+# Constructors
+@docs Field, group
 
-# Read field value
+# Value readers
 @docs at, asString, asBool
-
-# Write field value, for init.
-@docs text, select, radio, check, group
 -}
 
 import Dict exposing (Dict)
@@ -19,36 +17,11 @@ import Dict exposing (Dict)
 type Field
   = Group (Dict String Field)
   | Text String
+  | Textarea String
+  | Select String
+  | Radio String
   | Check Bool
   | EmptyField
-
-
-{-| Build a text field value.
--}
-text : String -> Field
-text =
-  Text
-
-
-{-| Build a text field value.
--}
-select : String -> Field
-select =
-  text
-
-
-{-| Build a radio button value.
--}
-radio : String -> Field
-radio =
-  text
-
-
-{-| Build a checkbox value.
--}
-check : Bool -> Field
-check =
-  Check
 
 
 {-| Build a group of values, for nested forms.
@@ -88,6 +61,15 @@ asString : Field -> Maybe String
 asString field =
   case field of
     Text s ->
+      Just s
+
+    Textarea s ->
+      Just s
+
+    Select s ->
+      Just s
+
+    Radio s ->
       Just s
 
     _ ->

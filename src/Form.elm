@@ -1,4 +1,4 @@
-module Form (Action, Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput, onFocus, onBlur, validate, submit, reset, updateTextField, updateSelectField, updateCheckField, updateRadioField) where
+module Form (Action(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput) where
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
@@ -14,12 +14,6 @@ with state lifecycle and input helpers for the views.
 
 # Global state accessors
 @docs getFocus, isSubmitted, getErrors, getOutput
-
-# Field actions
-@docs onFocus, onBlur, updateTextField, updateSelectField, updateCheckField, updateRadioField
-
-# Global actions
-@docs validate, submit, reset
 -}
 
 import Dict exposing (Dict)
@@ -126,73 +120,10 @@ type Action
   = NoOp
   | OnFocus String
   | OnBlur String
-  | UpdateField String Field
+  | OnInput String Field
+  | OnSubmit
   | Validate
-  | Submit
   | Reset (List ( String, Field ))
-
-
-{-| Field got focus.
--}
-onFocus : String -> Action
-onFocus =
-  OnFocus
-
-
-{-| Field lost focus.
--}
-onBlur : String -> Action
-onBlur =
-  OnBlur
-
-
-{-| Action to update the content of a text input at the given qualified path.
--}
-updateTextField : String -> String -> Action
-updateTextField name s =
-  UpdateField name (Text s)
-
-
-{-| Action to update the state of a select input at the given qualified path.
--}
-updateSelectField : String -> String -> Action
-updateSelectField =
-  updateTextField
-
-
-{-| Action to update the state of a radio input at the given qualified path.
--}
-updateRadioField : String -> String -> Action
-updateRadioField =
-  updateTextField
-
-
-{-| Action to update the state of a chekbox input at the given qualified path.
--}
-updateCheckField : String -> Bool -> Action
-updateCheckField name b =
-  UpdateField name (Check b)
-
-
-{-| Action to trigger validation of the form.
--}
-validate : Action
-validate =
-  Validate
-
-
-{-| Action to submit the form.
--}
-submit : Action
-submit =
-  Submit
-
-
-{-| Action to reset the form with the given fields.
--}
-reset : List ( String, Field ) -> Action
-reset =
-  Reset
 
 
 {-| Update form state with the given action.
@@ -212,18 +143,37 @@ update action (F model) =
 
     OnBlur name ->
       let
+        newDirtyFields =
+          Set.remove name model.dirtyFields
+
         newModel =
-          { model | focus = Nothing }
+          { model | focus = Nothing, dirtyFields = newDirtyFields }
       in
         F (updateValidate newModel)
 
-    UpdateField name field ->
+    OnInput name field ->
       let
         newFields =
           setFieldAt name field (F model)
 
+        _ = Debug.log name field
+
+        isDirty =
+          case field of
+            Text _ ->
+              True
+
+            Textarea _ ->
+              True
+
+            _ ->
+              False
+
         newDirtyFields =
-          Set.insert name model.dirtyFields
+          if isDirty then
+            Set.insert name model.dirtyFields
+          else
+            model.dirtyFields
 
         newChangedFields =
           Set.insert name model.changedFields
@@ -235,17 +185,17 @@ update action (F model) =
             , changedFields = newChangedFields
           }
       in
-        F newModel
+        F (updateValidate newModel)
 
-    Validate ->
-      F (updateValidate model)
-
-    Submit ->
+    OnSubmit ->
       let
         validatedModel =
           updateValidate model
       in
         F { validatedModel | isSubmitted = True }
+
+    Validate ->
+      F (updateValidate model)
 
     Reset fields ->
       let
@@ -266,15 +216,17 @@ updateValidate model =
   case model.validation model.fields of
     Ok output ->
       { model
-        | errors = GroupErrors Dict.empty
-        , dirtyFields = Set.empty
+        | errors =
+            GroupErrors Dict.empty
+            -- , dirtyFields = Set.empty
         , output = Just output
       }
 
     Err error ->
       { model
-        | errors = error
-        , dirtyFields = Set.empty
+        | errors =
+            error
+            -- , dirtyFields = Set.empty
         , output = Nothing
       }
 

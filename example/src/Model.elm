@@ -40,9 +40,9 @@ type Superpower = Flying | Invisible
 
 initialFields : List (String, Field.Field)
 initialFields =
-  [ ("name", Field.text "hey")
+  [ ("name", Field.Text "hey")
   , ("profile", Field.group
-       [ ("foo", Field.radio "ho") ]
+       [ ("foo", Field.Radio "ho") ]
     )
   ]
 

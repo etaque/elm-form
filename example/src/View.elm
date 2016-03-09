@@ -26,7 +26,7 @@ view address {form, userMaybe} =
         Just user ->
           onClick address (SubmitUser user)
         Nothing ->
-          onClick formAddress Form.submit
+          onClick formAddress Form.OnSubmit
   in
     div
       [ class "form-horizontal"
@@ -66,7 +66,7 @@ view address {form, userMaybe} =
               [ text "Submit" ]
           , text " "
           , button
-              [ onClick formAddress (Form.reset initialFields)
+              [ onClick formAddress (Form.Reset initialFields)
               , class "btn btn-default"
               ]
               [ text "Reset" ]
