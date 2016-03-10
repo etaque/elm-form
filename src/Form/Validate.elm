@@ -1,4 +1,4 @@
-module Form.Validate (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, (:=), (?=), (|:), form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf) where
+module Form.Validate (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf) where
 
 {-| Form validation.
 
@@ -16,9 +16,6 @@ module Form.Validate (Validation, get, map, andThen, pipeTo, apply, customError,
 
 # Custom validations
 @docs fail, succeed, customValidation, oneOf
-
-# Infix operators
-@docs (:=), (?=), (|:)
 -}
 
 import Result
@@ -67,8 +64,8 @@ pipeTo =
 {-| Incremental form validation for records with more that 8 fields.
 
     Form.succeed SomeRecord
-      `apply` ("foo" := string)
-      `apply` ("bar" := string)
+      `apply` ("foo" `at` string)
+      `apply` ("bar" `at` string)
 -}
 apply : Validation e (a -> b) -> Validation e a -> Validation e b
 apply partialValidation aValidation field =
@@ -78,18 +75,6 @@ apply partialValidation aValidation field =
 
     ( partialResult, aResult ) ->
       Err (mergeMany [ getErr partialResult, getErr aResult ])
-
-
-{-| Infix version of `apply`:
-
-    Form.succeed SomeRecord
-      |: ("foo" := string)
-      |: ("bar" := string)
-
--}
-(|:) : Validation e (a -> b) -> Validation e a -> Validation e b
-(|:) =
-  apply
 
 
 {-| Rescue a failed validation with the supplied value.
@@ -124,25 +109,6 @@ get key validation field =
     |> validation
     |> Result.formatError
         (\e -> GroupErrors (Dict.fromList [ ( key, e ) ]))
-
-
-{-| Infix version of `get`.
-
-    "name" := string
--}
-(:=) : String -> Validation e a -> Validation e a
-(:=) =
-  get
-infixl 5 :=
-
-
-{-| Access given field, wrapped in a `maybe` (Nothing if error).
-
-    "hobby" ?= string
--}
-(?=) : String -> Validation e a -> Validation e (Maybe a)
-(?=) s v =
-  maybe (get s v)
 
 
 {-| Validation a form with one field.
