@@ -53,16 +53,19 @@ type alias Model customError output =
 -}
 initial : List ( String, Field ) -> Validation e output -> Form e output
 initial initialFields validation =
-  F
-    <| { fields = group initialFields
-       , focus = Nothing
-       , dirtyFields = Set.empty
-       , changedFields = Set.empty
-       , isSubmitted = False
-       , output = Nothing
-       , errors = GroupErrors Dict.empty
-       , validation = validation
-       }
+  let
+    model =
+      { fields = group initialFields
+      , focus = Nothing
+      , dirtyFields = Set.empty
+      , changedFields = Set.empty
+      , isSubmitted = False
+      , output = Nothing
+      , errors = GroupErrors Dict.empty
+      , validation = validation
+      }
+  in
+    F (updateValidate model)
 
 
 {-| Field state containing all necessary data for view and update,
@@ -156,7 +159,8 @@ update action (F model) =
         newFields =
           setFieldAt name field (F model)
 
-        _ = Debug.log name field
+        _ =
+          Debug.log name field
 
         isDirty =
           case field of
@@ -218,7 +222,6 @@ updateValidate model =
       { model
         | errors =
             GroupErrors Dict.empty
-            -- , dirtyFields = Set.empty
         , output = Just output
       }
 
@@ -226,7 +229,6 @@ updateValidate model =
       { model
         | errors =
             error
-            -- , dirtyFields = Set.empty
         , output = Nothing
       }
 
