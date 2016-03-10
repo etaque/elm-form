@@ -361,8 +361,8 @@ maxFloat max i field =
 
 {-| Validates format of the string.
 -}
-format : String -> Regex -> Validation e String
-format s regex field =
+format : Regex -> String -> Validation e String
+format regex s field =
   if Regex.contains regex s then
     Ok s
   else
@@ -383,7 +383,7 @@ email : Validation e String
 email =
   string
     `andThen` (\s ->
-                format s validEmailPattern
+                format validEmailPattern s
                   |> formatError (\_ -> InvalidEmail)
               )
 
@@ -400,7 +400,7 @@ url : Validation e String
 url =
   string
     `andThen` (\s ->
-                format s validUrlPattern
+                format validUrlPattern s
                   |> formatError (\_ -> InvalidUrl)
               )
 
