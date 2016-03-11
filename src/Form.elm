@@ -121,10 +121,10 @@ getField getValue path form =
 -}
 type Action
   = NoOp
-  | OnFocus String
-  | OnBlur String
-  | OnInput String Field
-  | OnSubmit
+  | Focus String
+  | Blur String
+  | Input String Field
+  | Submit
   | Validate
   | Reset (List ( String, Field ))
 
@@ -137,14 +137,14 @@ update action (F model) =
     NoOp ->
       F model
 
-    OnFocus name ->
+    Focus name ->
       let
         newModel =
           { model | focus = Just name }
       in
         F newModel
 
-    OnBlur name ->
+    Blur name ->
       let
         newDirtyFields =
           Set.remove name model.dirtyFields
@@ -154,7 +154,7 @@ update action (F model) =
       in
         F (updateValidate newModel)
 
-    OnInput name field ->
+    Input name field ->
       let
         newFields =
           setFieldAt name field (F model)
@@ -191,7 +191,7 @@ update action (F model) =
       in
         F (updateValidate newModel)
 
-    OnSubmit ->
+    Submit ->
       let
         validatedModel =
           updateValidate model

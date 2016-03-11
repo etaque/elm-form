@@ -26,7 +26,7 @@ view address {form, userMaybe} =
         Just user ->
           onClick address (SubmitUser user)
         Nothing ->
-          onClick formAddress Form.OnSubmit
+          onClick formAddress Form.Submit
   in
     div
       [ class "form-horizontal"

@@ -14,7 +14,7 @@ import String
 import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
-import Form exposing (Form, Action, FieldState, Action (OnInput, OnFocus, OnBlur))
+import Form exposing (Form, Action, FieldState, Action (Input, Focus, Blur))
 import Form.Field exposing (Field(..))
 
 
@@ -40,9 +40,9 @@ baseInput t toField state addr attrs =
       , on
           "input"
           targetValue
-          (\v -> Signal.message addr (OnInput state.path (toField v)))
-      , onFocus addr (OnFocus state.path)
-      , onBlur addr (OnBlur state.path)
+          (\v -> Signal.message addr (Input state.path (toField v)))
+      , onFocus addr (Focus state.path)
+      , onBlur addr (Blur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -71,9 +71,9 @@ textArea state addr attrs =
       [ on
           "input"
           targetValue
-          (\v -> Signal.message addr (OnInput state.path (Textarea v)))
-      , onFocus addr (OnFocus state.path)
-      , onBlur addr (OnBlur state.path)
+          (\v -> Signal.message addr (Input state.path (Textarea v)))
+      , onFocus addr (Focus state.path)
+      , onBlur addr (Blur state.path)
       ]
 
     value =
@@ -92,9 +92,9 @@ selectInput options state addr attrs =
       , on
           "change"
           targetValue
-          (\v -> Signal.message addr (OnInput state.path (Select v)))
-      , onFocus addr (OnFocus state.path)
-      , onBlur addr (OnBlur state.path)
+          (\v -> Signal.message addr (Input state.path (Select v)))
+      , onFocus addr (Focus state.path)
+      , onBlur addr (Blur state.path)
       ]
 
     buildOption ( k, v ) =
@@ -114,9 +114,9 @@ checkboxInput state addr attrs =
       , on
           "change"
           targetChecked
-          (\v -> Signal.message addr (OnInput state.path (Check v)))
-      , onFocus addr (OnFocus state.path)
-      , onBlur addr (OnBlur state.path)
+          (\v -> Signal.message addr (Input state.path (Check v)))
+      , onFocus addr (Focus state.path)
+      , onBlur addr (Blur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -131,12 +131,12 @@ radioInput value state addr attrs =
       [ type' "radio"
       , HtmlAttr.name value
       , checked (state.value == Just value)
-      , onFocus addr (OnFocus state.path)
-      , onBlur addr (OnBlur state.path)
+      , onFocus addr (Focus state.path)
+      , onBlur addr (Blur state.path)
       , on
           "change"
           targetValue
-          (\v -> Signal.message addr (OnInput state.path (Radio v)))
+          (\v -> Signal.message addr (Input state.path (Radio v)))
       ]
   in
     input (formAttrs ++ attrs) []
