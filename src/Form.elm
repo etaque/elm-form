@@ -159,9 +159,6 @@ update action (F model) =
         newFields =
           setFieldAt name field (F model)
 
-        _ =
-          Debug.log name field
-
         isDirty =
           case field of
             Text _ ->
