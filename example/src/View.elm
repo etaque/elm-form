@@ -21,6 +21,12 @@ view address {form, userMaybe} =
       ("", "--") :: (List.map (\i -> (i, String.toUpper i)) roles)
     superpowerOptions =
       List.map (\i -> (i, String.toUpper i)) superpowers
+    submitClick =
+      case Form.getOutput form of
+        Just user ->
+          onClick address (SubmitUser user)
+        Nothing ->
+          onClick formAddress Form.Submit
   in
     div
       [ class "form-horizontal"
@@ -54,19 +60,19 @@ view address {form, userMaybe} =
 
       , formActions
           [ button
-              [ onClick formAddress Form.submit
+              [ submitClick
               , class "btn btn-primary"
               ]
               [ text "Submit" ]
           , text " "
           , button
-              [ onClick formAddress (Form.reset initialFields)
+              [ onClick formAddress (Form.Reset initialFields)
               , class "btn btn-default"
               ]
               [ text "Reset" ]
           ]
 
-      , case Form.getOutput form of
+      , case userMaybe of
           Just user ->
             p [ class "alert alert-success" ] [ text (toString user) ]
           Nothing ->

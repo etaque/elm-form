@@ -7,13 +7,15 @@ Simple forms made easy, for Elm.
 
 ## Features
 
-* Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc ; you either get the desired output value or all field errors
+* Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc: you either get the desired output value or all field errors
 * HTML inputs helpers with pre-wired handlers for live validation
 * Suite of basic validations, with a way to add your own
-* Unlimited fields! See `:+` infix operator (or `apply` function)
+* Unlimited fields! See `apply` function, similar to Json.Extra
 * Nested fields for record composition (`foo.bar.baz`)
 
-[See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](./example/))
+[See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](./example/)).
+
+Infix operators have been splitted to a [dedicated package](https://github.com/etaque/elm-simple-form-infix).
 
 
 ## Basic usage
@@ -61,8 +63,8 @@ init =
 validate : Validation () Foo
 validate =
   form2 Foo
-    ("bar" := email)
-    ("baz" := bool)
+    (get "bar" email)
+    (get "baz" bool)
 
 
 -- Forward form actions to Form.update
@@ -111,7 +113,7 @@ view address {form} =
       , errorFor baz
 
       , button
-          [ onClick formAddress Form.submit ]
+          [ onClick formAddress Form.OnSubmit ]
           [ text "Submit" ]
       ]
 
@@ -140,18 +142,18 @@ port tasks =
 
  * For rendering, `Form.getFieldAsString`/`Bool` provides a `FieldState` record with all required fields (see package doc).
 
- * For event handling, use one of the `Form.update(*)Field` provided.
+ * For event handling, see all field related actions in `Form.Action` type.
 
 Overall, having a look at current [helpers source code](https://github.com/etaque/elm-simple-form/blob/master/src/Form/Input.elm) should give you a good idea of the thing.
 
 ### Incremental validation
 
-Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version:
+Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version from [infix package](https://github.com/etaque/elm-simple-form-infix):
 
 ```elm
 Form.succeed Player
-  |: ("email" := string `andThen` email)
-  |: ("power" := int)
+  `apply` (get "email" (string `andThen` email))
+  `apply` (get "power" int)
 ```
 
 ### Nested records
@@ -161,11 +163,14 @@ Form.succeed Player
 ```elm
 validate =
   form2 Player
-    ("email" := string `andThen` email)
-    ("power" := int `andThen` (minInt 0))
-    ("options" := form2 Options
-      ("foo" := string)
-      ("bar" := string))
+    (get "email" (string `andThen` email))
+    (get "power" (int `andThen` (minInt 0)))
+    (get "options"
+      (form2 Options
+        (get "foo" string)
+        (get "bar" string)
+      )
+    )
 ```
 
 * View:
@@ -183,10 +188,10 @@ import Form.Field as Field
 
 initialFields : List (String, Field)
 initialFields =
-  [ ("power", Field.text "10")
+  [ ("power", Field.Text "10")
   , ("options", Field.group
-      [ ("foo", Field.text "blah")
-      , ("bar", Field.text "meh")
+      [ ("foo", Field.Text "blah")
+      , ("bar", Field.Text "meh")
       ]
     )
   ]
@@ -196,7 +201,7 @@ initialForm =
   Form.initial initialFields validate
 ```
 
-See `Form.Field` functions for more options.
+See `Form.Field` type for more options.
 
 * On demand:
 
@@ -212,7 +217,7 @@ type LocalError = Fatal | NotSoBad
 
 validate : Validate LocalError Foo
 validate =
-  ("foo" := string |> customError Fatal)
+  (get "foo" (string |> customError Fatal))
 
 -- creates `Form.Error.CustomError Fatal`
 ```
