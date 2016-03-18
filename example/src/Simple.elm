@@ -28,6 +28,9 @@ type alias Model =
 type Action =
   NoOp | FormAction Form.Action
 
+(:=) =
+  Validate.get
+infixl 7 :=
 
 -- Setup form validation
 
@@ -89,7 +92,7 @@ view address {form} =
       , errorFor baz
 
       , button
-          [ onClick formAddress Form.submit ]
+          [ onClick formAddress Form.Submit ]
           [ text "Submit" ]
       ]
 
