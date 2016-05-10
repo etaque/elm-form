@@ -1,13 +1,13 @@
-module Model (..) where
+module Model exposing (..)
 
 import Form exposing (Form)
 import Form.Field as Field
 import Form.Validate as Validate exposing (..)
 
 
-type Action
+type Msg
   = NoOp
-  | FormAction Form.Action
+  | FormMsg Form.Msg
   | SubmitUser User
 
 

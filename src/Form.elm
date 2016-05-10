@@ -1,10 +1,10 @@
-module Form (Action(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput) where
+module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput)
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
 
 # Types
-@docs Action, Form, FieldState
+@docs Msg, Form, FieldState
 
 # Init/update lifecyle
 @docs initial, update
@@ -117,9 +117,9 @@ getField getValue path form =
   }
 
 
-{-| Form actions for `update`.
+{-| Form messages for `update`.
 -}
-type Action
+type Msg
   = NoOp
   | Focus String
   | Blur String
@@ -129,11 +129,11 @@ type Action
   | Reset (List ( String, Field ))
 
 
-{-| Update form state with the given action.
+{-| Update form state with the given message
 -}
-update : Action -> Form e output -> Form e output
-update action (F model) =
-  case action of
+update : Msg -> Form e output -> Form e output
+update msg (F model) =
+  case msg of
     NoOp ->
       F model
 

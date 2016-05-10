@@ -1,4 +1,4 @@
-module Form.Input (Input, baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput, dumpErrors) where
+module Form.Input exposing (Input, baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput, dumpErrors)
 
 {-|
 @docs Input
@@ -8,21 +8,21 @@ module Form.Input (Input, baseInput, textInput, passwordInput, textArea, checkbo
 @docs dumpErrors
 -}
 
-import Signal exposing (Address)
 import Maybe exposing (andThen)
 import String
 import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
-import Form exposing (Form, Action, FieldState, Action (Input, Focus, Blur))
+import Json.Decode as Json
+import Form exposing (Form, Msg, FieldState, Msg (Input, Focus, Blur))
 import Form.Field exposing (Field(..))
 
 
-{-| An input render Html from a field state, a form and address for actions.
+{-| An input render Html from a field state, a form and address for messages.
 All input functions using this type alias are pre-wired with event handlers.
 -}
 type alias Input e a =
-  FieldState e a -> Address Action -> List Attribute -> Html
+  FieldState e a -> List (Attribute Msg) -> Html Msg
 
 
 (?=) =
@@ -32,17 +32,14 @@ type alias Input e a =
 {-| Untyped input, first param is `type` attribute.
 -}
 baseInput : String -> (String -> Field) -> Input e String
-baseInput t toField state addr attrs =
+baseInput t toField state attrs =
   let
     formAttrs =
       [ type' t
       , value (state.value ?= "")
-      , on
-          "input"
-          targetValue
-          (\v -> Signal.message addr (Input state.path (toField v)))
-      , onFocus addr (Focus state.path)
-      , onBlur addr (Blur state.path)
+      , onInput (toField >> (Input state.path))
+      , onFocus (Focus state.path)
+      , onBlur (Blur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -65,15 +62,12 @@ passwordInput =
 {-| Textarea.
 -}
 textArea : Input e String
-textArea state addr attrs =
+textArea state attrs =
   let
     formAttrs =
-      [ on
-          "input"
-          targetValue
-          (\v -> Signal.message addr (Input state.path (Textarea v)))
-      , onFocus addr (Focus state.path)
-      , onBlur addr (Blur state.path)
+      [ onInput (Textarea >> (Input state.path))
+      , onFocus (Focus state.path)
+      , onBlur (Blur state.path)
       ]
 
     value =
@@ -85,16 +79,14 @@ textArea state addr attrs =
 {-| Select input.
 -}
 selectInput : List ( String, String ) -> Input e String
-selectInput options state addr attrs =
+selectInput options state attrs =
   let
     formAttrs =
-      [ type' "checkbox"
-      , on
+      [ on
           "change"
-          targetValue
-          (\v -> Signal.message addr (Input state.path (Select v)))
-      , onFocus addr (Focus state.path)
-      , onBlur addr (Blur state.path)
+          (targetValue |> Json.map (Select >> (Input state.path)))
+      , onFocus (Focus state.path)
+      , onBlur (Blur state.path)
       ]
 
     buildOption ( k, v ) =
@@ -106,17 +98,14 @@ selectInput options state addr attrs =
 {-| Checkbox input.
 -}
 checkboxInput : Input e Bool
-checkboxInput state addr attrs =
+checkboxInput state attrs =
   let
     formAttrs =
       [ type' "checkbox"
       , checked (state.value ?= False)
-      , on
-          "change"
-          targetChecked
-          (\v -> Signal.message addr (Input state.path (Check v)))
-      , onFocus addr (Focus state.path)
-      , onBlur addr (Blur state.path)
+      , onCheck (Check >> (Input state.path))
+      , onFocus (Focus state.path)
+      , onBlur (Blur state.path)
       ]
   in
     input (formAttrs ++ attrs) []
@@ -125,18 +114,17 @@ checkboxInput state addr attrs =
 {-| Radio input.
 -}
 radioInput : String -> Input e String
-radioInput value state addr attrs =
+radioInput value state attrs =
   let
     formAttrs =
       [ type' "radio"
       , HtmlAttr.name value
       , checked (state.value == Just value)
-      , onFocus addr (Focus state.path)
-      , onBlur addr (Blur state.path)
+      , onFocus (Focus state.path)
+      , onBlur (Blur state.path)
       , on
           "change"
-          targetValue
-          (\v -> Signal.message addr (Input state.path (Radio v)))
+          (targetValue |> Json.map (Radio >> (Input state.path)))
       ]
   in
     input (formAttrs ++ attrs) []
@@ -144,7 +132,7 @@ radioInput value state addr attrs =
 
 {-| Dump all form errors in a `<pre>` tag. Useful for debugging.
 -}
-dumpErrors : Form e o -> Html
+dumpErrors : Form e o -> Html Msg
 dumpErrors form =
   let
     line ( name, error ) =

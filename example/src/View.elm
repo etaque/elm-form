@@ -1,32 +1,36 @@
-module View where
+module View exposing (..)
 
 import String
-
+import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-
 import Form exposing (Form)
-import Form.Input
-
 import Model exposing (..)
 import View.Bootstrap exposing (..)
 
 
-view : Signal.Address Action -> Model -> Html
-view address {form, userMaybe} =
+view : Model -> Html Msg
+view {form, userMaybe} =
+  div
+    []
+    [ Html.map FormMsg (formView form)
+    , case userMaybe of
+        Just user ->
+          p [ class "alert alert-success" ] [ text (toString user) ]
+        Nothing ->
+          text ""
+
+    ]
+
+
+formView : Form CustomError User -> Html Form.Msg
+formView form =
   let
-    formAddress = Signal.forwardTo address FormAction
     roleOptions =
       ("", "--") :: (List.map (\i -> (i, String.toUpper i)) roles)
     superpowerOptions =
       List.map (\i -> (i, String.toUpper i)) superpowers
-    submitClick =
-      case Form.getOutput form of
-        Just user ->
-          onClick address (SubmitUser user)
-        Nothing ->
-          onClick formAddress Form.Submit
   in
     div
       [ class "form-horizontal"
@@ -34,52 +38,43 @@ view address {form, userMaybe} =
       ]
       [ legend [] [ text "Elm Simple Form example" ]
 
-      , textGroup "Name" formAddress
+      , textGroup "Name"
           (Form.getFieldAsString "name" form)
 
-      , textGroup "Email address" formAddress
+      , textGroup "Email address"
           (Form.getFieldAsString "email" form)
 
-      , checkboxGroup "Administrator" formAddress
+      , checkboxGroup "Administrator"
           (Form.getFieldAsBool "admin" form)
 
-      , textGroup "Website" formAddress
+      , textGroup "Website"
           (Form.getFieldAsString "profile.website" form)
 
-      , selectGroup roleOptions "Role" formAddress
+      , selectGroup roleOptions "Role"
           (Form.getFieldAsString "profile.role" form)
 
-      , radioGroup superpowerOptions "Superpower" formAddress
+      , radioGroup superpowerOptions "Superpower"
           (Form.getFieldAsString "profile.superpower" form)
 
-      , textGroup "Age" formAddress
+      , textGroup "Age"
           (Form.getFieldAsString "profile.age" form)
 
-      , textAreaGroup "Bio" formAddress
+      , textAreaGroup "Bio"
           (Form.getFieldAsString "profile.bio" form)
 
       , formActions
           [ button
-              [ submitClick
+              [ onClick Form.Submit
               , class "btn btn-primary"
               ]
               [ text "Submit" ]
           , text " "
           , button
-              [ onClick formAddress (Form.Reset initialFields)
+              [ onClick (Form.Reset initialFields)
               , class "btn btn-default"
               ]
               [ text "Reset" ]
           ]
-
-      , case userMaybe of
-          Just user ->
-            p [ class "alert alert-success" ] [ text (toString user) ]
-          Nothing ->
-            text ""
-
-      -- , hr [] []
-      -- , Form.Input.dumpErrors form
       ]
 
 

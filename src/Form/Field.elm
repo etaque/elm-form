@@ -1,4 +1,4 @@
-module Form.Field (Field(..), group, at, asString, asBool) where
+module Form.Field exposing (Field(..), group, at, asString, asBool)
 
 {-| Read and write field values.
 

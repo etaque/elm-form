@@ -1,27 +1,24 @@
-module Update where
+module Update exposing (..)
 
-import Effects exposing (Effects)
 import Form exposing (Form)
-
 import Model exposing (..)
 
 
-init : (Model, Effects Action)
+init : (Model, Cmd Msg)
 init =
-  ({ form = Form.initial initialFields validate, userMaybe = Nothing }, Effects.none)
+  ({ form = Form.initial initialFields validate, userMaybe = Nothing }, Cmd.none)
 
 
-update : Action -> Model -> (Model, Effects Action)
-update action ({form} as model) =
-  case action of
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg ({form} as model) =
+  case msg of
 
     NoOp ->
-      (model, Effects.none)
+      (model, Cmd.none)
 
-    FormAction formAction ->
-      ({ model | form = Form.update formAction form}, Effects.none)
+    FormMsg formMsg ->
+      ({ model | form = Form.update formMsg form}, Cmd.none)
 
     SubmitUser user ->
-      ({ model | userMaybe = Just user }, Effects.none)
-
+      ({ model | userMaybe = Just user }, Cmd.none)
 

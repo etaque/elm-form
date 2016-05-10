@@ -1,12 +1,9 @@
-module Main where
+module Main exposing (..)
 
-import StartApp
-import Task exposing (Task)
-import Effects exposing (Effects)
+import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-
 import Form exposing (Form)
 import Form.Validate as Validate exposing (..)
 import Form.Input as Input
@@ -20,50 +17,51 @@ type alias Foo =
   }
 
 
--- Add form to your model and actions
+-- Add form to your model and msgs
 
 type alias Model =
   { form : Form () Foo }
 
-type Action =
-  NoOp | FormAction Form.Action
+type Msg =
+  NoOp | FormMsg Form.Msg
 
 
 -- Setup form validation
 
-init : (Model, Effects Action)
+init : (Model, Cmd Msg)
 init =
-  ({ form = Form.initial [] validate }, Effects.none)
+  ({ form = Form.initial [] validate }, Cmd.none)
 
 
 validate : Validation () Foo
 validate =
   form2 Foo
-    ("bar" := email)
-    ("baz" := bool)
+    (get "bar" email)
+    (get "baz" bool)
 
 
--- Forward form actions to Form.update
+-- Forward form msgs to Form.update
 
-update : Action -> Model -> (Model, Effects Action)
-update action ({form} as model) =
-  case action of
+update : Msg -> Model -> (Model, Cmd Msg)
+update msg ({form} as model) =
+  case msg of
 
     NoOp ->
-      (model, Effects.none)
+      (model, Cmd.none)
 
-    FormAction formAction ->
-      ({ model | form = Form.update formAction form}, Effects.none)
+    FormMsg formMsg ->
+      ({ model | form = Form.update formMsg form}, Cmd.none)
 
 
 -- Render form with Input helpers
 
-view : Signal.Address Action -> Model -> Html
-view address {form} =
-  let
-    -- Address for Form events
-    formAddress = Signal.forwardTo address FormAction
+view : Model -> Html Msg
+view {form} =
+  Html.map FormMsg (formView form)
 
+formView : Form () Foo -> Html Form.Msg
+formView form =
+  let
     -- error presenter
     errorFor field =
       case field.liveError of
@@ -79,33 +77,25 @@ view address {form} =
   in
     div []
       [ label [] [ text "Bar" ]
-      , Input.textInput bar formAddress []
+      , Input.textInput bar []
       , errorFor bar
 
       , label []
-          [ Input.checkboxInput baz formAddress []
+          [ Input.checkboxInput baz []
           , text "Baz"
           ]
       , errorFor baz
 
       , button
-          [ onClick formAddress Form.submit ]
+          [ onClick Form.Submit ]
           [ text "Submit" ]
       ]
 
 
--- Classic StartApp wiring
-
-app = StartApp.start
+app = Html.program
   { init = init
   , update = update
   , view = view
-  , inputs = [ ]
+  , subscriptions = \_ -> Sub.none
   }
 
-main =
-  app.html
-
-port tasks : Signal (Task Effects.Never ())
-port tasks =
-  app.tasks

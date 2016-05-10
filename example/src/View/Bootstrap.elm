@@ -1,28 +1,26 @@
-module View.Bootstrap where
+module View.Bootstrap exposing (..)
 
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Html.Events exposing (..)
-
 import Form exposing (Form, FieldState)
 import Form.Input as Input
 import Form.Error exposing (Error)
-
 import Model exposing (..)
 
-row : List Html -> Html
+
+row : List (Html Form.Msg) -> Html Form.Msg
 row content =
   div [ class "row" ] content
 
-col' : Int -> List Html -> Html
+col' : Int -> List (Html Form.Msg) -> Html Form.Msg
 col' i content =
   div [ class ("col-xs-" ++ toString i) ] content
 
 
-type alias GroupBuilder a = String -> Signal.Address Form.Action -> FieldState CustomError a -> Html
+type alias GroupBuilder a = String -> FieldState CustomError a -> Html Form.Msg
 
 
-formGroup : String -> Maybe (Error CustomError) -> List Html -> Html
+formGroup : String -> Maybe (Error CustomError) -> List (Html Form.Msg) -> Html Form.Msg
 formGroup label' maybeError inputs =
   div
     [ class ("row form-group " ++ (errorClass maybeError)) ]
@@ -35,31 +33,31 @@ formGroup label' maybeError inputs =
     ]
 
 
-formActions : List Html -> Html
+formActions : List (Html Form.Msg) -> Html Form.Msg
 formActions content =
   row
     [ div [ class "col-xs-offset-3 col-xs-9" ] content ]
 
 
 textGroup : GroupBuilder String
-textGroup label' address state =
+textGroup label' state =
   formGroup label' state.liveError
-    [ Input.textInput state address [ class "form-control" ] ]
+    [ Input.textInput state [ class "form-control" ] ]
 
 
 textAreaGroup : GroupBuilder String
-textAreaGroup label' address state =
+textAreaGroup label' state =
   formGroup label' state.liveError
-    [ Input.textArea state address [ class "form-control" ] ]
+    [ Input.textArea state [ class "form-control" ] ]
 
 
 checkboxGroup : GroupBuilder Bool
-checkboxGroup label' address state =
+checkboxGroup label' state =
   formGroup "" state.liveError
     [ div
         [ class "checkbox" ]
         [ label []
-            [ Input.checkboxInput state address []
+            [ Input.checkboxInput state []
             , text label'
             ]
         ]
@@ -67,18 +65,18 @@ checkboxGroup label' address state =
 
 
 selectGroup : List (String, String) -> GroupBuilder String
-selectGroup options label' address state =
+selectGroup options label' state =
   formGroup label' state.liveError
-    [ Input.selectInput options state address [ class "form-control" ] ]
+    [ Input.selectInput options state [ class "form-control" ] ]
 
 
 radioGroup : List (String, String) -> GroupBuilder String
-radioGroup options label' address state =
+radioGroup options label' state =
   let
     item (v, l) =
       label
         [ class "radio-inline" ]
-        [ Input.radioInput state.path state address [ value v ]
+        [ Input.radioInput state.path state [ value v ]
         , text l
         ]
   in
@@ -91,7 +89,7 @@ errorClass maybeError =
   Maybe.map (\_ -> "has-error") maybeError |> Maybe.withDefault ""
 
 
-errorMessage : Maybe (Error CustomError) -> Html
+errorMessage : Maybe (Error CustomError) -> Html Form.Msg
 errorMessage maybeError =
   case maybeError of
     Just error ->

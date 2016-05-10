@@ -1,4 +1,4 @@
-module Form.Error (Error(..), getAt) where
+module Form.Error exposing (Error(..), getAt)
 
 {-| Validation errors.
 
