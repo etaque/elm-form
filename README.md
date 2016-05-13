@@ -21,7 +21,8 @@ Infix operators have been splitted to a [dedicated package](https://github.com/e
 ## Basic usage
 
 
-```elmmodule Main exposing (..)
+```elm
+module Main exposing (..)
 
 import Html.App as Html
 import Html exposing (..)
