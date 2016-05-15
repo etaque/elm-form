@@ -1,6 +1,6 @@
 # Elm SimpleForm
 
-Simple forms made easy, for Elm.
+HTML live forms builders and validation for Elm.
 
     elm package install etaque/elm-simple-form
 
