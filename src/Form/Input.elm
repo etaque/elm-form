@@ -65,15 +65,14 @@ textArea : Input e String
 textArea state attrs =
   let
     formAttrs =
-      [ onInput (Textarea >> (Input state.path))
+      [ value (state.value ?= "")
+      , onInput (Textarea >> (Input state.path))
       , onFocus (Focus state.path)
       , onBlur (Blur state.path)
       ]
 
-    value =
-      state.value ?= ""
   in
-    Html.textarea (formAttrs ++ attrs) [ text value ]
+    Html.textarea (formAttrs ++ attrs) []
 
 
 {-| Select input.
