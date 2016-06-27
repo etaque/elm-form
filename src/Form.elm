@@ -206,10 +206,9 @@ update msg (F model) =
             , dirtyFields = Set.empty
             , changedFields = Set.empty
             , isSubmitted = False
-            , errors = GroupErrors Dict.empty
           }
       in
-        F newModel
+        F (updateValidate newModel)
 
 
 updateValidate : Model e o -> Model e o
