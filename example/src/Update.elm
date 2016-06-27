@@ -17,8 +17,10 @@ update msg ({form} as model) =
       (model, Cmd.none)
 
     FormMsg formMsg ->
-      ({ model | form = Form.update formMsg form}, Cmd.none)
+      case ( formMsg, Form.getOutput form ) of
+        ( Form.Submit, Just user ) ->
+          ({ model | userMaybe = Just user }, Cmd.none)
 
-    SubmitUser user ->
-      ({ model | userMaybe = Just user }, Cmd.none)
+        _ ->
+          ({ model | form = Form.update formMsg form}, Cmd.none)
 

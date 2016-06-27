@@ -8,7 +8,6 @@ import Form.Validate as Validate exposing (..)
 type Msg
   = NoOp
   | FormMsg Form.Msg
-  | SubmitUser User
 
 
 type alias Model =
