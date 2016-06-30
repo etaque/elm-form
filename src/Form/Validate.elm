@@ -223,7 +223,7 @@ float v =
         |> Result.formatError (\_ -> InvalidFloat)
 
     Nothing ->
-      Err InvalidInt
+      Err InvalidFloat
 
 
 {-| Validation a String.
