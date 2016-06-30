@@ -232,9 +232,6 @@ string : Validation e String
 string v =
   case Field.asString v of
     Just s ->
-      if String.isEmpty s then
-        Err Empty
-      else
         Ok s
 
     Nothing ->
