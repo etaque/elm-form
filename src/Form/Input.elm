@@ -18,7 +18,7 @@ import Form exposing (Form, Msg, FieldState, Msg (Input, Focus, Blur))
 import Form.Field exposing (Field(..))
 
 
-{-| An input render Html from a field state, a form and address for messages.
+{-| An input renders Html from a field state and list of additional attributes.
 All input functions using this type alias are pre-wired with event handlers.
 -}
 type alias Input e a =

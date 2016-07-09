@@ -233,12 +233,7 @@ getFieldAt : String -> Form e o -> Maybe Field
 getFieldAt qualifiedName (F model) =
   let
     walkPath name maybeField =
-      case maybeField of
-        Just field ->
-          Field.at name field
-
-        Nothing ->
-          Nothing
+      maybeField `Maybe.andThen` Field.at name
   in
     List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
 
@@ -312,18 +307,14 @@ getErrorAt qualifiedName (F model) =
   let
     walkPath path maybeNode =
       case path of
-        name :: rest ->
-          case maybeNode of
-            Just error ->
-              case error of
-                GroupErrors _ ->
-                  walkPath rest (Error.getAt name error)
+        name :: rest -> maybeNode `Maybe.andThen`
+          \error ->
+            case error of
+              GroupErrors _ ->
+                walkPath rest (Error.getAt name error)
 
-                _ ->
-                  Just error
-
-            Nothing ->
-              Nothing
+              _ ->
+                Just error
 
         [] ->
           maybeNode
