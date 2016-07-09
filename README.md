@@ -131,7 +131,7 @@ app = Html.program
 
  * For rendering, `Form.getFieldAsString`/`Bool` provides a `FieldState` record with all required fields (see package doc).
 
- * For event handling, see all field related actions in `Form.Action` type.
+ * For event handling, see all field related messages in `Form.Msg` type.
 
 Overall, having a look at current [helpers source code](https://github.com/etaque/elm-simple-form/blob/master/src/Form/Input.elm) should give you a good idea of the thing.
 
@@ -165,7 +165,7 @@ validate =
 * View:
 
 ```elm
-Input.textInput (Form.getFieldAsString "options.foo" form) formAddress []
+Input.textInput (Form.getFieldAsString "options.foo" form) []
 ```
 
 ### Initial values and reset
@@ -214,6 +214,6 @@ validate =
 
 ### Async validation
 
-This package doesn't provide anything special for async validation, but doesn't prevent you to do that neither. As field values are accessible from `update` with `Form.getStringAt/getBoolAt`, you can proceed them as you need, trigger effects like an HTTP request, and then add any errors to the view by yourself.
+This package doesn't provide anything special for async validation, but doesn't prevent you to do that neither. As field values are accessible from `update` with `Form.getStringAt/getBoolAt`, you can process them as you need, trigger effects like an HTTP request, and then add any errors to the view by yourself.
 
 Another way would be to enable dynamic validation reload, to make it dependant of an effect, as it's part of the form state. Please ping me if this feature would be useful to you.
