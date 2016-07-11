@@ -316,7 +316,7 @@ maxLength max s field =
   if String.length s <= max then
     Ok s
   else
-    Err (ShorterStringThan max)
+    Err (LongerStringThan max)
 
 
 {-| Min value for Int.
