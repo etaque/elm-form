@@ -45,7 +45,7 @@ map f validation field =
 
 {-| Apply a new validation to the result of the validation.
 
-    int `andThen` (minInt 10)
+    get "myfield" (int `andThen` minInt 10)
 -}
 andThen : Validation e a -> (a -> Validation e b) -> Validation e b
 andThen validation callback field =
@@ -223,7 +223,7 @@ float v =
         |> Result.formatError (\_ -> InvalidFloat)
 
     Nothing ->
-      Err InvalidInt
+      Err InvalidFloat
 
 
 {-| Validation a String.
