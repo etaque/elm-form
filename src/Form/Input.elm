@@ -131,7 +131,7 @@ radioInput value state attrs =
 
 {-| Dump all form errors in a `<pre>` tag. Useful for debugging.
 -}
-dumpErrors : Form e o -> Html Msg
+dumpErrors : Form e o -> Html msg
 dumpErrors form =
   let
     line ( name, error ) =
