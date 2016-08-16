@@ -1,9 +1,9 @@
-module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
+module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, formatError, form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
 
 {-| Form validation.
 
 # Combinators
-@docs Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue
+@docs Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue, formatError
 
 # Fixed-size forms
 @docs form1, form2, form3, form4, form5, form6, form7, form8
