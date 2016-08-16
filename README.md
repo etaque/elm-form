@@ -13,7 +13,7 @@ HTML live forms builders and validation for Elm.
 * Unlimited fields! See `apply` function, similar to Json.Extra
 * Nested fields for record composition (`foo.bar.baz`)
 
-[See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](./example/)).
+[See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](https://github.com/etaque/elm-simple-form/tree/master/example)).
 
 Infix operators have been splitted to a [dedicated package](https://github.com/etaque/elm-simple-form-infix).
 
