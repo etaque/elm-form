@@ -1,5 +1,5 @@
 {
-    "version": "3.0.2",
+    "version": "4.0.0",
     "summary": "Simple forms made easy, for Elm",
     "repository": "https://github.com/etaque/elm-simple-form.git",
     "license": "BSD3",
