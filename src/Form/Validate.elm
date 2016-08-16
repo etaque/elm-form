@@ -36,7 +36,7 @@ type alias Validation customError output =
 
 {-| Map over the result of the validation.
 
-    string `map` String.trim
+    get "myfield" (string |> map String.trim)
 -}
 map : (a -> b) -> Validation e a -> Validation e b
 map f validation field =
