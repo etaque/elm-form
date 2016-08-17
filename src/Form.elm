@@ -1,4 +1,4 @@
-module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput)
+module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
@@ -13,7 +13,7 @@ with state lifecycle and input helpers for the views.
 @docs getFieldAsString, getFieldAsBool
 
 # Global state accessors
-@docs getFocus, isSubmitted, getErrors, getOutput
+@docs getFocus, isSubmitted, getErrors, getOutput, getChangedFields
 -}
 
 import Dict exposing (Dict)
@@ -355,3 +355,10 @@ merge v1 v2 =
 
     _ ->
       v1
+
+
+{-| Get set of changed fields.
+-}
+getChangedFields : Form e o -> Set String
+getChangedFields (F model) =
+  model.changedFields
