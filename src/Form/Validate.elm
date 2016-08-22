@@ -86,7 +86,7 @@ defaultValue a validation field =
 
 {-| Call Result.formatError on validation result.
 -}
-formatError : (Error e -> Error e) -> Validation e a -> Validation e a
+formatError : (Error e1 -> Error e2) -> Validation e1 a -> Validation e2 a
 formatError f validation =
   \field -> Result.formatError f (validation field)
 
