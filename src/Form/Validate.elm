@@ -1,9 +1,9 @@
-module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, formatError, form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
+module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, formatError, withCustomError, form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
 
 {-| Form validation.
 
 # Combinators
-@docs Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue, formatError
+@docs Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue, formatError, withCustomError
 
 # Fixed-size forms
 @docs form1, form2, form3, form4, form5, form6, form7, form8
@@ -89,6 +89,18 @@ defaultValue a validation field =
 formatError : (Error e1 -> Error e2) -> Validation e1 a -> Validation e2 a
 formatError f validation =
   \field -> Result.formatError f (validation field)
+
+
+{-| Arrange that if a validation fails, it has the given custom error.
+
+    get "customerId" (V.int
+          `andThen` minInt 1
+          `andThen` maxInt 9999
+          |> withCustomError InvalidIdentity)
+-}
+withCustomError : customErr -> Validation e a -> Validation customErr a
+withCustomError =
+  formatError << always << customError
 
 
 {-| Helper to create a CustomError.
