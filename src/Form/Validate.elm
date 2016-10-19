@@ -64,8 +64,8 @@ pipeTo =
 {-| Incremental form validation for records with more that 8 fields.
 
     Form.succeed SomeRecord
-      `apply` ("foo" `at` string)
-      `apply` ("bar" `at` string)
+      `apply` (get "foo" string)
+      `apply` (get "bar" string)
 -}
 apply : Validation e (a -> b) -> Validation e a -> Validation e b
 apply partialValidation aValidation field =
