@@ -1,9 +1,9 @@
-module Form.Field exposing (Field(..), group, at, asString, asBool)
+module Form.Field exposing (Field(..), group, list, at, asString, asBool)
 
 {-| Read and write field values.
 
 # Constructors
-@docs Field, group
+@docs Field, group, list
 
 # Value readers
 @docs at, asString, asBool
@@ -21,6 +21,7 @@ type Field
     | Select String
     | Radio String
     | Check Bool
+    | List (List Field)
     | EmptyField
 
 
@@ -41,6 +42,25 @@ at name field =
 
         _ ->
             Nothing
+
+
+{-| Build a list of values, for dynamic fields list
+-}
+list : List Field -> Field
+list =
+    List
+
+
+{-| Get field as a list of fields
+-}
+asList : Field -> List Field
+asList field =
+    case field of
+        List items ->
+            items
+
+        _ ->
+            []
 
 
 {-| Get field value as boolean.

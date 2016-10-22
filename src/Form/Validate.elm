@@ -467,3 +467,23 @@ oneOf validations field =
                     result
     in
         List.foldl walkResults (Err Empty) results
+
+
+list : Validation e a -> Validation e (List a)
+list validation field =
+    case field of
+        List items ->
+            let
+                results =
+                    List.map validation items
+
+                errors =
+                    List.filterMap getErr results
+            in
+                if List.isEmpty errors then
+                    Ok (List.filterMap Result.toMaybe results)
+                else
+                    Err (ListErrors errors)
+
+        _ ->
+            Err Empty

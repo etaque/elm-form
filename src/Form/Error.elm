@@ -12,6 +12,7 @@ import Dict exposing (Dict)
 -}
 type Error e
     = GroupErrors (Dict String (Error e))
+    | ListErrors (List (Error e))
     | Empty
     | InvalidString
     | InvalidEmail
