@@ -1,6 +1,6 @@
 # Elm SimpleForm
 
-HTML live forms builders and validation for Elm.
+HTML live forms builders and validation for Elm. [![Build Status](https://travis-ci.org/etaque/elm-simple-form.svg?branch=master)](https://travis-ci.org/etaque/elm-simple-form)
 
     elm package install etaque/elm-simple-form
 
