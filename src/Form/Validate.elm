@@ -1,4 +1,4 @@
-module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, formatError, withCustomError, form1, form2, form3, form4, form5, form6, form7, form8, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
+module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, formatError, withCustomError, form1, form2, form3, form4, form5, form6, form7, form8, list, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
 
 {-| Form validation.
 
@@ -9,7 +9,7 @@ module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, cus
 @docs form1, form2, form3, form4, form5, form6, form7, form8
 
 # Type extractors
-@docs string, int, float, bool, date, maybe, email, url, emptyString
+@docs list, string, int, float, bool, date, maybe, email, url, emptyString
 
 # Common filters
 @docs minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn
@@ -469,6 +469,8 @@ oneOf validations field =
         List.foldl walkResults (Err Empty) results
 
 
+{-| Validate a list of fields.
+-}
 list : Validation e a -> Validation e (List a)
 list validation field =
     case field of
@@ -486,4 +488,4 @@ list validation field =
                     Err (ListErrors errors)
 
         _ ->
-            Err Empty
+            Ok []

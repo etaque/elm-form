@@ -28,6 +28,7 @@ type alias User =
     , email : String
     , admin : Bool
     , profile : Profile
+    , links : List Link
     }
 
 
@@ -43,6 +44,12 @@ type alias Profile =
 type Superpower
     = Flying
     | Invisible
+
+
+type alias Link =
+    { name : String
+    , url : String
+    }
 
 
 initialFields : List ( String, Field.Field )
@@ -74,12 +81,13 @@ infixl 7 :=
 
 validate : Validation CustomError User
 validate =
-    form4
+    form5
         User
         ("name" := string `andThen` nonEmpty)
         ("email" := email `andThen` (asyncCheck True))
         ("admin" := bool |> defaultValue False)
         ("profile" := validateProfile)
+        ("links" := list validateLink)
 
 
 validateProfile : Validation CustomError Profile
@@ -112,6 +120,13 @@ validateSuperpower =
                 _ ->
                     Err (customError InvalidSuperpower)
         )
+
+
+validateLink : Validation CustomError Link
+validateLink =
+    form2 Link
+        (get "name" string)
+        (get "url" url)
 
 
 

@@ -1,4 +1,4 @@
-module Form.Field exposing (Field(..), group, list, at, asString, asBool)
+module Form.Field exposing (Field(..), group, list, at, atIndex, asString, asBool, asList)
 
 {-| Read and write field values.
 
@@ -6,7 +6,7 @@ module Form.Field exposing (Field(..), group, list, at, asString, asBool)
 @docs Field, group, list
 
 # Value readers
-@docs at, asString, asBool
+@docs at, atIndex, asString, asBool, asList
 -}
 
 import Dict exposing (Dict)
@@ -42,6 +42,15 @@ at name field =
 
         _ ->
             Nothing
+
+
+{-| Get field at index, for list of fields.
+-}
+atIndex : Int -> Field -> Maybe Field
+atIndex index field =
+    asList field
+        |> List.drop index
+        |> List.head
 
 
 {-| Build a list of values, for dynamic fields list

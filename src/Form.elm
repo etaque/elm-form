@@ -233,7 +233,12 @@ getFieldAt : String -> Form e o -> Maybe Field
 getFieldAt qualifiedName (F model) =
     let
         walkPath name maybeField =
-            maybeField `Maybe.andThen` Field.at name
+            case String.toInt name of
+                Ok index ->
+                    maybeField `Maybe.andThen` Field.atIndex index
+
+                Err _ ->
+                    maybeField `Maybe.andThen` Field.at name
     in
         List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
 
@@ -250,23 +255,62 @@ getBoolAt name form =
 
 setFieldAt : String -> Field -> Form e o -> Field
 setFieldAt qualifiedName field (F model) =
+    walkPath (String.split "." qualifiedName) (Just model.fields) field
+
+
+walkPath : List String -> Maybe Field -> Field -> Field
+walkPath path maybeNode finalField =
+    case path of
+        name :: rest ->
+            case String.toInt name of
+                Ok index ->
+                    walkPathAtIndex index maybeNode rest finalField
+
+                Err _ ->
+                    walkPathAtName name maybeNode rest finalField
+
+        [] ->
+            finalField
+
+
+walkPathAtIndex : Int -> Maybe Field -> List String -> Field -> Field
+walkPathAtIndex index maybeNode rest finalField =
+    maybeNode
+        |> Maybe.map Field.asList
+        |> Maybe.withDefault []
+        |> setFieldAtIndex index (\f -> walkPath rest (Just f) finalField)
+        |> List
+
+
+setFieldAtIndex : Int -> (Field -> Field) -> List Field -> List Field
+setFieldAtIndex index updater fields =
     let
-        walkPath path maybeNode =
-            case path of
-                name :: rest ->
-                    let
-                        node =
-                            Maybe.withDefault (Group Dict.empty) maybeNode
-
-                        childField =
-                            walkPath rest (Field.at name node)
-                    in
-                        merge (Group (Dict.fromList [ ( name, childField ) ])) node
-
-                [] ->
-                    field
+        filledList =
+            if index >= List.length fields then
+                fields ++ List.repeat (index + 1 - List.length fields) EmptyField
+            else
+                fields
     in
-        walkPath (String.split "." qualifiedName) (Just model.fields)
+        List.indexedMap
+            (\i f ->
+                if i == index then
+                    updater f
+                else
+                    f
+            )
+            filledList
+
+
+walkPathAtName : String -> Maybe Field -> List String -> Field -> Field
+walkPathAtName name maybeNode rest finalField =
+    let
+        node =
+            Maybe.withDefault (Group Dict.empty) maybeNode
+
+        childField =
+            walkPath rest (Field.at name node) finalField
+    in
+        merge (Group (Dict.fromList [ ( name, childField ) ])) node
 
 
 {-| Get form output, in case of validation success.

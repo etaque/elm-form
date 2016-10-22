@@ -7,22 +7,36 @@ import Model
 import Update
 import Form exposing (Form)
 import Form.Error exposing (..)
+import Form.Field as Field
 
 
 all : Test
 all =
     describe "Initial example validation"
         [ test "has no output" <|
-            \_ -> equal (Form.getOutput validatedForm) Nothing
+            \_ -> equal Nothing (Form.getOutput validatedForm)
         , test "has errors on expected fields" <|
             \_ ->
                 equal
+                    (Form.getErrors validatedForm)
                     [ ( "email", InvalidString )
                     , ( "profile.age", InvalidInt )
                     , ( "profile.role", InvalidString )
                     , ( "profile.superpower", InvalidString )
                     ]
-                    (Form.getErrors validatedForm)
+        , test "set then get field in list" <|
+            \_ ->
+                let
+                    ( name, value ) =
+                        ( "links.0.name", "Twitter" )
+
+                    newForm =
+                        Form.update (Form.Input name (Field.Text value)) initialForm
+
+                    maybeState =
+                        Form.getFieldAsString name newForm
+                in
+                    equal (Just value) maybeState.value
         ]
 
 
