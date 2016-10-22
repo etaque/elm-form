@@ -76,7 +76,7 @@ radioGroup options label' state =
     item (v, l) =
       label
         [ class "radio-inline" ]
-        [ Input.radioInput state.path state [ value v ]
+        [ Input.radioInput v state []
         , text l
         ]
   in
