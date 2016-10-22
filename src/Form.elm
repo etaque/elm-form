@@ -1,4 +1,4 @@
-module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
+module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getListIndexes, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
@@ -10,7 +10,7 @@ with state lifecycle and input helpers for the views.
 @docs initial, update
 
 # Field state accessors
-@docs getFieldAsString, getFieldAsBool
+@docs getFieldAsString, getFieldAsBool, getListIndexes
 
 # Global state accessors
 @docs getFocus, isSubmitted, getErrors, getOutput, getChangedFields
@@ -117,6 +117,19 @@ getField getValue path form =
     }
 
 
+{-| return a list of indexes so one can build qualified names of fields in list.
+-}
+getListIndexes : String -> Form e o -> List Int
+getListIndexes path (F model) =
+    let
+        length =
+            getFieldAt path model
+                |> Maybe.map (Field.asList >> List.length)
+                |> Maybe.withDefault 0
+    in
+        [0..length - 1]
+
+
 {-| Form messages for `update`.
 -}
 type Msg
@@ -124,6 +137,8 @@ type Msg
     | Focus String
     | Blur String
     | Input String Field
+    | Append String
+    | RemoveItem String Int
     | Submit
     | Validate
     | Reset (List ( String, Field ))
@@ -157,7 +172,7 @@ update msg (F model) =
         Input name field ->
             let
                 newFields =
-                    setFieldAt name field (F model)
+                    setFieldAt name field model
 
                 isDirty =
                     case field of
@@ -187,6 +202,40 @@ update msg (F model) =
                     }
             in
                 F (updateValidate newModel)
+
+        Append listName ->
+            let
+                listFields =
+                    getFieldAt listName model
+                        |> Maybe.map Field.asList
+                        |> Maybe.withDefault []
+
+                newListFields =
+                    listFields ++ [ Field.EmptyField ]
+
+                newModel =
+                    { model
+                        | fields = setFieldAt listName (Field.List newListFields) model
+                    }
+            in
+                F newModel
+
+        RemoveItem listName index ->
+            let
+                listFields =
+                    getFieldAt listName model
+                        |> Maybe.map Field.asList
+                        |> Maybe.withDefault []
+
+                newListFields =
+                    (List.take index listFields) ++ (List.drop (index + 1) listFields)
+
+                newModel =
+                    { model
+                        | fields = setFieldAt listName (Field.List newListFields) model
+                    }
+            in
+                F newModel
 
         Submit ->
             let
@@ -229,8 +278,8 @@ updateValidate model =
             }
 
 
-getFieldAt : String -> Form e o -> Maybe Field
-getFieldAt qualifiedName (F model) =
+getFieldAt : String -> Model e o -> Maybe Field
+getFieldAt qualifiedName model =
     let
         walkPath name maybeField =
             case String.toInt name of
@@ -244,17 +293,17 @@ getFieldAt qualifiedName (F model) =
 
 
 getStringAt : String -> Form e o -> Maybe String
-getStringAt name form =
-    getFieldAt name form `Maybe.andThen` asString
+getStringAt name (F model) =
+    getFieldAt name model `Maybe.andThen` asString
 
 
 getBoolAt : String -> Form e o -> Maybe Bool
-getBoolAt name form =
-    getFieldAt name form `Maybe.andThen` asBool
+getBoolAt name (F model) =
+    getFieldAt name model `Maybe.andThen` asBool
 
 
-setFieldAt : String -> Field -> Form e o -> Field
-setFieldAt qualifiedName field (F model) =
+setFieldAt : String -> Field -> Model e o -> Field
+setFieldAt qualifiedName field model =
     walkPath (String.split "." qualifiedName) (Just model.fields) field
 
 

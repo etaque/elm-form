@@ -6,6 +6,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Form exposing (Form)
+import Form.Input as Input
 import Model exposing (..)
 import View.Bootstrap exposing (..)
 
@@ -56,6 +57,7 @@ formView form =
                 (Form.getFieldAsString "profile.age" form)
             , textAreaGroup "Bio"
                 (Form.getFieldAsString "profile.bio" form)
+            , linksView form
             , formActions
                 [ button
                     [ onClick Form.Submit
@@ -70,3 +72,26 @@ formView form =
                     [ text "Reset" ]
                 ]
             ]
+
+
+linksView : Form CustomError User -> Html Form.Msg
+linksView form =
+    let
+        linkView i =
+            div
+                [ class "row link" ]
+                [ col' 3 [ text "Link" ]
+                , Input.textInput
+                    (Form.getFieldAsString ("links." ++ (toString i) ++ ".name") form)
+                    [ placeholder "Name" ]
+                , textGroup
+                    "URL"
+                    (Form.getFieldAsString ("links." ++ (toString i) ++ ".url") form)
+                , button [ onClick (Form.RemoveItem "links" i) ] [ text "Remove" ]
+                ]
+    in
+        div
+            [ class "links" ]
+        <|
+            (List.map linkView (Form.getListIndexes "links" form))
+                ++ [ button [ onClick (Form.Append "links") ] [ text "Add link" ] ]
