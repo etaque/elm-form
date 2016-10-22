@@ -8,7 +8,7 @@
     "test": "tests"
   },
   "scripts": {
-    "test": "cd test && elm-test TestRunner.elm"
+    "test": "cd tests && elm-test TestRunner.elm"
   },
   "repository": {
     "type": "git",
