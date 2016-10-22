@@ -117,7 +117,8 @@ radioInput value state attrs =
   let
     formAttrs =
       [ type' "radio"
-      , HtmlAttr.name value
+      , name state.path
+      , HtmlAttr.value value
       , checked (state.value == Just value)
       , onFocus (Focus state.path)
       , onBlur (Blur state.path)
