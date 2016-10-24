@@ -198,6 +198,10 @@ See `Form.Field` type for more options.
 button [ onClick (Form.Reset initialFields) ] [ text "Reset" ]
 ```
 
+*Note:* To have programmatically control over any `input[type=text]`/`textarea` value, like reseting or changing the value, you must set the `value` attribute with `Maybe.withDefault "" state.value`, as seen [here](https://github.com/etaque/elm-simple-form/pull/57/files#diff-bfb877e82b2c89b329fcda943a258611R50). There's a downside of doing this: if the user types too fast, the caret can go crazy.
+
+More info: https://github.com/evancz/elm-html/pull/81#issuecomment-145676200
+
 
 ### Custom errors
 
