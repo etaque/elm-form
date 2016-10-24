@@ -45,14 +45,22 @@ textGroup : GroupBuilder String
 textGroup label' state =
     formGroup label'
         state.liveError
-        [ Input.textInput state [ class "form-control" ] ]
+        [ Input.textInput state
+            [ class "form-control"
+            , value (Maybe.withDefault "" state.value)
+            ]
+        ]
 
 
 textAreaGroup : GroupBuilder String
 textAreaGroup label' state =
     formGroup label'
         state.liveError
-        [ Input.textArea state [ class "form-control" ] ]
+        [ Input.textArea state
+            [ class "form-control"
+            , value (Maybe.withDefault "" state.value)
+            ]
+        ]
 
 
 checkboxGroup : GroupBuilder Bool
