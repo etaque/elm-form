@@ -48,10 +48,6 @@ type Superpower
 initialFields : List ( String, Field.Field )
 initialFields =
     [ ( "name", Field.Text "hey" )
-    , ( "profile"
-      , Field.group
-            [ ( "foo", Field.Radio "ho" ) ]
-      )
     ]
 
 
