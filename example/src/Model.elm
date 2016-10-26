@@ -1,7 +1,7 @@
 module Model exposing (..)
 
 import Form exposing (Form)
-import Form.Field as Field
+import Form.Field as Field exposing (Field, field, group)
 import Form.Validate as Validate exposing (..)
 
 
@@ -52,9 +52,11 @@ type alias Link =
     }
 
 
-initialFields : List ( String, Field.Field )
+initialFields : List ( String, Field )
 initialFields =
-    [ ( "name", Field.Text "hey" )
+    [ field "name" (Field.Text "hey")
+    , group "profile"
+        [ field "age" (Field.Text "33") ]
     ]
 
 

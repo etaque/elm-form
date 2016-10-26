@@ -53,7 +53,7 @@ initial : List ( String, Field ) -> Validation e output -> Form e output
 initial initialFields validation =
     let
         model =
-            { fields = Field.group initialFields
+            { fields = Tree.group initialFields
             , focus = Nothing
             , dirtyFields = Set.empty
             , changedFields = Set.empty
@@ -249,7 +249,7 @@ update msg (F model) =
             let
                 newModel =
                     { model
-                        | fields = Field.group fields
+                        | fields = Tree.group fields
                         , dirtyFields = Set.empty
                         , changedFields = Set.empty
                         , isSubmitted = False

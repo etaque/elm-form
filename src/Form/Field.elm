@@ -1,9 +1,9 @@
-module Form.Field exposing (Field, FieldValue(..), group, list, value, asString, asBool)
+module Form.Field exposing (Field, FieldValue(..), field, group, list, value, asString, asBool)
 
 {-| Read and write field values.
 
 # Constructors
-@docs Field, FieldValue, group, list, value
+@docs Field, FieldValue, field, group, list, value
 
 
 # Value readers
@@ -30,18 +30,25 @@ type FieldValue
     | EmptyField
 
 
+{-| Builds a tuple of field name and value, for groups.
+-}
+field : String -> FieldValue -> ( String, Field )
+field name value =
+    ( name, Tree.Value value )
+
+
 {-| Build a group of values, for nested forms.
 -}
-group : List ( String, Field ) -> Field
-group =
-    Tree.group
+group : String -> List ( String, Field ) -> ( String, Field )
+group name pairs =
+    ( name, Tree.group pairs )
 
 
 {-| Build a list of values, for dynamic fields list
 -}
-list : List Field -> Field
-list =
-    Tree.list
+list : String -> List Field -> ( String, Field )
+list name items =
+    ( name, Tree.list items )
 
 
 {-| Build a field from its value.
