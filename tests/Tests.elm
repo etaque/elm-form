@@ -20,7 +20,6 @@ all =
                 equal
                     (Form.getErrors validatedForm)
                     [ ( "email", InvalidString )
-                    , ( "profile.age", InvalidInt )
                     , ( "profile.role", InvalidString )
                     , ( "profile.superpower", InvalidString )
                     ]
