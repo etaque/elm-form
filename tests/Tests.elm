@@ -24,17 +24,20 @@ all =
                     , ( "profile.role", InvalidString )
                     , ( "profile.superpower", InvalidString )
                     ]
-        , test "set then get field in list" <|
+        , test "append, set then get field in list" <|
             \_ ->
                 let
                     ( name, value ) =
                         ( "links.0.name", "Twitter" )
 
-                    newForm =
-                        Form.update (Form.Input name (Field.Text value)) initialForm
+                    formAfterAppend =
+                        Form.update (Form.Append "links") initialForm
+
+                    formAfterInput =
+                        Form.update (Form.Input name (Field.Text value)) formAfterAppend
 
                     maybeState =
-                        Form.getFieldAsString name newForm
+                        Form.getFieldAsString name formAfterInput
                 in
                     equal (Just value) maybeState.value
         ]
