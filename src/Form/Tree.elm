@@ -152,28 +152,26 @@ toFragment s =
 -}
 setAtPath : String -> Tree value -> Tree value -> Tree value
 setAtPath path node tree =
-    recursiveSet (extractFragments path) node (Just tree)
+    recursiveSet (extractFragments path) node tree
 
 
-recursiveSet : List Fragment -> Tree value -> Maybe (Tree value) -> Tree value
-recursiveSet fragments node maybeTree =
+recursiveSet : List Fragment -> Tree value -> Tree value -> Tree value
+recursiveSet fragments node tree =
     case fragments of
         head :: rest ->
             case head of
                 IntFragment index ->
-                    maybeTree
-                        |> Maybe.map asList
-                        |> Maybe.withDefault []
-                        |> updateListAtIndex index (\f -> recursiveSet rest node (Just f))
+                    asList tree
+                        |> updateListAtIndex index (recursiveSet rest node)
                         |> List
 
                 StringFragment name ->
                     let
-                        tree =
-                            Maybe.withDefault (Group Dict.empty) maybeTree
+                        target =
+                            getAtName name tree |> Maybe.withDefault (Group Dict.empty)
 
                         childNode =
-                            recursiveSet rest node (getAtName name tree)
+                            recursiveSet rest node target
                     in
                         merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
 
