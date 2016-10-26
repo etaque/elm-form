@@ -70,41 +70,32 @@ superpowers =
     [ "flying", "invisible" ]
 
 
-{-| Infix operators. See elm-simple-form-infix for a packaged version.
--}
-(:=) =
-    Validate.get
-infixl 7 :=
-
-
-(|:) =
-    Validate.apply
-
-
 validate : Validation CustomError User
 validate =
     form5
         User
-        ("name" := string `andThen` nonEmpty)
-        ("email" := email `andThen` (asyncCheck True))
-        ("admin" := bool |> defaultValue False)
-        ("profile" := validateProfile)
-        ("links" := list validateLink)
+        (get "name" (string `andThen` nonEmpty))
+        (get "email" (email `andThen` (asyncCheck True)))
+        (get "admin" (bool |> defaultValue False))
+        (get "profile" validateProfile)
+        (get "links" (list validateLink))
 
 
 validateProfile : Validation CustomError Profile
 validateProfile =
     succeed Profile
-        |: ("website"
-                := oneOf
+        `apply`
+            (get "website"
+                (oneOf
                     [ emptyString |> map (\_ -> Nothing)
                     , url |> map Just
                     ]
-           )
-        |: ("role" := (string `andThen` (includedIn roles)))
-        |: ("superpower" := validateSuperpower)
-        |: ("age" := naturalInt)
-        |: ("bio" := string |> defaultValue "")
+                )
+            )
+        `apply` (get "role" (string `andThen` (includedIn roles)))
+        `apply` (get "superpower" validateSuperpower)
+        `apply` (get "age" naturalInt)
+        `apply` (get "bio" (string |> defaultValue ""))
 
 
 validateSuperpower : Validation CustomError Superpower
@@ -127,7 +118,7 @@ validateSuperpower =
 validateLink : Validation CustomError Link
 validateLink =
     form2 Link
-        (get "name" string)
+        (get "name" (string `andThen` (minLength 3)))
         (get "url" url)
 
 
