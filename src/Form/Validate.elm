@@ -23,8 +23,9 @@ import Date exposing (Date)
 import Dict exposing (Dict)
 import String
 import Regex exposing (Regex)
-import Form.Error as Error exposing (Error(..))
-import Form.Field as Field exposing (Field(..))
+import Form.Error as Error exposing (Error, ErrorValue(..))
+import Form.Field as Field exposing (Field, FieldValue(..))
+import Form.Tree as Tree
 
 
 {-| A validation is a function that takes a form field and returns a result
@@ -107,7 +108,7 @@ withCustomError =
 -}
 customError : e -> Error e
 customError =
-    CustomError
+    CustomError >> Error.value
 
 
 {-| Access the given field in the group.
@@ -116,11 +117,11 @@ customError =
 -}
 get : String -> Validation e a -> Validation e a
 get key validation field =
-    Field.at key field
-        |> Maybe.withDefault EmptyField
+    Tree.getAtName key field
+        |> Maybe.withDefault (Tree.Value EmptyField)
         |> validation
         |> Result.formatError
-            (\e -> GroupErrors (Dict.fromList [ ( key, e ) ]))
+            (\e -> Tree.group [ ( key, e ) ])
 
 
 {-| Validation a form with one field.
@@ -185,7 +186,7 @@ mergeMany : List (Maybe (Error e)) -> Error e
 mergeMany errors =
     errors
         |> List.filterMap identity
-        |> List.foldl groupErrorsUnion (GroupErrors Dict.empty)
+        |> List.foldl groupErrorsUnion (Tree.group [])
 
 
 {-| Private
@@ -193,8 +194,8 @@ mergeMany errors =
 groupErrorsUnion : Error e -> Error e -> Error e
 groupErrorsUnion e1 e2 =
     case ( e1, e2 ) of
-        ( GroupErrors ge1, GroupErrors ge2 ) ->
-            GroupErrors (Dict.union ge1 ge2)
+        ( Tree.Group g1, Tree.Group g2 ) ->
+            Tree.Group (Dict.union g1 g2)
 
         _ ->
             e2
@@ -219,10 +220,10 @@ int v =
     case Field.asString v of
         Just s ->
             String.toInt s
-                |> Result.formatError (\_ -> InvalidInt)
+                |> Result.formatError (\_ -> Error.value InvalidInt)
 
         Nothing ->
-            Err InvalidInt
+            Err (Error.value InvalidInt)
 
 
 {-| Validation a float using `String.toFloat`.
@@ -232,10 +233,10 @@ float v =
     case Field.asString v of
         Just s ->
             String.toFloat s
-                |> Result.formatError (\_ -> InvalidFloat)
+                |> Result.formatError (\_ -> Error.value InvalidFloat)
 
         Nothing ->
-            Err InvalidFloat
+            Err (Error.value InvalidFloat)
 
 
 {-| Validation a String.
@@ -245,12 +246,12 @@ string v =
     case Field.asString v of
         Just s ->
             if String.isEmpty s then
-                Err Empty
+                Err (Error.value Empty)
             else
                 Ok s
 
         Nothing ->
-            Err InvalidString
+            Err (Error.value InvalidString)
 
 
 {-| Validate an empty string, otherwise failing with InvalidString.
@@ -263,7 +264,7 @@ emptyString v =
             if String.isEmpty s then
                 Ok s
             else
-                Err InvalidString
+                Err (Error.value InvalidString)
 
         Nothing ->
             Ok ""
@@ -288,10 +289,10 @@ date v =
     case Field.asString v of
         Just s ->
             Date.fromString s
-                |> Result.formatError (\_ -> InvalidDate)
+                |> Result.formatError (\_ -> Error.value InvalidDate)
 
         Nothing ->
-            Err InvalidDate
+            Err (Error.value InvalidDate)
 
 
 {-| Transform validation result to `Maybe`, using `Result.toMaybe`.
@@ -306,7 +307,7 @@ maybe validation field =
 nonEmpty : String -> Validation e String
 nonEmpty s field =
     if String.isEmpty s then
-        Err Empty
+        Err (Error.value Empty)
     else
         Ok s
 
@@ -318,7 +319,7 @@ minLength min s field =
     if String.length s >= min then
         Ok s
     else
-        Err (ShorterStringThan min)
+        Err (Error.value (ShorterStringThan min))
 
 
 {-| Max length for String.
@@ -328,7 +329,7 @@ maxLength max s field =
     if String.length s <= max then
         Ok s
     else
-        Err (LongerStringThan max)
+        Err (Error.value (LongerStringThan max))
 
 
 {-| Min value for Int.
@@ -338,7 +339,7 @@ minInt min i field =
     if i >= min then
         Ok i
     else
-        Err (SmallerIntThan min)
+        Err (Error.value (SmallerIntThan min))
 
 
 {-| Max value for Int.
@@ -348,7 +349,7 @@ maxInt max i field =
     if i <= max then
         Ok i
     else
-        Err (GreaterIntThan max)
+        Err (Error.value (GreaterIntThan max))
 
 
 {-| Min value for Float.
@@ -358,7 +359,7 @@ minFloat min i field =
     if i >= min then
         Ok i
     else
-        Err (SmallerFloatThan min)
+        Err (Error.value (SmallerFloatThan min))
 
 
 {-| Max value for Float.
@@ -368,7 +369,7 @@ maxFloat max i field =
     if i <= max then
         Ok i
     else
-        Err (GreaterFloatThan max)
+        Err (Error.value (GreaterFloatThan max))
 
 
 {-| Validates format of the string.
@@ -378,7 +379,7 @@ format regex s field =
     if Regex.contains regex s then
         Ok s
     else
-        Err InvalidFormat
+        Err (Error.value InvalidFormat)
 
 
 {-| Stolen to elm-validate.
@@ -397,7 +398,7 @@ email =
         `andThen`
             (\s ->
                 format validEmailPattern s
-                    |> formatError (\_ -> InvalidEmail)
+                    |> formatError (\_ -> Error.value InvalidEmail)
             )
 
 
@@ -415,7 +416,7 @@ url =
         `andThen`
             (\s ->
                 format validUrlPattern s
-                    |> formatError (\_ -> InvalidUrl)
+                    |> formatError (\_ -> Error.value InvalidUrl)
             )
 
 
@@ -426,7 +427,7 @@ includedIn items s field =
     if List.member s items then
         Ok s
     else
-        Err NotIncludedIn
+        Err (Error.value NotIncludedIn)
 
 
 {-| A validation that always fails. Useful for contextual validation.
@@ -466,7 +467,7 @@ oneOf validations field =
                 _ ->
                     result
     in
-        List.foldl walkResults (Err Empty) results
+        List.foldl walkResults (Err (Error.value Empty)) results
 
 
 {-| Validate a list of fields.
@@ -474,7 +475,7 @@ oneOf validations field =
 list : Validation e a -> Validation e (List a)
 list validation field =
     case field of
-        List items ->
+        Tree.List items ->
             let
                 results =
                     List.map validation items
@@ -485,7 +486,7 @@ list validation field =
                 if List.isEmpty errors then
                     Ok (List.filterMap Result.toMaybe results)
                 else
-                    Err (ListErrors errors)
+                    Err (Tree.List errors)
 
         _ ->
             Ok []

@@ -15,7 +15,7 @@ import Html.Events exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
 import Json.Decode as Json
 import Form exposing (Form, Msg, FieldState, Msg(Input, Focus, Blur))
-import Form.Field exposing (Field(..))
+import Form.Field exposing (Field, FieldValue(..))
 
 
 {-| An input renders Html from a field state and list of additional attributes.
@@ -25,19 +25,15 @@ type alias Input e a =
     FieldState e a -> List (Attribute Msg) -> Html Msg
 
 
-(?=) =
-    flip Maybe.withDefault
-
-
 {-| Untyped input, first param is `type` attribute.
 -}
-baseInput : String -> (String -> Field) -> Input e String
-baseInput t toField state attrs =
+baseInput : String -> (String -> FieldValue) -> Input e String
+baseInput t toFieldValue state attrs =
     let
         formAttrs =
             [ type' t
-            , defaultValue (state.value ?= "")
-            , onInput (toField >> (Input state.path))
+            , defaultValue (state.value |> Maybe.withDefault "")
+            , onInput (toFieldValue >> (Input state.path))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
@@ -65,7 +61,11 @@ textArea : Input e String
 textArea state attrs =
     let
         formAttrs =
+<<<<<<< HEAD
             [ defaultValue (state.value ?= "")
+=======
+            [ value (state.value |> Maybe.withDefault "")
+>>>>>>> extracts tree structure and functions
             , onInput (Textarea >> (Input state.path))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
@@ -100,7 +100,7 @@ checkboxInput state attrs =
     let
         formAttrs =
             [ type' "checkbox"
-            , checked (state.value ?= False)
+            , checked (state.value |> Maybe.withDefault False)
             , onCheck (Check >> (Input state.path))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)

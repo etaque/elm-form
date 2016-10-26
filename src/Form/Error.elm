@@ -1,19 +1,23 @@
-module Form.Error exposing (Error(..), getAt)
+module Form.Error exposing (Error, ErrorValue(..), value)
 
 {-| Validation errors.
 
-@docs Error, getAt
+@docs Error, ErrorValue, value
 -}
 
-import Dict exposing (Dict)
+import Form.Tree as Tree exposing (Tree)
+
+
+{-| Tree of errors.
+-}
+type alias Error e =
+    Tree (ErrorValue e)
 
 
 {-| A validation error. See `Form.Validate.customError` for `CustomError` building.
 -}
-type Error e
-    = GroupErrors (Dict String (Error e))
-    | ListErrors (List (Error e))
-    | Empty
+type ErrorValue e
+    = Empty
     | InvalidString
     | InvalidEmail
     | InvalidUrl
@@ -32,13 +36,8 @@ type Error e
     | CustomError e
 
 
-{-| Get error at name, for nested errors.
+{-| Build a tree node (a leaf) for this error
 -}
-getAt : String -> Error e -> Maybe (Error e)
-getAt name error =
-    case error of
-        GroupErrors groupErrors ->
-            Dict.get name groupErrors
-
-        _ ->
-            Nothing
+value : ErrorValue a -> Error a
+value =
+    Tree.Value

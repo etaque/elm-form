@@ -16,14 +16,12 @@ with state lifecycle and input helpers for the views.
 @docs getFocus, isSubmitted, getErrors, getOutput, getChangedFields
 -}
 
-import Dict exposing (Dict)
 import Result
-import String
 import Set exposing (Set)
-import String
-import Form.Error as Error exposing (..)
-import Form.Field as Field exposing (..)
+import Form.Error as Error exposing (Error, ErrorValue)
+import Form.Field as Field exposing (Field, FieldValue)
 import Form.Validate as Validate exposing (Validation)
+import Form.Tree as Tree
 
 
 {-| Form to embed in your model. Type parameters are:
@@ -55,13 +53,13 @@ initial : List ( String, Field ) -> Validation e output -> Form e output
 initial initialFields validation =
     let
         model =
-            { fields = group initialFields
+            { fields = Field.group initialFields
             , focus = Nothing
             , dirtyFields = Set.empty
             , changedFields = Set.empty
             , isSubmitted = False
             , output = Nothing
-            , errors = GroupErrors Dict.empty
+            , errors = Tree.group []
             , validation = validation
             }
     in
@@ -83,8 +81,8 @@ can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
 type alias FieldState e a =
     { path : String
     , value : Maybe a
-    , error : Maybe (Error e)
-    , liveError : Maybe (Error e)
+    , error : Maybe (ErrorValue e)
+    , liveError : Maybe (ErrorValue e)
     , isDirty : Bool
     , isChanged : Bool
     , hasFocus : Bool
@@ -124,7 +122,7 @@ getListIndexes path (F model) =
     let
         length =
             getFieldAt path model
-                |> Maybe.map (Field.asList >> List.length)
+                |> Maybe.map (Tree.asList >> List.length)
                 |> Maybe.withDefault 0
     in
         [0..length - 1]
@@ -136,7 +134,7 @@ type Msg
     = NoOp
     | Focus String
     | Blur String
-    | Input String Field
+    | Input String FieldValue
     | Append String
     | RemoveItem String Int
     | Submit
@@ -169,17 +167,17 @@ update msg (F model) =
             in
                 F (updateValidate newModel)
 
-        Input name field ->
+        Input name fieldValue ->
             let
                 newFields =
-                    setFieldAt name field model
+                    setFieldAt name (Tree.Value fieldValue) model
 
                 isDirty =
-                    case field of
-                        Text _ ->
+                    case fieldValue of
+                        Field.Text _ ->
                             True
 
-                        Textarea _ ->
+                        Field.Textarea _ ->
                             True
 
                         _ ->
@@ -207,15 +205,15 @@ update msg (F model) =
             let
                 listFields =
                     getFieldAt listName model
-                        |> Maybe.map Field.asList
+                        |> Maybe.map Tree.asList
                         |> Maybe.withDefault []
 
                 newListFields =
-                    listFields ++ [ Field.EmptyField ]
+                    listFields ++ [ Field.value Field.EmptyField ]
 
                 newModel =
                     { model
-                        | fields = setFieldAt listName (Field.List newListFields) model
+                        | fields = setFieldAt listName (Tree.list newListFields) model
                     }
             in
                 F newModel
@@ -224,7 +222,7 @@ update msg (F model) =
             let
                 listFields =
                     getFieldAt listName model
-                        |> Maybe.map Field.asList
+                        |> Maybe.map Tree.asList
                         |> Maybe.withDefault []
 
                 newListFields =
@@ -232,7 +230,7 @@ update msg (F model) =
 
                 newModel =
                     { model
-                        | fields = setFieldAt listName (Field.List newListFields) model
+                        | fields = setFieldAt listName (Tree.list newListFields) model
                     }
             in
                 F newModel
@@ -251,7 +249,7 @@ update msg (F model) =
             let
                 newModel =
                     { model
-                        | fields = group fields
+                        | fields = Field.group fields
                         , dirtyFields = Set.empty
                         , changedFields = Set.empty
                         , isSubmitted = False
@@ -266,7 +264,7 @@ updateValidate model =
         Ok output ->
             { model
                 | errors =
-                    GroupErrors Dict.empty
+                    Tree.group []
                 , output = Just output
             }
 
@@ -280,86 +278,22 @@ updateValidate model =
 
 getFieldAt : String -> Model e o -> Maybe Field
 getFieldAt qualifiedName model =
-    let
-        walkPath name maybeField =
-            case String.toInt name of
-                Ok index ->
-                    maybeField `Maybe.andThen` Field.atIndex index
-
-                Err _ ->
-                    maybeField `Maybe.andThen` Field.at name
-    in
-        List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
+    Tree.getAtPath qualifiedName model.fields
 
 
 getStringAt : String -> Form e o -> Maybe String
 getStringAt name (F model) =
-    getFieldAt name model `Maybe.andThen` asString
+    getFieldAt name model `Maybe.andThen` Field.asString
 
 
 getBoolAt : String -> Form e o -> Maybe Bool
 getBoolAt name (F model) =
-    getFieldAt name model `Maybe.andThen` asBool
+    getFieldAt name model `Maybe.andThen` Field.asBool
 
 
 setFieldAt : String -> Field -> Model e o -> Field
-setFieldAt qualifiedName field model =
-    walkPath (String.split "." qualifiedName) (Just model.fields) field
-
-
-walkPath : List String -> Maybe Field -> Field -> Field
-walkPath path maybeNode finalField =
-    case path of
-        name :: rest ->
-            case String.toInt name of
-                Ok index ->
-                    walkPathAtIndex index maybeNode rest finalField
-
-                Err _ ->
-                    walkPathAtName name maybeNode rest finalField
-
-        [] ->
-            finalField
-
-
-walkPathAtIndex : Int -> Maybe Field -> List String -> Field -> Field
-walkPathAtIndex index maybeNode rest finalField =
-    maybeNode
-        |> Maybe.map Field.asList
-        |> Maybe.withDefault []
-        |> setFieldAtIndex index (\f -> walkPath rest (Just f) finalField)
-        |> List
-
-
-setFieldAtIndex : Int -> (Field -> Field) -> List Field -> List Field
-setFieldAtIndex index updater fields =
-    let
-        filledList =
-            if index >= List.length fields then
-                fields ++ List.repeat (index + 1 - List.length fields) EmptyField
-            else
-                fields
-    in
-        List.indexedMap
-            (\i f ->
-                if i == index then
-                    updater f
-                else
-                    f
-            )
-            filledList
-
-
-walkPathAtName : String -> Maybe Field -> List String -> Field -> Field
-walkPathAtName name maybeNode rest finalField =
-    let
-        node =
-            Maybe.withDefault (Group Dict.empty) maybeNode
-
-        childField =
-            walkPath rest (Field.at name node) finalField
-    in
-        merge (Group (Dict.fromList [ ( name, childField ) ])) node
+setFieldAt path field model =
+    Tree.setAtPath path field model.fields
 
 
 {-| Get form output, in case of validation success.
@@ -378,46 +312,17 @@ isSubmitted (F model) =
 
 {-| Get list of errors on qualified paths.
 -}
-getErrors : Form e o -> List ( String, Error e )
+getErrors : Form e o -> List ( String, Error.ErrorValue e )
 getErrors (F model) =
-    let
-        mapGroupItem path ( name, error ) =
-            walkTree (path ++ [ name ]) error
-
-        walkTree path node =
-            case node of
-                GroupErrors errors ->
-                    List.concatMap (mapGroupItem path) (Dict.toList errors)
-
-                _ ->
-                    [ ( String.join "." path, node ) ]
-    in
-        walkTree [] model.errors
+    Tree.valuesWithPath model.errors
 
 
-getErrorAt : String -> Form e o -> Maybe (Error e)
-getErrorAt qualifiedName (F model) =
-    let
-        walkPath path maybeNode =
-            case path of
-                name :: rest ->
-                    maybeNode
-                        `Maybe.andThen`
-                            \error ->
-                                case error of
-                                    GroupErrors _ ->
-                                        walkPath rest (Error.getAt name error)
-
-                                    _ ->
-                                        Just error
-
-                [] ->
-                    maybeNode
-    in
-        walkPath (String.split "." qualifiedName) (Just model.errors)
+getErrorAt : String -> Form e o -> Maybe (ErrorValue e)
+getErrorAt path (F model) =
+    Tree.getAtPath path model.errors `Maybe.andThen` Tree.asValue
 
 
-getLiveErrorAt : String -> Form e o -> Maybe (Error e)
+getLiveErrorAt : String -> Form e o -> Maybe (ErrorValue e)
 getLiveErrorAt name form =
     if isSubmitted form || (isChangedAt name form && not (isDirtyAt name form)) then
         getErrorAt name form
@@ -440,16 +345,6 @@ isDirtyAt qualifiedName (F model) =
 getFocus : Form e o -> Maybe String
 getFocus (F model) =
     model.focus
-
-
-merge : Field -> Field -> Field
-merge v1 v2 =
-    case ( v1, v2 ) of
-        ( Group g1, Group g2 ) ->
-            Group (Dict.union g1 g2)
-
-        _ ->
-            v1
 
 
 {-| Get set of changed fields.

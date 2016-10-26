@@ -1,27 +1,32 @@
-module Form.Field exposing (Field(..), group, list, at, atIndex, asString, asBool, asList)
+module Form.Field exposing (Field, FieldValue(..), group, list, value, asString, asBool)
 
 {-| Read and write field values.
 
 # Constructors
-@docs Field, group, list
+@docs Field, FieldValue, group, list, value
+
 
 # Value readers
-@docs at, atIndex, asString, asBool, asList
+@docs  asString, asBool
 -}
 
-import Dict exposing (Dict)
+import Form.Tree as Tree exposing (Tree)
+
+
+{-| A field is a tree node.
+-}
+type alias Field =
+    Tree FieldValue
 
 
 {-| Form field. Can either be a group of named fields, or a final field.
 -}
-type Field
-    = Group (Dict String Field)
-    | Text String
+type FieldValue
+    = Text String
     | Textarea String
     | Select String
     | Radio String
     | Check Bool
-    | List (List Field)
     | EmptyField
 
 
@@ -29,55 +34,29 @@ type Field
 -}
 group : List ( String, Field ) -> Field
 group =
-    Group << Dict.fromList
-
-
-{-| Get field at name, for nested forms.
--}
-at : String -> Field -> Maybe Field
-at name field =
-    case field of
-        Group fields ->
-            Dict.get name fields
-
-        _ ->
-            Nothing
-
-
-{-| Get field at index, for list of fields.
--}
-atIndex : Int -> Field -> Maybe Field
-atIndex index field =
-    asList field
-        |> List.drop index
-        |> List.head
+    Tree.group
 
 
 {-| Build a list of values, for dynamic fields list
 -}
 list : List Field -> Field
 list =
-    List
+    Tree.list
 
 
-{-| Get field as a list of fields
+{-| Build a field from its value.
 -}
-asList : Field -> List Field
-asList field =
-    case field of
-        List items ->
-            items
-
-        _ ->
-            []
+value : FieldValue -> Field
+value =
+    Tree.Value
 
 
 {-| Get field value as boolean.
 -}
 asBool : Field -> Maybe Bool
-asBool field =
-    case field of
-        Check b ->
+asBool node =
+    case node of
+        Tree.Value (Check b) ->
             Just b
 
         _ ->
@@ -89,17 +68,22 @@ asBool field =
 asString : Field -> Maybe String
 asString field =
     case field of
-        Text s ->
-            Just s
+        Tree.Value value ->
+            case value of
+                Text s ->
+                    Just s
 
-        Textarea s ->
-            Just s
+                Textarea s ->
+                    Just s
 
-        Select s ->
-            Just s
+                Select s ->
+                    Just s
 
-        Radio s ->
-            Just s
+                Radio s ->
+                    Just s
+
+                _ ->
+                    Nothing
 
         _ ->
             Nothing
