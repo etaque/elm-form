@@ -4,7 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Form exposing (Form, FieldState)
 import Form.Input as Input
-import Form.Error exposing (Error)
+import Form.Error exposing (Error, ErrorValue)
 import Model exposing (..)
 
 
@@ -22,7 +22,7 @@ type alias GroupBuilder a =
     String -> FieldState CustomError a -> Html Form.Msg
 
 
-formGroup : String -> Maybe (Error CustomError) -> List (Html Form.Msg) -> Html Form.Msg
+formGroup : String -> Maybe (ErrorValue CustomError) -> List (Html Form.Msg) -> Html Form.Msg
 formGroup label' maybeError inputs =
     div
         [ class ("row form-group " ++ (errorClass maybeError)) ]
@@ -104,7 +104,7 @@ errorClass maybeError =
     Maybe.map (\_ -> "has-error") maybeError |> Maybe.withDefault ""
 
 
-errorMessage : Maybe (Error CustomError) -> Html Form.Msg
+errorMessage : Maybe (ErrorValue CustomError) -> Html Form.Msg
 errorMessage maybeError =
     case maybeError of
         Just error ->
