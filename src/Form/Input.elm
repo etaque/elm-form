@@ -61,11 +61,7 @@ textArea : Input e String
 textArea state attrs =
     let
         formAttrs =
-<<<<<<< HEAD
-            [ defaultValue (state.value ?= "")
-=======
-            [ value (state.value |> Maybe.withDefault "")
->>>>>>> extracts tree structure and functions
+            [ defaultValue (state.value |> Maybe.withDefault "")
             , onInput (Textarea >> (Input state.path))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
