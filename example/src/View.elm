@@ -1,7 +1,6 @@
 module View exposing (..)
 
 import String
-import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -82,12 +81,12 @@ todosView form =
     in
         div
             [ class "row" ]
-            [ col' 3
+            [ colN 3
                 [ label [ class "control-label" ] [ text "Todolist" ]
                 , br [] []
                 , button [ onClick (Form.Append "todos"), class "btn btn-xs btn-default" ] [ text "Add" ]
                 ]
-            , col' 9
+            , colN 9
                 [ div [ class "todos" ] allTodos
                 ]
             ]

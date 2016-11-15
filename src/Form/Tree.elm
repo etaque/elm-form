@@ -1,9 +1,9 @@
-module Form.Tree exposing (Tree(..), getAtPath, getAtName, getAtIndex, valuesWithPath, group, list, asList, asValue, setAtPath)
+module Form.Tree exposing (Tree(..), getAtPath, getAtName, getAtIndex, valuesWithPath, group, asList, asValue, setAtPath)
 
 {-| Data structures
 
 # Tree structure and builders
-@docs Tree, group, list
+@docs Tree, group
 
 # Readers
 @docs getAtPath, getAtName, getAtIndex, asList, asValue, valuesWithPath
@@ -37,10 +37,10 @@ getAtPath path tree =
         walkPath fragment maybeField =
             case fragment of
                 IntFragment index ->
-                    maybeField `Maybe.andThen` getAtIndex index
+                    maybeField |> Maybe.andThen (getAtIndex index)
 
                 StringFragment name ->
-                    maybeField `Maybe.andThen` getAtName name
+                    maybeField |> Maybe.andThen (getAtName name)
     in
         List.foldl walkPath (Just tree) (extractFragments path)
 
@@ -123,13 +123,6 @@ group items =
     items
         |> Dict.fromList
         |> Group
-
-
-{-| Build a list of values, for dynamic fields list
--}
-list : List (Tree value) -> Tree value
-list =
-    List
 
 
 extractFragments : String -> List Fragment

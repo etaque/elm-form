@@ -11,11 +11,9 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 * HTML inputs helpers with pre-wired handlers for live validation
 * Suite of basic validations, with a way to add your own
 * Unlimited fields! See `apply` function, similar to Json.Extra
-* Nested fields for record composition (`foo.bar.baz`)
+* Nested fields (`foo.bar.baz`) and lists (`todos.1.checked`) enabling rich form build
 
 [See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](https://github.com/etaque/elm-simple-form/tree/master/example)).
-
-Infix operators have been splitted to a [dedicated package](https://github.com/etaque/elm-simple-form-infix).
 
 
 ## Basic usage

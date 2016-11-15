@@ -2,9 +2,7 @@ module Tests exposing (..)
 
 import Test exposing (..)
 import Expect exposing (..)
-import String
 import Model
-import Update
 import Form exposing (Form)
 import Form.Error exposing (..)
 import Form.Field as Field
@@ -33,7 +31,7 @@ all =
                         Form.update (Form.Append "links") initialForm
 
                     formAfterInput =
-                        Form.update (Form.Input name (Field.Text value)) formAfterAppend
+                        Form.update (Form.Input name Form.Text (Field.String value)) formAfterAppend
 
                     maybeState =
                         Form.getFieldAsString name formAfterInput

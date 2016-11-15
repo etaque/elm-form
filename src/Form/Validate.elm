@@ -1,12 +1,12 @@
-module Form.Validate exposing (Validation, get, map, andThen, pipeTo, apply, customError, defaultValue, formatError, withCustomError, form1, form2, form3, form4, form5, form6, form7, form8, list, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
+module Form.Validate exposing (Validation, field, map, andThen, andMap, customError, defaultValue, mapError, withCustomError, map2, map3, map4, map5, map6, map7, map8, list, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
 
 {-| Form validation.
 
 # Combinators
-@docs Validation, get, map, succeed, andThen, pipeTo, apply, customError, defaultValue, formatError, withCustomError
+@docs Validation, field, map, succeed, andThen, andMap, customError, defaultValue, mapError, withCustomError
 
 # Fixed-size forms
-@docs form1, form2, form3, form4, form5, form6, form7, form8
+@docs map2, map3, map4, map5, map6, map7, map8
 
 # Type extractors
 @docs list, string, int, float, bool, date, maybe, email, url, emptyString
@@ -37,7 +37,7 @@ type alias Validation customError output =
 
 {-| Map over the result of the validation.
 
-    get "myfield" (string |> map String.trim)
+    field "myfield" (string |> map String.trim)
 -}
 map : (a -> b) -> Validation e a -> Validation e b
 map f validation field =
@@ -46,36 +46,27 @@ map f validation field =
 
 {-| Apply a new validation to the result of the validation.
 
-    get "myfield" (int `andThen` minInt 10)
+    field "myfield" (int `andThen` minInt 10)
 -}
-andThen : Validation e a -> (a -> Validation e b) -> Validation e b
-andThen validation callback field =
-    validation field `Result.andThen` (\next -> (callback next) field)
-
-
-{-| Same as `andThen`, but flipped for piping.
-
-    int |> pipeTo (minInt 10)
--}
-pipeTo : (a -> Validation e b) -> Validation e a -> Validation e b
-pipeTo =
-    flip andThen
+andThen : (a -> Validation e b) -> Validation e a -> Validation e b
+andThen callback validation field =
+    validation field |> Result.andThen (\next -> (callback next) field)
 
 
 {-| Incremental form validation for records with more that 8 fields.
 
     Form.succeed SomeRecord
-      `apply` (get "foo" string)
-      `apply` (get "bar" string)
+      |> andMap (get "foo" string)
+      |> andMap (get "bar" string)
 -}
-apply : Validation e (a -> b) -> Validation e a -> Validation e b
-apply partialValidation aValidation field =
+andMap : Validation e a -> Validation e (a -> b) -> Validation e b
+andMap aValidation partialValidation field =
     case ( partialValidation field, aValidation field ) of
         ( Ok partial, Ok a ) ->
             Ok (partial a)
 
         ( partialResult, aResult ) ->
-            Err (mergeMany [ getErr partialResult, getErr aResult ])
+            Err (mergeMany [ errMaybe partialResult, errMaybe aResult ])
 
 
 {-| Rescue a failed validation with the supplied value.
@@ -85,11 +76,11 @@ defaultValue a validation field =
     Ok (Result.withDefault a (validation field))
 
 
-{-| Call Result.formatError on validation result.
+{-| Call Result.mapError on validation result.
 -}
-formatError : (Error e1 -> Error e2) -> Validation e1 a -> Validation e2 a
-formatError f validation =
-    \field -> Result.formatError f (validation field)
+mapError : (Error e1 -> Error e2) -> Validation e1 a -> Validation e2 a
+mapError f validation =
+    \field -> Result.mapError f (validation field)
 
 
 {-| Arrange that if a validation fails, it has the given custom error.
@@ -101,7 +92,7 @@ formatError f validation =
 -}
 withCustomError : customErr -> Validation e a -> Validation customErr a
 withCustomError =
-    formatError << always << customError
+    mapError << always << customError
 
 
 {-| Helper to create a CustomError.
@@ -113,71 +104,75 @@ customError =
 
 {-| Access the given field in the group.
 
-    get "name" string
+    field "name" string
 -}
-get : String -> Validation e a -> Validation e a
-get key validation field =
+field : String -> Validation e a -> Validation e a
+field key validation field =
     Tree.getAtName key field
         |> Maybe.withDefault (Tree.Value EmptyField)
         |> validation
-        |> Result.formatError
+        |> Result.mapError
             (\e -> Tree.group [ ( key, e ) ])
-
-
-{-| Validation a form with one field.
--}
-form1 : (a -> field) -> Validation e a -> Validation e field
-form1 =
-    map
 
 
 {-| Validation a form with two fields.
 -}
-form2 : (a -> b -> m) -> Validation e a -> Validation e b -> Validation e m
-form2 func v1 v2 =
-    (form1 func v1) `apply` v2
+map2 : (a -> b -> m) -> Validation e a -> Validation e b -> Validation e m
+map2 func v1 v2 =
+    map func v1
+        |> andMap v2
+
+
+
+-- apply (form1 func v1) v2
 
 
 {-| Validation a form with three fields.
 -}
-form3 : (a -> b -> c -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e m
-form3 func v1 v2 v3 =
-    (form2 func v1 v2) `apply` v3
+map3 : (a -> b -> c -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e m
+map3 func v1 v2 v3 =
+    map2 func v1 v2
+        |> andMap v3
 
 
 {-| Validation a form with four fields.
 -}
-form4 : (a -> b -> c -> d -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e d -> Validation e m
-form4 func v1 v2 v3 v4 =
-    (form3 func v1 v2 v3) `apply` v4
+map4 : (a -> b -> c -> d -> m) -> Validation e a -> Validation e b -> Validation e c -> Validation e d -> Validation e m
+map4 func v1 v2 v3 v4 =
+    map3 func v1 v2 v3
+        |> andMap v4
 
 
 {-| Validation a form with five fields.
 -}
-form5 : (a -> b -> c -> d -> e -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err m
-form5 func v1 v2 v3 v4 v5 =
-    (form4 func v1 v2 v3 v4) `apply` v5
+map5 : (a -> b -> c -> d -> e -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err m
+map5 func v1 v2 v3 v4 v5 =
+    map4 func v1 v2 v3 v4
+        |> andMap v5
 
 
 {-| Validation a form with six fields.
 -}
-form6 : (a -> b -> c -> d -> e -> f -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err m
-form6 func v1 v2 v3 v4 v5 v6 =
-    (form5 func v1 v2 v3 v4 v5) `apply` v6
+map6 : (a -> b -> c -> d -> e -> f -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err m
+map6 func v1 v2 v3 v4 v5 v6 =
+    map5 func v1 v2 v3 v4 v5
+        |> andMap v6
 
 
 {-| Validation a form with seven fields.
 -}
-form7 : (a -> b -> c -> d -> e -> f -> g -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err m
-form7 func v1 v2 v3 v4 v5 v6 v7 =
-    (form6 func v1 v2 v3 v4 v5 v6) `apply` v7
+map7 : (a -> b -> c -> d -> e -> f -> g -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err m
+map7 func v1 v2 v3 v4 v5 v6 v7 =
+    map6 func v1 v2 v3 v4 v5 v6
+        |> andMap v7
 
 
 {-| Validation a form with eight fields.
 -}
-form8 : (a -> b -> c -> d -> e -> f -> g -> h -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err h -> Validation err m
-form8 func v1 v2 v3 v4 v5 v6 v7 v8 =
-    (form7 func v1 v2 v3 v4 v5 v6 v7) `apply` v8
+map8 : (a -> b -> c -> d -> e -> f -> g -> h -> m) -> Validation err a -> Validation err b -> Validation err c -> Validation err d -> Validation err e -> Validation err f -> Validation err g -> Validation err h -> Validation err m
+map8 func v1 v2 v3 v4 v5 v6 v7 v8 =
+    map7 func v1 v2 v3 v4 v5 v6 v7
+        |> andMap v8
 
 
 {-| Private
@@ -203,8 +198,8 @@ groupErrorsUnion e1 e2 =
 
 {-| Private
 -}
-getErr : Result e a -> Maybe e
-getErr res =
+errMaybe : Result e a -> Maybe e
+errMaybe res =
     case res of
         Ok _ ->
             Nothing
@@ -220,7 +215,7 @@ int v =
     case Field.asString v of
         Just s ->
             String.toInt s
-                |> Result.formatError (\_ -> Error.value InvalidInt)
+                |> Result.mapError (\_ -> Error.value InvalidInt)
 
         Nothing ->
             Err (Error.value InvalidInt)
@@ -233,7 +228,7 @@ float v =
     case Field.asString v of
         Just s ->
             String.toFloat s
-                |> Result.formatError (\_ -> Error.value InvalidFloat)
+                |> Result.mapError (\_ -> Error.value InvalidFloat)
 
         Nothing ->
             Err (Error.value InvalidFloat)
@@ -289,7 +284,7 @@ date v =
     case Field.asString v of
         Just s ->
             Date.fromString s
-                |> Result.formatError (\_ -> Error.value InvalidDate)
+                |> Result.mapError (\_ -> Error.value InvalidDate)
 
         Nothing ->
             Err (Error.value InvalidDate)
@@ -395,10 +390,10 @@ validEmailPattern =
 email : Validation e String
 email =
     string
-        `andThen`
+        |> andThen
             (\s ->
                 format validEmailPattern s
-                    |> formatError (\_ -> Error.value InvalidEmail)
+                    |> mapError (\_ -> Error.value InvalidEmail)
             )
 
 
@@ -413,10 +408,10 @@ validUrlPattern =
 url : Validation e String
 url =
     string
-        `andThen`
+        |> andThen
             (\s ->
                 format validUrlPattern s
-                    |> formatError (\_ -> Error.value InvalidUrl)
+                    |> mapError (\_ -> Error.value InvalidUrl)
             )
 
 
@@ -448,7 +443,7 @@ succeed a field =
 -}
 customValidation : Validation e a -> (a -> Result (Error e) b) -> Validation e b
 customValidation validation callback field =
-    validation field `Result.andThen` callback
+    validation field |> Result.andThen callback
 
 
 {-| First successful validation wins, from left to right.
@@ -481,7 +476,7 @@ list validation field =
                     List.map validation items
 
                 errors =
-                    List.filterMap getErr results
+                    List.filterMap errMaybe results
             in
                 if List.isEmpty errors then
                     Ok (List.filterMap Result.toMaybe results)

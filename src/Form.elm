@@ -1,10 +1,10 @@
-module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getListIndexes, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
+module Form exposing (Msg(..), InputType(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getListIndexes, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
 
 # Types
-@docs Msg, Form, FieldState
+@docs Msg, InputType, Form, FieldState
 
 # Init/update lifecyle
 @docs initial, update
@@ -125,7 +125,7 @@ getListIndexes path (F model) =
                 |> Maybe.map (Tree.asList >> List.length)
                 |> Maybe.withDefault 0
     in
-        [0..length - 1]
+        List.range 0 (length - 1)
 
 
 {-| Form messages for `update`.
@@ -134,12 +134,22 @@ type Msg
     = NoOp
     | Focus String
     | Blur String
-    | Input String FieldValue
+    | Input String InputType FieldValue
     | Append String
     | RemoveItem String Int
     | Submit
     | Validate
     | Reset (List ( String, Field ))
+
+
+{-| Input types to determine live validation behaviour.
+-}
+type InputType
+    = Text
+    | Textarea
+    | Select
+    | Radio
+    | Checkbox
 
 
 {-| Update form state with the given message
@@ -167,17 +177,17 @@ update msg (F model) =
             in
                 F (updateValidate newModel)
 
-        Input name fieldValue ->
+        Input name inputType fieldValue ->
             let
                 newFields =
                     setFieldAt name (Tree.Value fieldValue) model
 
                 isDirty =
-                    case fieldValue of
-                        Field.Text _ ->
+                    case inputType of
+                        Text ->
                             True
 
-                        Field.Textarea _ ->
+                        Textarea ->
                             True
 
                         _ ->
@@ -209,11 +219,11 @@ update msg (F model) =
                         |> Maybe.withDefault []
 
                 newListFields =
-                    listFields ++ [ Field.value Field.EmptyField ]
+                    listFields ++ [ Tree.Value Field.EmptyField ]
 
                 newModel =
                     { model
-                        | fields = setFieldAt listName (Tree.list newListFields) model
+                        | fields = setFieldAt listName (Tree.List newListFields) model
                     }
             in
                 F newModel
@@ -230,7 +240,7 @@ update msg (F model) =
 
                 newModel =
                     { model
-                        | fields = setFieldAt listName (Tree.list newListFields) model
+                        | fields = setFieldAt listName (Tree.List newListFields) model
                     }
             in
                 F newModel
@@ -283,12 +293,12 @@ getFieldAt qualifiedName model =
 
 getStringAt : String -> Form e o -> Maybe String
 getStringAt name (F model) =
-    getFieldAt name model `Maybe.andThen` Field.asString
+    getFieldAt name model |> Maybe.andThen Field.asString
 
 
 getBoolAt : String -> Form e o -> Maybe Bool
 getBoolAt name (F model) =
-    getFieldAt name model `Maybe.andThen` Field.asBool
+    getFieldAt name model |> Maybe.andThen Field.asBool
 
 
 setFieldAt : String -> Field -> Model e o -> Field
@@ -319,7 +329,7 @@ getErrors (F model) =
 
 getErrorAt : String -> Form e o -> Maybe (ErrorValue e)
 getErrorAt path (F model) =
-    Tree.getAtPath path model.errors `Maybe.andThen` Tree.asValue
+    Tree.getAtPath path model.errors |> Maybe.andThen Tree.asValue
 
 
 getLiveErrorAt : String -> Form e o -> Maybe (ErrorValue e)

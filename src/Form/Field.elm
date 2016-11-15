@@ -1,9 +1,9 @@
-module Form.Field exposing (Field, FieldValue(..), field, group, list, listGroup, value, asString, asBool)
+module Form.Field exposing (Field, FieldValue(..), value, string, bool, group, list, asString, asBool)
 
 {-| Read and write field values.
 
 # Constructors
-@docs Field, FieldValue, field, group, list, listGroup, value
+@docs Field, FieldValue, value, string, bool, group, list
 
 
 # Value readers
@@ -22,40 +22,9 @@ type alias Field =
 {-| Form field. Can either be a group of named fields, or a final field.
 -}
 type FieldValue
-    = Text String
-    | Textarea String
-    | Select String
-    | Radio String
-    | Check Bool
+    = String String
+    | Bool Bool
     | EmptyField
-
-
-{-| Builds a tuple of field name and value, for groups.
--}
-field : String -> FieldValue -> ( String, Field )
-field name value =
-    ( name, Tree.Value value )
-
-
-{-| Build a group of values, for nested forms.
--}
-group : String -> List ( String, Field ) -> ( String, Field )
-group name pairs =
-    ( name, Tree.group pairs )
-
-
-{-| Build a list of values, for dynamic fields list
--}
-list : String -> List Field -> ( String, Field )
-list name items =
-    ( name, Tree.list items )
-
-
-{-| Group values without name, for lists
--}
-listGroup : List ( String, Field ) -> Field
-listGroup =
-    Tree.group
 
 
 {-| Build a field from its value.
@@ -65,12 +34,40 @@ value =
     Tree.Value
 
 
+{-| Build a string field, for text inputs, selects, etc.
+-}
+string : String -> Field
+string =
+    String >> Tree.Value
+
+
+{-| Build a boolean field, for checkboxes.
+-}
+bool : Bool -> Field
+bool =
+    Bool >> Tree.Value
+
+
+{-| Gather named fields as a group field.
+-}
+group : List ( String, Field ) -> Field
+group =
+    Tree.group
+
+
+{-| Gather fields as a list field.
+-}
+list : List Field -> Field
+list =
+    Tree.List
+
+
 {-| Get field value as boolean.
 -}
 asBool : Field -> Maybe Bool
-asBool node =
-    case node of
-        Tree.Value (Check b) ->
+asBool field =
+    case field of
+        Tree.Value (Bool b) ->
             Just b
 
         _ ->
@@ -82,22 +79,8 @@ asBool node =
 asString : Field -> Maybe String
 asString field =
     case field of
-        Tree.Value value ->
-            case value of
-                Text s ->
-                    Just s
-
-                Textarea s ->
-                    Just s
-
-                Select s ->
-                    Just s
-
-                Radio s ->
-                    Just s
-
-                _ ->
-                    Nothing
+        Tree.Value (String s) ->
+            Just s
 
         _ ->
             Nothing

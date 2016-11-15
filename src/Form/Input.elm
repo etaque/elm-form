@@ -14,8 +14,8 @@ import Html exposing (..)
 import Html.Events exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
 import Json.Decode as Json
-import Form exposing (Form, Msg, FieldState, Msg(Input, Focus, Blur))
-import Form.Field exposing (Field, FieldValue(..))
+import Form exposing (Form, Msg, FieldState, Msg(Input, Focus, Blur), InputType(..))
+import Form.Field as Field exposing (Field, FieldValue(..))
 
 
 {-| An input renders Html from a field state and list of additional attributes.
@@ -27,13 +27,13 @@ type alias Input e a =
 
 {-| Untyped input, first param is `type` attribute.
 -}
-baseInput : String -> (String -> FieldValue) -> Input e String
-baseInput t toFieldValue state attrs =
+baseInput : String -> (String -> FieldValue) -> InputType -> Input e String
+baseInput t toFieldValue inputType state attrs =
     let
         formAttrs =
-            [ type' t
+            [ type_ t
             , defaultValue (state.value |> Maybe.withDefault "")
-            , onInput (toFieldValue >> (Input state.path))
+            , onInput (toFieldValue >> (Input state.path inputType))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
@@ -45,14 +45,14 @@ baseInput t toFieldValue state attrs =
 -}
 textInput : Input e String
 textInput =
-    baseInput "text" Text
+    baseInput "text" String Text
 
 
 {-| Password input.
 -}
 passwordInput : Input e String
 passwordInput =
-    baseInput "password" Text
+    baseInput "password" String Text
 
 
 {-| Textarea.
@@ -62,7 +62,7 @@ textArea state attrs =
     let
         formAttrs =
             [ defaultValue (state.value |> Maybe.withDefault "")
-            , onInput (Textarea >> (Input state.path))
+            , onInput (String >> (Input state.path Textarea))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
@@ -78,7 +78,7 @@ selectInput options state attrs =
         formAttrs =
             [ on
                 "change"
-                (targetValue |> Json.map (Select >> (Input state.path)))
+                (targetValue |> Json.map (String >> (Input state.path Select)))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
@@ -95,9 +95,9 @@ checkboxInput : Input e Bool
 checkboxInput state attrs =
     let
         formAttrs =
-            [ type' "checkbox"
+            [ type_ "checkbox"
             , checked (state.value |> Maybe.withDefault False)
-            , onCheck (Check >> (Input state.path))
+            , onCheck (Bool >> (Input state.path Checkbox))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
@@ -111,7 +111,7 @@ radioInput : String -> Input e String
 radioInput value state attrs =
     let
         formAttrs =
-            [ type' "radio"
+            [ type_ "radio"
             , name state.path
             , HtmlAttr.value value
             , checked (state.value == Just value)
@@ -119,7 +119,7 @@ radioInput value state attrs =
             , onBlur (Blur state.path)
             , on
                 "change"
-                (targetValue |> Json.map (Radio >> (Input state.path)))
+                (targetValue |> Json.map (String >> (Input state.path Radio)))
             ]
     in
         input (formAttrs ++ attrs) []

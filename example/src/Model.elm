@@ -1,7 +1,7 @@
 module Model exposing (..)
 
 import Form exposing (Form)
-import Form.Field as Field exposing (Field, field, group)
+import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
 
 
@@ -54,15 +54,19 @@ type alias Todo =
 
 initialFields : List ( String, Field )
 initialFields =
-    [ field "name" (Field.Text "hey")
-    , group "profile"
-        [ field "age" (Field.Text "33") ]
-    , Field.list "todos"
-        [ Field.listGroup
-            [ field "done" (Field.Check True)
-            , field "label" (Field.Text "Remember the milk")
+    [ ( "name", Field.string "hey" )
+    , ( "profile"
+      , Field.group
+            [ ( "age", Field.string "33" ) ]
+      )
+    , ( "todos"
+      , Field.list
+            [ Field.group
+                [ ( "done", Field.bool True )
+                , ( "label", Field.string "Remember the milk" )
+                ]
             ]
-        ]
+      )
     ]
 
 
@@ -78,30 +82,30 @@ superpowers =
 
 validate : Validation CustomError User
 validate =
-    form5
+    map5
         User
-        (get "name" (string `andThen` nonEmpty))
-        (get "email" (email `andThen` (asyncCheck True)))
-        (get "admin" (bool |> defaultValue False))
-        (get "profile" validateProfile)
-        (get "todos" (list validateTodo))
+        (field "name" (string |> andThen nonEmpty))
+        (field "email" (email |> andThen (asyncCheck True)))
+        (field "admin" (bool |> defaultValue False))
+        (field "profile" validateProfile)
+        (field "todos" (list validateTodo))
 
 
 validateProfile : Validation CustomError Profile
 validateProfile =
     succeed Profile
-        `apply`
-            (get "website"
+        |> andMap
+            (field "website"
                 (oneOf
                     [ emptyString |> map (\_ -> Nothing)
                     , url |> map Just
                     ]
                 )
             )
-        `apply` (get "role" (string `andThen` (includedIn roles)))
-        `apply` (get "superpower" validateSuperpower)
-        `apply` (get "age" naturalInt)
-        `apply` (get "bio" (string |> defaultValue ""))
+        |> andMap (field "role" (string |> andThen (includedIn roles)))
+        |> andMap (field "superpower" validateSuperpower)
+        |> andMap (field "age" naturalInt)
+        |> andMap (field "bio" (string |> defaultValue ""))
 
 
 validateSuperpower : Validation CustomError Superpower
@@ -123,9 +127,9 @@ validateSuperpower =
 
 validateTodo : Validation CustomError Todo
 validateTodo =
-    form2 Todo
-        (get "done" bool)
-        (get "label" string)
+    map2 Todo
+        (field "done" bool)
+        (field "label" string)
 
 
 
