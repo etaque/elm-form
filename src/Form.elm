@@ -73,7 +73,7 @@ can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
  * `value` - a `Maybe` of the requested type
  * `error` - a `Maybe` of the field error
  * `liveError` - same but with added logic for live validation
-    (see [`getLiveErrorAt`](https://github.com/etaque/elm-simple-form/blob/master/src/Form.elm) impl)
+    (see [`getLiveErrorAt`](https://github.com/etaque/elm-form/blob/master/src/Form.elm) impl)
  * `isDirty` - if the field content has been changed since last validation
  * `isChanged` - if the field value has changed since last init/reset
  * `hasFocus` - if the field is currently focused

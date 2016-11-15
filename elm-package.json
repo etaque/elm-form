@@ -1,7 +1,7 @@
 {
     "version": "5.0.1",
-    "summary": "Simple forms made easy, for Elm",
-    "repository": "https://github.com/etaque/elm-simple-form.git",
+    "summary": "Live validation of form inputs in Elm",
+    "repository": "https://github.com/etaque/elm-form.git",
     "license": "BSD3",
     "source-directories": [
         "src/"

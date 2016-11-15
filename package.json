@@ -1,5 +1,5 @@
 {
-  "name": "elm-simple-form",
+  "name": "elm-form",
   "version": "1.0.0",
   "description": "HTML live forms builders and validation for Elm.",
   "main": "index.js",
@@ -12,12 +12,12 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/etaque/elm-simple-form.git"
+    "url": "git+https://github.com/etaque/elm-form.git"
   },
   "author": "Emilien Taque",
   "license": "BSD-3-Clause",
   "bugs": {
-    "url": "https://github.com/etaque/elm-simple-form/issues"
+    "url": "https://github.com/etaque/elm-form/issues"
   },
-  "homepage": "https://github.com/etaque/elm-simple-form#readme"
+  "homepage": "https://github.com/etaque/elm-form#readme"
 }

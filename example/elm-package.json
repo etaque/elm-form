@@ -1,7 +1,7 @@
 {
     "version": "1.0.0",
-    "summary": "Example for elm-simple-form",
-    "repository": "https://github.com/etaque/elm-simple-form.git",
+    "summary": "Example for elm-form",
+    "repository": "https://github.com/etaque/elm-form.git",
     "license": "BSD3",
     "source-directories": [
         "src/",

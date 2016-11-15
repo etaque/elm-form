@@ -1,8 +1,8 @@
-# Elm SimpleForm
+# Elm Form
 
-HTML live forms builders and validation for Elm. [![Build Status](https://travis-ci.org/etaque/elm-simple-form.svg?branch=master)](https://travis-ci.org/etaque/elm-simple-form)
+HTML live forms builders and validation for Elm. [![Build Status](https://travis-ci.org/etaque/elm-form.svg?branch=master)](https://travis-ci.org/etaque/elm-form)
 
-    elm package install etaque/elm-simple-form
+    elm package install etaque/elm-form
 
 
 ## Features
@@ -13,7 +13,7 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 * Unlimited fields, see `andMap` function (as in `Json.Extra`)
 * Nested fields (`foo.bar.baz`) and lists (`todos.1.checked`) enabling rich form build
 
-[See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](https://github.com/etaque/elm-simple-form/tree/master/example)).
+[See complete example here](http://etaque.github.io/elm-form/example/) ([source code](https://github.com/etaque/elm-form/tree/master/example)).
 
 
 ## Basic usage
@@ -132,11 +132,11 @@ app =
 
  * For event handling, see all field related messages in `Form.Msg` type.
 
-Overall, having a look at current [helpers source code](https://github.com/etaque/elm-simple-form/blob/master/src/Form/Input.elm) should give you a good idea of the thing.
+Overall, having a look at current [helpers source code](https://github.com/etaque/elm-form/blob/master/src/Form/Input.elm) should give you a good idea of the thing.
 
 ### Incremental validation
 
-Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version from [infix package](https://github.com/etaque/elm-simple-form-infix):
+Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version from [infix package](https://github.com/etaque/elm-form-infix):
 
 ```elm
 Form.succeed Player
@@ -251,7 +251,7 @@ See `Form.Field` type for more options.
 button [ onClick (Form.Reset initialFields) ] [ text "Reset" ]
 ```
 
-*Note:* To have programmatically control over any `input[type=text]`/`textarea` value, like reseting or changing the value, you must set the `value` attribute with `Maybe.withDefault "" state.value`, as seen [here](https://github.com/etaque/elm-simple-form/pull/57/files#diff-bfb877e82b2c89b329fcda943a258611R50). There's a downside of doing this: if the user types too fast, the caret can go crazy.
+*Note:* To have programmatically control over any `input[type=text]`/`textarea` value, like reseting or changing the value, you must set the `value` attribute with `Maybe.withDefault "" state.value`, as seen [here](https://github.com/etaque/elm-form/pull/57/files#diff-bfb877e82b2c89b329fcda943a258611R50). There's a downside of doing this: if the user types too fast, the caret can go crazy.
 
 More info: https://github.com/evancz/elm-html/pull/81#issuecomment-145676200
 
