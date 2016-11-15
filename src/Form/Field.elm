@@ -1,9 +1,9 @@
-module Form.Field exposing (Field, FieldValue(..), field, group, list, value, asString, asBool)
+module Form.Field exposing (Field, FieldValue(..), field, group, list, listGroup, value, asString, asBool)
 
 {-| Read and write field values.
 
 # Constructors
-@docs Field, FieldValue, field, group, list, value
+@docs Field, FieldValue, field, group, list, listGroup, value
 
 
 # Value readers
@@ -49,6 +49,13 @@ group name pairs =
 list : String -> List Field -> ( String, Field )
 list name items =
     ( name, Tree.list items )
+
+
+{-| Group values without name, for lists
+-}
+listGroup : List ( String, Field ) -> Field
+listGroup =
+    Tree.group
 
 
 {-| Build a field from its value.
