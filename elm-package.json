@@ -1,5 +1,5 @@
 {
-    "version": "5.0.1",
+    "version": "1.0.0",
     "summary": "Live validation of form inputs in Elm",
     "repository": "https://github.com/etaque/elm-form.git",
     "license": "BSD3",
