@@ -2,27 +2,41 @@ module Tests exposing (..)
 
 import Test exposing (..)
 import Expect exposing (..)
-import String
 import Model
-import Update
 import Form exposing (Form)
 import Form.Error exposing (..)
+import Form.Field as Field
 
 
 all : Test
 all =
     describe "Initial example validation"
         [ test "has no output" <|
-            \_ -> equal (Form.getOutput validatedForm) Nothing
+            \_ -> equal Nothing (Form.getOutput validatedForm)
         , test "has errors on expected fields" <|
             \_ ->
                 equal
+                    (Form.getErrors validatedForm)
                     [ ( "email", InvalidString )
-                    , ( "profile.age", InvalidInt )
                     , ( "profile.role", InvalidString )
                     , ( "profile.superpower", InvalidString )
                     ]
-                    (Form.getErrors validatedForm)
+        , test "append, set then get field in list" <|
+            \_ ->
+                let
+                    ( name, value ) =
+                        ( "links.0.name", "Twitter" )
+
+                    formAfterAppend =
+                        Form.update (Form.Append "links") initialForm
+
+                    formAfterInput =
+                        Form.update (Form.Input name Form.Text (Field.String value)) formAfterAppend
+
+                    maybeState =
+                        Form.getFieldAsString name formAfterInput
+                in
+                    equal (Just value) maybeState.value
         ]
 
 

@@ -1,46 +1,65 @@
-module Form.Field exposing (Field(..), group, at, asString, asBool)
+module Form.Field exposing (Field, FieldValue(..), value, string, bool, group, list, asString, asBool)
 
 {-| Read and write field values.
 
 # Constructors
-@docs Field, group
+@docs Field, FieldValue, value, string, bool, group, list
+
 
 # Value readers
-@docs at, asString, asBool
+@docs  asString, asBool
 -}
 
-import Dict exposing (Dict)
+import Form.Tree as Tree exposing (Tree)
+
+
+{-| A field is a tree node.
+-}
+type alias Field =
+    Tree FieldValue
 
 
 {-| Form field. Can either be a group of named fields, or a final field.
 -}
-type Field
-    = Group (Dict String Field)
-    | Text String
-    | Textarea String
-    | Select String
-    | Radio String
-    | Check Bool
+type FieldValue
+    = String String
+    | Bool Bool
     | EmptyField
 
 
-{-| Build a group of values, for nested forms.
+{-| Build a field from its value.
+-}
+value : FieldValue -> Field
+value =
+    Tree.Value
+
+
+{-| Build a string field, for text inputs, selects, etc.
+-}
+string : String -> Field
+string =
+    String >> Tree.Value
+
+
+{-| Build a boolean field, for checkboxes.
+-}
+bool : Bool -> Field
+bool =
+    Bool >> Tree.Value
+
+
+{-| Gather named fields as a group field.
 -}
 group : List ( String, Field ) -> Field
 group =
-    Group << Dict.fromList
+    Tree.group
 
 
-{-| Get field at name, for nested forms.
+{-| Gather fields as a list field.
 -}
-at : String -> Field -> Maybe Field
-at name field =
-    case field of
-        Group fields ->
-            Dict.get name fields
-
-        _ ->
-            Nothing
+list : List Field -> Field
+list =
+    Tree.List
 
 
 {-| Get field value as boolean.
@@ -48,7 +67,7 @@ at name field =
 asBool : Field -> Maybe Bool
 asBool field =
     case field of
-        Check b ->
+        Tree.Value (Bool b) ->
             Just b
 
         _ ->
@@ -60,16 +79,7 @@ asBool field =
 asString : Field -> Maybe String
 asString field =
     case field of
-        Text s ->
-            Just s
-
-        Textarea s ->
-            Just s
-
-        Select s ->
-            Just s
-
-        Radio s ->
+        Tree.Value (String s) ->
             Just s
 
         _ ->

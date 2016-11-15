@@ -1,11 +1,11 @@
 module View exposing (..)
 
 import String
-import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 import Form exposing (Form)
+import Form.Input as Input
 import Model exposing (..)
 import View.Bootstrap exposing (..)
 
@@ -38,24 +38,25 @@ formView form =
             , style [ ( "margin", "50px auto" ), ( "width", "600px" ) ]
             ]
             [ legend [] [ text "Elm Simple Form example" ]
-            , textGroup "Name"
+            , textGroup (text "Name")
                 (Form.getFieldAsString "name" form)
-            , textGroup "Email address"
+            , textGroup (text "Email address")
                 (Form.getFieldAsString "email" form)
-            , checkboxGroup "Administrator"
+            , checkboxGroup (text "Administrator")
                 (Form.getFieldAsBool "admin" form)
-            , textGroup "Website"
+            , textGroup (text "Website")
                 (Form.getFieldAsString "profile.website" form)
             , selectGroup roleOptions
-                "Role"
+                (text "Role")
                 (Form.getFieldAsString "profile.role" form)
             , radioGroup superpowerOptions
-                "Superpower"
+                (text "Superpower")
                 (Form.getFieldAsString "profile.superpower" form)
-            , textGroup "Age"
+            , textGroup (text "Age")
                 (Form.getFieldAsString "profile.age" form)
-            , textAreaGroup "Bio"
+            , textAreaGroup (text "Bio")
                 (Form.getFieldAsString "profile.bio" form)
+            , todosView form
             , formActions
                 [ button
                     [ onClick Form.Submit
@@ -70,3 +71,50 @@ formView form =
                     [ text "Reset" ]
                 ]
             ]
+
+
+todosView : Form CustomError User -> Html Form.Msg
+todosView form =
+    let
+        allTodos =
+            List.concatMap (todoItemView form) (Form.getListIndexes "todos" form)
+    in
+        div
+            [ class "row" ]
+            [ colN 3
+                [ label [ class "control-label" ] [ text "Todolist" ]
+                , br [] []
+                , button [ onClick (Form.Append "todos"), class "btn btn-xs btn-default" ] [ text "Add" ]
+                ]
+            , colN 9
+                [ div [ class "todos" ] allTodos
+                ]
+            ]
+
+
+todoItemView : Form CustomError User -> Int -> List (Html Form.Msg)
+todoItemView form i =
+    let
+        labelField =
+            Form.getFieldAsString ("todos." ++ (toString i) ++ ".label") form
+    in
+        [ div
+            [ class ("input-group" ++ (errorClass labelField.liveError)) ]
+            [ span
+                [ class "input-group-addon" ]
+                [ Input.checkboxInput
+                    (Form.getFieldAsBool ("todos." ++ (toString i) ++ ".done") form)
+                    []
+                ]
+            , Input.textInput
+                labelField
+                [ class "form-control" ]
+            , span
+                [ class "input-group-btn" ]
+                [ button
+                    [ onClick (Form.RemoveItem "todos" i), class "btn btn-danger" ]
+                    [ text "Remove" ]
+                ]
+            ]
+        , br [] []
+        ]

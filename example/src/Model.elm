@@ -1,7 +1,7 @@
 module Model exposing (..)
 
 import Form exposing (Form)
-import Form.Field as Field
+import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
 
 
@@ -28,6 +28,7 @@ type alias User =
     , email : String
     , admin : Bool
     , profile : Profile
+    , todos : List Todo
     }
 
 
@@ -45,9 +46,27 @@ type Superpower
     | Invisible
 
 
-initialFields : List ( String, Field.Field )
+type alias Todo =
+    { done : Bool
+    , label : String
+    }
+
+
+initialFields : List ( String, Field )
 initialFields =
-    [ ( "name", Field.Text "hey" )
+    [ ( "name", Field.string "hey" )
+    , ( "profile"
+      , Field.group
+            [ ( "age", Field.string "33" ) ]
+      )
+    , ( "todos"
+      , Field.list
+            [ Field.group
+                [ ( "done", Field.bool True )
+                , ( "label", Field.string "Remember the milk" )
+                ]
+            ]
+      )
     ]
 
 
@@ -61,40 +80,32 @@ superpowers =
     [ "flying", "invisible" ]
 
 
-{-| Infix operators. See elm-simple-form-infix for a packaged version.
--}
-(:=) =
-    Validate.get
-infixl 7 :=
-
-
-(|:) =
-    Validate.apply
-
-
 validate : Validation CustomError User
 validate =
-    form4
+    map5
         User
-        ("name" := string `andThen` nonEmpty)
-        ("email" := email `andThen` (asyncCheck True))
-        ("admin" := bool |> defaultValue False)
-        ("profile" := validateProfile)
+        (field "name" (string |> andThen nonEmpty))
+        (field "email" (email |> andThen (asyncCheck True)))
+        (field "admin" (bool |> defaultValue False))
+        (field "profile" validateProfile)
+        (field "todos" (list validateTodo))
 
 
 validateProfile : Validation CustomError Profile
 validateProfile =
     succeed Profile
-        |: ("website"
-                := oneOf
+        |> andMap
+            (field "website"
+                (oneOf
                     [ emptyString |> map (\_ -> Nothing)
                     , url |> map Just
                     ]
-           )
-        |: ("role" := (string `andThen` (includedIn roles)))
-        |: ("superpower" := validateSuperpower)
-        |: ("age" := naturalInt)
-        |: ("bio" := string |> defaultValue "")
+                )
+            )
+        |> andMap (field "role" (string |> andThen (includedIn roles)))
+        |> andMap (field "superpower" validateSuperpower)
+        |> andMap (field "age" naturalInt)
+        |> andMap (field "bio" (string |> defaultValue ""))
 
 
 validateSuperpower : Validation CustomError Superpower
@@ -112,6 +123,13 @@ validateSuperpower =
                 _ ->
                     Err (customError InvalidSuperpower)
         )
+
+
+validateTodo : Validation CustomError Todo
+validateTodo =
+    map2 Todo
+        (field "done" bool)
+        (field "label" string)
 
 
 
