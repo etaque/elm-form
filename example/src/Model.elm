@@ -28,7 +28,7 @@ type alias User =
     , email : String
     , admin : Bool
     , profile : Profile
-    , links : List Link
+    , todos : List Todo
     }
 
 
@@ -46,9 +46,9 @@ type Superpower
     | Invisible
 
 
-type alias Link =
-    { name : String
-    , url : String
+type alias Todo =
+    { done : Bool
+    , label : String
     }
 
 
@@ -57,6 +57,12 @@ initialFields =
     [ field "name" (Field.Text "hey")
     , group "profile"
         [ field "age" (Field.Text "33") ]
+    , Field.list "todos"
+        [ Field.listGroup
+            [ field "done" (Field.Check True)
+            , field "label" (Field.Text "Remember the milk")
+            ]
+        ]
     ]
 
 
@@ -78,7 +84,7 @@ validate =
         (get "email" (email `andThen` (asyncCheck True)))
         (get "admin" (bool |> defaultValue False))
         (get "profile" validateProfile)
-        (get "links" (list validateLink))
+        (get "todos" (list validateTodo))
 
 
 validateProfile : Validation CustomError Profile
@@ -115,11 +121,11 @@ validateSuperpower =
         )
 
 
-validateLink : Validation CustomError Link
-validateLink =
-    form2 Link
-        (get "name" (string `andThen` (minLength 3)))
-        (get "url" url)
+validateTodo : Validation CustomError Todo
+validateTodo =
+    form2 Todo
+        (get "done" bool)
+        (get "label" string)
 
 
 

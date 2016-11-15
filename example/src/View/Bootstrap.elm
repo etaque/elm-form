@@ -19,15 +19,15 @@ col' i content =
 
 
 type alias GroupBuilder a =
-    String -> FieldState CustomError a -> Html Form.Msg
+    Html Form.Msg -> FieldState CustomError a -> Html Form.Msg
 
 
-formGroup : String -> Maybe (ErrorValue CustomError) -> List (Html Form.Msg) -> Html Form.Msg
+formGroup : Html Form.Msg -> Maybe (ErrorValue CustomError) -> List (Html Form.Msg) -> Html Form.Msg
 formGroup label' maybeError inputs =
     div
         [ class ("row form-group " ++ (errorClass maybeError)) ]
         [ col' 3
-            [ label [ class "control-label" ] [ text label' ] ]
+            [ label [ class "control-label" ] [ label' ] ]
         , col' 5
             inputs
         , col' 4
@@ -65,13 +65,13 @@ textAreaGroup label' state =
 
 checkboxGroup : GroupBuilder Bool
 checkboxGroup label' state =
-    formGroup ""
+    formGroup (text "")
         state.liveError
         [ div
             [ class "checkbox" ]
             [ label []
                 [ Input.checkboxInput state []
-                , text label'
+                , label'
                 ]
             ]
         ]

@@ -39,25 +39,25 @@ formView form =
             , style [ ( "margin", "50px auto" ), ( "width", "600px" ) ]
             ]
             [ legend [] [ text "Elm Simple Form example" ]
-            , textGroup "Name"
+            , textGroup (text "Name")
                 (Form.getFieldAsString "name" form)
-            , textGroup "Email address"
+            , textGroup (text "Email address")
                 (Form.getFieldAsString "email" form)
-            , checkboxGroup "Administrator"
+            , checkboxGroup (text "Administrator")
                 (Form.getFieldAsBool "admin" form)
-            , textGroup "Website"
+            , textGroup (text "Website")
                 (Form.getFieldAsString "profile.website" form)
             , selectGroup roleOptions
-                "Role"
+                (text "Role")
                 (Form.getFieldAsString "profile.role" form)
             , radioGroup superpowerOptions
-                "Superpower"
+                (text "Superpower")
                 (Form.getFieldAsString "profile.superpower" form)
-            , textGroup "Age"
+            , textGroup (text "Age")
                 (Form.getFieldAsString "profile.age" form)
-            , textAreaGroup "Bio"
+            , textAreaGroup (text "Bio")
                 (Form.getFieldAsString "profile.bio" form)
-            , linksView form
+            , todosView form
             , formActions
                 [ button
                     [ onClick Form.Submit
@@ -74,24 +74,48 @@ formView form =
             ]
 
 
-linksView : Form CustomError User -> Html Form.Msg
-linksView form =
+todosView : Form CustomError User -> Html Form.Msg
+todosView form =
     let
-        linkView i =
-            div
-                [ class "row link" ]
-                [ col' 3 [ text "Link" ]
-                , Input.textInput
-                    (Form.getFieldAsString ("links." ++ (toString i) ++ ".name") form)
-                    [ placeholder "Name" ]
-                , textGroup
-                    "URL"
-                    (Form.getFieldAsString ("links." ++ (toString i) ++ ".url") form)
-                , button [ onClick (Form.RemoveItem "links" i) ] [ text "Remove" ]
-                ]
+        allTodos =
+            List.concatMap (todoItemView form) (Form.getListIndexes "todos" form)
     in
         div
-            [ class "links" ]
-        <|
-            (List.map linkView (Form.getListIndexes "links" form))
-                ++ [ button [ onClick (Form.Append "links") ] [ text "Add link" ] ]
+            [ class "row" ]
+            [ col' 3
+                [ label [ class "control-label" ] [ text "Todolist" ]
+                , br [] []
+                , button [ onClick (Form.Append "todos"), class "btn btn-xs btn-default" ] [ text "Add" ]
+                ]
+            , col' 9
+                [ div [ class "todos" ] allTodos
+                ]
+            ]
+
+
+todoItemView : Form CustomError User -> Int -> List (Html Form.Msg)
+todoItemView form i =
+    let
+        labelField =
+            Form.getFieldAsString ("todos." ++ (toString i) ++ ".label") form
+    in
+        [ div
+            [ class ("input-group" ++ (errorClass labelField.liveError)) ]
+            [ span
+                [ class "input-group-addon" ]
+                [ Input.checkboxInput
+                    (Form.getFieldAsBool ("todos." ++ (toString i) ++ ".done") form)
+                    []
+                ]
+            , Input.textInput
+                labelField
+                [ class "form-control" ]
+            , span
+                [ class "input-group-btn" ]
+                [ button
+                    [ onClick (Form.RemoveItem "todos" i), class "btn btn-danger" ]
+                    [ text "Remove" ]
+                ]
+            ]
+        , br [] []
+        ]
