@@ -10,7 +10,7 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 * Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc: you either get the desired output value or all field errors
 * HTML inputs helpers with pre-wired handlers for live validation
 * Suite of basic validations, with a way to add your own
-* Unlimited fields! See `apply` function, similar to Json.Extra
+* Unlimited fields, see `andMap` function (as in `Json.Extra`)
 * Nested fields (`foo.bar.baz`) and lists (`todos.1.checked`) enabling rich form build
 
 [See complete example here](http://etaque.github.io/elm-simple-form/example/) ([source code](https://github.com/etaque/elm-simple-form/tree/master/example)).
@@ -22,7 +22,6 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 ```elm
 module Main exposing (..)
 
-import Html.App as Html
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
@@ -34,92 +33,94 @@ import Form.Input as Input
 -- your expected form output
 
 type alias Foo =
-  { bar : String
-  , baz : Bool
-  }
+    { bar : String
+    , baz : Bool
+    }
 
 
 -- Add form to your model and msgs
 
 type alias Model =
-  { form : Form () Foo }
+    { form : Form () Foo }
 
-type Msg =
-  NoOp | FormMsg Form.Msg
+type Msg
+    = NoOp
+    | FormMsg Form.Msg
 
 
 -- Setup form validation
 
-init : (Model, Cmd Msg)
+init : ( Model, Cmd Msg )
 init =
-  ({ form = Form.initial [] validate }, Cmd.none)
-
+    ( { form = Form.initialFields [] validate }, Cmd.none )
 
 validate : Validation () Foo
 validate =
-  form2 Foo
-    (get "bar" email)
-    (get "baz" bool)
+    map2 Foo
+        (field "bar" email)
+        (field "baz" bool)
 
 
 -- Forward form msgs to Form.update
 
-update : Msg -> Model -> (Model, Cmd Msg)
-update msg ({form} as model) =
-  case msg of
+update : Msg -> Model -> ( Model, Cmd Msg )
+update msg ({ form } as model) =
+    case msg of
+        NoOp ->
+            ( model, Cmd.none )
 
-    NoOp ->
-      (model, Cmd.none)
-
-    FormMsg formMsg ->
-      ({ model | form = Form.update formMsg form}, Cmd.none)
+        FormMsg formMsg ->
+            ( { model | form = Form.update formMsg form }, Cmd.none )
 
 
 -- Render form with Input helpers
 
 view : Model -> Html Msg
-view {form} =
-  Html.map FormMsg (formView form)
+view { form } =
+    Html.map FormMsg (formView form)
 
 formView : Form () Foo -> Html Form.Msg
 formView form =
-  let
-    -- error presenter
-    errorFor field =
-      case field.liveError of
-        Just error ->
-          -- replace toString with your own translations
-          div [ class "error" ] [ text (toString error) ]
-        Nothing ->
-          text ""
+    let
+        -- error presenter
+        errorFor field =
+            case field.liveError of
+                Just error ->
+                    -- replace toString with your own translations
+                    div [ class "error" ] [ text (toString error) ]
 
-    -- fields states
-    bar = Form.getFieldAsString "bar" form
-    baz = Form.getFieldAsBool "baz" form
-  in
-    div []
-      [ label [] [ text "Bar" ]
-      , Input.textInput bar []
-      , errorFor bar
+                Nothing ->
+                    text ""
 
-      , label []
-          [ Input.checkboxInput baz []
-          , text "Baz"
-          ]
-      , errorFor baz
+        -- fields states
+        bar =
+            Form.getFieldAsString "bar" form
 
-      , button
-          [ onClick Form.Submit ]
-          [ text "Submit" ]
-      ]
+        baz =
+            Form.getFieldAsBool "baz" form
+    in
+        div []
+            [ label [] [ text "Bar" ]
+            , Input.textInput bar []
+            , errorFor bar
+            , label []
+                [ Input.checkboxInput baz []
+                , text "Baz"
+                ]
+            , errorFor baz
+            , button
+                [ onClick Form.Submit ]
+                [ text "Submit" ]
+            ]
 
 
-app = Html.program
-  { init = init
-  , update = update
-  , view = view
-  , subscriptions = \_ -> Sub.none
-  }
+app =
+    Html.program
+        { init = init
+        , update = update
+        , view = view
+        , subscriptions = \_ -> Sub.none
+        }
 ```
 
 
@@ -139,8 +140,8 @@ Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version
 
 ```elm
 Form.succeed Player
-  `apply` (get "email" (string `andThen` email))
-  `apply` (get "power" int)
+    |> andMap (field "email" (string |> andThen email))
+    |> andMap (field "power" int)
 ```
 
 ### Nested records
@@ -149,15 +150,15 @@ Form.succeed Player
 
 ```elm
 validate =
-  form2 Player
-    (get "email" (string `andThen` email))
-    (get "power" (int `andThen` (minInt 0)))
-    (get "options"
-      (form2 Options
-        (get "foo" string)
-        (get "bar" string)
-      )
-    )
+    map2 Player
+        (field "email" (string |> andThen email))
+        (field "power" (int |> andThen (minInt 0)))
+        (field "options"
+            (map2 Options
+                (field "foo" string)
+                (field "bar" string)
+            )
+        )
 ```
 
 * View:
@@ -166,6 +167,57 @@ validate =
 Input.textInput (Form.getFieldAsString "options.foo" form) []
 ```
 
+### Dynamic lists
+
+```elm
+-- model
+type alias TodoList =
+    { title : String
+    , items : List String
+    }
+
+-- validation
+validate : Validation () Issue
+validate =
+    map2 TodoList
+        (field "title" string)
+        (field "items" (list string))
+
+-- view
+formView : Form () Issue -> Html Form.Msg
+formView form =
+    div
+        [ class "todo-list" ]
+        [ Input.textInput
+            (Form.getFieldAsString "title" form)
+            [ placeholder "Title" ]
+        , div [ class "items" ] <|
+            List.map
+                (itemView form)
+                (Form.getListIndexes "items" form)
+        , button
+            [ class "add"
+            , onClick (Form.Append "items")
+            ]
+            [ text "Add" ]
+        ]
+
+itemView : Form () Issue -> Int -> Html Form.Msg
+itemView form i =
+    div
+        [ class "item" ]
+        [ Input.textInput
+            (Form.getFieldAsString ("items." ++ (toString i)) form)
+            []
+        , a
+            [ class "remove"
+            , onClick (Form.RemoveItem "items" i)
+            ]
+            [ text "Remove" ]
+        ]
+```
+
+
 ### Initial values and reset
 
 * At form initialization:
@@ -173,19 +225,22 @@ Input.textInput (Form.getFieldAsString "options.foo" form) []
 ```elm
 import Form.Field as Field
 
-initialFields : List (String, Field)
+
+initialFields : List ( String, Field )
 initialFields =
-  [ ("power", Field.Text "10")
-  , ("options", Field.group
-      [ ("foo", Field.Text "blah")
-      , ("bar", Field.Text "meh")
-      ]
-    )
-  ]
+    [ ( "power", Field.string "10" )
+    , ( "options"
+      , Field.group
+            [ ( "foo", Field.string "blah" )
+            , ( "bar", Field.string "meh" )
+            ]
+      )
+    ]
+
 
 initialForm : Form
 initialForm =
-  Form.initial initialFields validate
+    Form.initial initialFields validate
 ```
 
 See `Form.Field` type for more options.
@@ -208,7 +263,7 @@ type LocalError = Fatal | NotSoBad
 
 validate : Validate LocalError Foo
 validate =
-  (get "foo" (string |> customError Fatal))
+    (field "foo" (string |> customError Fatal))
 
 -- creates `Form.Error.CustomError Fatal`
 ```
