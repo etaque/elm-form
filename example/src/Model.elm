@@ -1,121 +1,135 @@
 module Model exposing (..)
 
 import Form exposing (Form)
-import Form.Field as Field
+import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
 
 
 type Msg
-  = NoOp
-  | FormMsg Form.Msg
+    = NoOp
+    | FormMsg Form.Msg
 
 
 type alias Model =
-  { form : Form CustomError User
-  , userMaybe : Maybe User
-  }
+    { form : Form CustomError User
+    , userMaybe : Maybe User
+    }
 
 
 type CustomError
-  = Ooops
-  | Nope
-  | AlreadyTaken
-  | InvalidSuperpower
+    = Ooops
+    | Nope
+    | AlreadyTaken
+    | InvalidSuperpower
 
 
 type alias User =
-  { name : String
-  , email : String
-  , admin : Bool
-  , profile : Profile
-  }
+    { name : String
+    , email : String
+    , admin : Bool
+    , profile : Profile
+    , todos : List Todo
+    }
 
 
 type alias Profile =
-  { website : Maybe String
-  , role : String
-  , superpower : Superpower
-  , age : Int
-  , bio : String
-  }
+    { website : Maybe String
+    , role : String
+    , superpower : Superpower
+    , age : Int
+    , bio : String
+    }
 
 
 type Superpower
-  = Flying
-  | Invisible
+    = Flying
+    | Invisible
 
 
-initialFields : List ( String, Field.Field )
+type alias Todo =
+    { done : Bool
+    , label : String
+    }
+
+
+initialFields : List ( String, Field )
 initialFields =
-  [ ( "name", Field.Text "hey" )
-  , ( "profile"
-    , Field.group
-        [ ( "foo", Field.Radio "ho" ) ]
-    )
-  ]
+    [ ( "name", Field.string "hey" )
+    , ( "profile"
+      , Field.group
+            [ ( "age", Field.string "33" ) ]
+      )
+    , ( "todos"
+      , Field.list
+            [ Field.group
+                [ ( "done", Field.bool True )
+                , ( "label", Field.string "Remember the milk" )
+                ]
+            ]
+      )
+    ]
 
 
 roles : List String
 roles =
-  [ "role1", "role2" ]
+    [ "role1", "role2" ]
 
 
 superpowers : List String
 superpowers =
-  [ "flying", "invisible" ]
-
-
-{-| Infix operators. See elm-simple-form-infix for a packaged version.
--}
-(:=) =
-  Validate.get
-infixl 7 :=
-
-
-(|:) =
-  Validate.apply
+    [ "flying", "invisible" ]
 
 
 validate : Validation CustomError User
 validate =
-  form4
-    User
-    ("name" := string `andThen` nonEmpty)
-    ("email" := email `andThen` (asyncCheck True))
-    ("admin" := bool |> defaultValue False)
-    ("profile" := validateProfile)
+    map5
+        User
+        (field "name" (string |> andThen nonEmpty))
+        (field "email" (email |> andThen (asyncCheck True)))
+        (field "admin" (bool |> defaultValue False))
+        (field "profile" validateProfile)
+        (field "todos" (list validateTodo))
 
 
 validateProfile : Validation CustomError Profile
 validateProfile =
-  succeed Profile
-    |: ("website"
-          := oneOf
-              [ emptyString |> map (\_ -> Nothing)
-              , url |> map Just
-              ]
-       )
-    |: ("role" := (string `andThen` (includedIn roles)))
-    |: ("superpower" := validateSuperpower)
-    |: ("age" := naturalInt)
-    |: ("bio" := string |> defaultValue "")
+    succeed Profile
+        |> andMap
+            (field "website"
+                (oneOf
+                    [ emptyString |> map (\_ -> Nothing)
+                    , url |> map Just
+                    ]
+                )
+            )
+        |> andMap (field "role" (string |> andThen (includedIn roles)))
+        |> andMap (field "superpower" validateSuperpower)
+        |> andMap (field "age" naturalInt)
+        |> andMap (field "bio" (string |> defaultValue ""))
 
 
 validateSuperpower : Validation CustomError Superpower
 validateSuperpower =
-  customValidation
-    string
-    (\s ->
-      case s of
-        "flying" ->
-          Ok Flying
+    customValidation
+        string
+        (\s ->
+            case s of
+                "flying" ->
+                    Ok Flying
 
-        "invisible" ->
-          Ok Invisible
+                "invisible" ->
+                    Ok Invisible
 
-        _ ->
-          Err (customError InvalidSuperpower)
-    )
+                _ ->
+                    Err (customError InvalidSuperpower)
+        )
+
+
+validateTodo : Validation CustomError Todo
+validateTodo =
+    map2 Todo
+        (field "done" bool)
+        (field "label" string)
 
 
 
@@ -124,19 +138,19 @@ validateSuperpower =
 
 naturalInt : Validation CustomError Int
 naturalInt =
-  customValidation
-    int
-    (\i ->
-      if i > 0 then
-        Ok i
-      else
-        Err (customError Nope)
-    )
+    customValidation
+        int
+        (\i ->
+            if i > 0 then
+                Ok i
+            else
+                Err (customError Nope)
+        )
 
 
 asyncCheck : Bool -> String -> Validation CustomError String
 asyncCheck serverIsOk s =
-  if serverIsOk then
-    succeed s
-  else
-    fail (customError AlreadyTaken)
+    if serverIsOk then
+        succeed s
+    else
+        fail (customError AlreadyTaken)

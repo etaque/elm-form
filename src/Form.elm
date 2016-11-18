@@ -1,29 +1,27 @@
-module Form exposing (Msg(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getFocus, getErrors, isSubmitted, getOutput)
+module Form exposing (Msg(..), InputType(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getListIndexes, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
 
 # Types
-@docs Msg, Form, FieldState
+@docs Msg, InputType, Form, FieldState
 
 # Init/update lifecyle
 @docs initial, update
 
 # Field state accessors
-@docs getFieldAsString, getFieldAsBool
+@docs getFieldAsString, getFieldAsBool, getListIndexes
 
 # Global state accessors
-@docs getFocus, isSubmitted, getErrors, getOutput
+@docs getFocus, isSubmitted, getErrors, getOutput, getChangedFields
 -}
 
-import Dict exposing (Dict)
 import Result
-import String
 import Set exposing (Set)
-import String
-import Form.Error as Error exposing (..)
-import Form.Field as Field exposing (..)
+import Form.Error as Error exposing (Error, ErrorValue)
+import Form.Field as Field exposing (Field, FieldValue)
 import Form.Validate as Validate exposing (Validation)
+import Form.Tree as Tree
 
 
 {-| Form to embed in your model. Type parameters are:
@@ -32,40 +30,40 @@ import Form.Validate as Validate exposing (Validation)
  * `output` - the type of the validation output.
 -}
 type Form customError output
-  = F (Model customError output)
+    = F (Model customError output)
 
 
 {-| Private
 -}
 type alias Model customError output =
-  { fields : Field
-  , focus : Maybe String
-  , dirtyFields : Set String
-  , changedFields : Set String
-  , isSubmitted : Bool
-  , output : Maybe output
-  , errors : Error customError
-  , validation : Validation customError output
-  }
+    { fields : Field
+    , focus : Maybe String
+    , dirtyFields : Set String
+    , changedFields : Set String
+    , isSubmitted : Bool
+    , output : Maybe output
+    , errors : Error customError
+    , validation : Validation customError output
+    }
 
 
 {-| Initial form state. See `Form.Field` for initial fields, and `Form.Validate` for validation.
 -}
 initial : List ( String, Field ) -> Validation e output -> Form e output
 initial initialFields validation =
-  let
-    model =
-      { fields = group initialFields
-      , focus = Nothing
-      , dirtyFields = Set.empty
-      , changedFields = Set.empty
-      , isSubmitted = False
-      , output = Nothing
-      , errors = GroupErrors Dict.empty
-      , validation = validation
-      }
-  in
-    F (updateValidate model)
+    let
+        model =
+            { fields = Tree.group initialFields
+            , focus = Nothing
+            , dirtyFields = Set.empty
+            , changedFields = Set.empty
+            , isSubmitted = False
+            , output = Nothing
+            , errors = Tree.group []
+            , validation = validation
+            }
+    in
+        F (updateValidate model)
 
 
 {-| Field state containing all necessary data for view and update,
@@ -75,292 +73,292 @@ can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
  * `value` - a `Maybe` of the requested type
  * `error` - a `Maybe` of the field error
  * `liveError` - same but with added logic for live validation
-    (see [`getLiveErrorAt`](https://github.com/etaque/elm-simple-form/blob/master/src/Form.elm) impl)
+    (see [`getLiveErrorAt`](https://github.com/etaque/elm-form/blob/master/src/Form.elm) impl)
  * `isDirty` - if the field content has been changed since last validation
  * `isChanged` - if the field value has changed since last init/reset
  * `hasFocus` - if the field is currently focused
 -}
 type alias FieldState e a =
-  { path : String
-  , value : Maybe a
-  , error : Maybe (Error e)
-  , liveError : Maybe (Error e)
-  , isDirty : Bool
-  , isChanged : Bool
-  , hasFocus : Bool
-  }
+    { path : String
+    , value : Maybe a
+    , error : Maybe (ErrorValue e)
+    , liveError : Maybe (ErrorValue e)
+    , isDirty : Bool
+    , isChanged : Bool
+    , hasFocus : Bool
+    }
 
 
 {-| Get field state at path, with value as a `String`.
 -}
 getFieldAsString : String -> Form e o -> FieldState e String
 getFieldAsString =
-  getField getStringAt
+    getField getStringAt
 
 
 {-| Get field state at path, with value as a `Bool`.
 -}
 getFieldAsBool : String -> Form e o -> FieldState e Bool
 getFieldAsBool =
-  getField getBoolAt
+    getField getBoolAt
 
 
 getField : (String -> Form e o -> Maybe a) -> String -> Form e o -> FieldState e a
 getField getValue path form =
-  { path = path
-  , value = getValue path form
-  , error = getErrorAt path form
-  , liveError = getLiveErrorAt path form
-  , isDirty = isDirtyAt path form
-  , isChanged = isChangedAt path form
-  , hasFocus = getFocus form == Just path
-  }
+    { path = path
+    , value = getValue path form
+    , error = getErrorAt path form
+    , liveError = getLiveErrorAt path form
+    , isDirty = isDirtyAt path form
+    , isChanged = isChangedAt path form
+    , hasFocus = getFocus form == Just path
+    }
+
+
+{-| return a list of indexes so one can build qualified names of fields in list.
+-}
+getListIndexes : String -> Form e o -> List Int
+getListIndexes path (F model) =
+    let
+        length =
+            getFieldAt path model
+                |> Maybe.map (Tree.asList >> List.length)
+                |> Maybe.withDefault 0
+    in
+        List.range 0 (length - 1)
 
 
 {-| Form messages for `update`.
 -}
 type Msg
-  = NoOp
-  | Focus String
-  | Blur String
-  | Input String Field
-  | Submit
-  | Validate
-  | Reset (List ( String, Field ))
+    = NoOp
+    | Focus String
+    | Blur String
+    | Input String InputType FieldValue
+    | Append String
+    | RemoveItem String Int
+    | Submit
+    | Validate
+    | Reset (List ( String, Field ))
+
+
+{-| Input types to determine live validation behaviour.
+-}
+type InputType
+    = Text
+    | Textarea
+    | Select
+    | Radio
+    | Checkbox
 
 
 {-| Update form state with the given message
 -}
 update : Msg -> Form e output -> Form e output
 update msg (F model) =
-  case msg of
-    NoOp ->
-      F model
+    case msg of
+        NoOp ->
+            F model
 
-    Focus name ->
-      let
-        newModel =
-          { model | focus = Just name }
-      in
-        F newModel
+        Focus name ->
+            let
+                newModel =
+                    { model | focus = Just name }
+            in
+                F newModel
 
-    Blur name ->
-      let
-        newDirtyFields =
-          Set.remove name model.dirtyFields
+        Blur name ->
+            let
+                newDirtyFields =
+                    Set.remove name model.dirtyFields
 
-        newModel =
-          { model | focus = Nothing, dirtyFields = newDirtyFields }
-      in
-        F (updateValidate newModel)
+                newModel =
+                    { model | focus = Nothing, dirtyFields = newDirtyFields }
+            in
+                F (updateValidate newModel)
 
-    Input name field ->
-      let
-        newFields =
-          setFieldAt name field (F model)
+        Input name inputType fieldValue ->
+            let
+                newFields =
+                    setFieldAt name (Tree.Value fieldValue) model
 
-        isDirty =
-          case field of
-            Text _ ->
-              True
+                isDirty =
+                    case inputType of
+                        Text ->
+                            True
 
-            Textarea _ ->
-              True
+                        Textarea ->
+                            True
 
-            _ ->
-              False
+                        _ ->
+                            False
 
-        newDirtyFields =
-          if isDirty then
-            Set.insert name model.dirtyFields
-          else
-            model.dirtyFields
+                newDirtyFields =
+                    if isDirty then
+                        Set.insert name model.dirtyFields
+                    else
+                        model.dirtyFields
 
-        newChangedFields =
-          Set.insert name model.changedFields
+                newChangedFields =
+                    Set.insert name model.changedFields
 
-        newModel =
-          { model
-            | fields = newFields
-            , dirtyFields = newDirtyFields
-            , changedFields = newChangedFields
-          }
-      in
-        F (updateValidate newModel)
+                newModel =
+                    { model
+                        | fields = newFields
+                        , dirtyFields = newDirtyFields
+                        , changedFields = newChangedFields
+                    }
+            in
+                F (updateValidate newModel)
 
-    Submit ->
-      let
-        validatedModel =
-          updateValidate model
-      in
-        F { validatedModel | isSubmitted = True }
+        Append listName ->
+            let
+                listFields =
+                    getFieldAt listName model
+                        |> Maybe.map Tree.asList
+                        |> Maybe.withDefault []
 
-    Validate ->
-      F (updateValidate model)
+                newListFields =
+                    listFields ++ [ Tree.Value Field.EmptyField ]
 
-    Reset fields ->
-      let
-        newModel =
-          { model
-            | fields = group fields
-            , dirtyFields = Set.empty
-            , changedFields = Set.empty
-            , isSubmitted = False
-          }
-      in
-        F (updateValidate newModel)
+                newModel =
+                    { model
+                        | fields = setFieldAt listName (Tree.List newListFields) model
+                    }
+            in
+                F newModel
+
+        RemoveItem listName index ->
+            let
+                listFields =
+                    getFieldAt listName model
+                        |> Maybe.map Tree.asList
+                        |> Maybe.withDefault []
+
+                newListFields =
+                    (List.take index listFields) ++ (List.drop (index + 1) listFields)
+
+                newModel =
+                    { model
+                        | fields = setFieldAt listName (Tree.List newListFields) model
+                    }
+            in
+                F newModel
+
+        Submit ->
+            let
+                validatedModel =
+                    updateValidate model
+            in
+                F { validatedModel | isSubmitted = True }
+
+        Validate ->
+            F (updateValidate model)
+
+        Reset fields ->
+            let
+                newModel =
+                    { model
+                        | fields = Tree.group fields
+                        , dirtyFields = Set.empty
+                        , changedFields = Set.empty
+                        , isSubmitted = False
+                    }
+            in
+                F (updateValidate newModel)
 
 
 updateValidate : Model e o -> Model e o
 updateValidate model =
-  case model.validation model.fields of
-    Ok output ->
-      { model
-        | errors =
-            GroupErrors Dict.empty
-        , output = Just output
-      }
+    case model.validation model.fields of
+        Ok output ->
+            { model
+                | errors =
+                    Tree.group []
+                , output = Just output
+            }
 
-    Err error ->
-      { model
-        | errors =
-            error
-        , output = Nothing
-      }
+        Err error ->
+            { model
+                | errors =
+                    error
+                , output = Nothing
+            }
 
 
-getFieldAt : String -> Form e o -> Maybe Field
-getFieldAt qualifiedName (F model) =
-  let
-    walkPath name maybeField =
-      case maybeField of
-        Just field ->
-          Field.at name field
-
-        Nothing ->
-          Nothing
-  in
-    List.foldl walkPath (Just model.fields) (String.split "." qualifiedName)
+getFieldAt : String -> Model e o -> Maybe Field
+getFieldAt qualifiedName model =
+    Tree.getAtPath qualifiedName model.fields
 
 
 getStringAt : String -> Form e o -> Maybe String
-getStringAt name form =
-  getFieldAt name form `Maybe.andThen` asString
+getStringAt name (F model) =
+    getFieldAt name model |> Maybe.andThen Field.asString
 
 
 getBoolAt : String -> Form e o -> Maybe Bool
-getBoolAt name form =
-  getFieldAt name form `Maybe.andThen` asBool
+getBoolAt name (F model) =
+    getFieldAt name model |> Maybe.andThen Field.asBool
 
 
-setFieldAt : String -> Field -> Form e o -> Field
-setFieldAt qualifiedName field (F model) =
-  let
-    walkPath path maybeNode =
-      case path of
-        name :: rest ->
-          let
-            node =
-              Maybe.withDefault (Group Dict.empty) maybeNode
-
-            childField =
-              walkPath rest (Field.at name node)
-          in
-            merge (Group (Dict.fromList [ ( name, childField ) ])) node
-
-        [] ->
-          field
-  in
-    walkPath (String.split "." qualifiedName) (Just model.fields)
+setFieldAt : String -> Field -> Model e o -> Field
+setFieldAt path field model =
+    Tree.setAtPath path field model.fields
 
 
 {-| Get form output, in case of validation success.
 -}
 getOutput : Form e o -> Maybe o
 getOutput (F model) =
-  model.output
+    model.output
 
 
 {-| Get form submission state. Useful to show errors on unchanged fields.
 -}
 isSubmitted : Form e o -> Bool
 isSubmitted (F model) =
-  model.isSubmitted
+    model.isSubmitted
 
 
 {-| Get list of errors on qualified paths.
 -}
-getErrors : Form e o -> List ( String, Error e )
+getErrors : Form e o -> List ( String, Error.ErrorValue e )
 getErrors (F model) =
-  let
-    mapGroupItem path ( name, error ) =
-      walkTree (path ++ [ name ]) error
-
-    walkTree path node =
-      case node of
-        GroupErrors errors ->
-          List.concatMap (mapGroupItem path) (Dict.toList errors)
-
-        _ ->
-          [ ( String.join "." path, node ) ]
-  in
-    walkTree [] model.errors
+    Tree.valuesWithPath model.errors
 
 
-getErrorAt : String -> Form e o -> Maybe (Error e)
-getErrorAt qualifiedName (F model) =
-  let
-    walkPath path maybeNode =
-      case path of
-        name :: rest ->
-          case maybeNode of
-            Just error ->
-              case error of
-                GroupErrors _ ->
-                  walkPath rest (Error.getAt name error)
-
-                _ ->
-                  Just error
-
-            Nothing ->
-              Nothing
-
-        [] ->
-          maybeNode
-  in
-    walkPath (String.split "." qualifiedName) (Just model.errors)
+getErrorAt : String -> Form e o -> Maybe (ErrorValue e)
+getErrorAt path (F model) =
+    Tree.getAtPath path model.errors |> Maybe.andThen Tree.asValue
 
 
-getLiveErrorAt : String -> Form e o -> Maybe (Error e)
+getLiveErrorAt : String -> Form e o -> Maybe (ErrorValue e)
 getLiveErrorAt name form =
-  if isSubmitted form || (isChangedAt name form && not (isDirtyAt name form)) then
-    getErrorAt name form
-  else
-    Nothing
+    if isSubmitted form || (isChangedAt name form && not (isDirtyAt name form)) then
+        getErrorAt name form
+    else
+        Nothing
 
 
 isChangedAt : String -> Form e o -> Bool
 isChangedAt qualifiedName (F model) =
-  Set.member qualifiedName model.changedFields
+    Set.member qualifiedName model.changedFields
 
 
 isDirtyAt : String -> Form e o -> Bool
 isDirtyAt qualifiedName (F model) =
-  Set.member qualifiedName model.dirtyFields
+    Set.member qualifiedName model.dirtyFields
 
 
 {-| Return currently focused field, if any.
 -}
 getFocus : Form e o -> Maybe String
 getFocus (F model) =
-  model.focus
+    model.focus
 
 
-merge : Field -> Field -> Field
-merge v1 v2 =
-  case ( v1, v2 ) of
-    ( Group g1, Group g2 ) ->
-      Group (Dict.union g1 g2)
-
-    _ ->
-      v1
+{-| Get set of changed fields.
+-}
+getChangedFields : Form e o -> Set String
+getChangedFields (F model) =
+    model.changedFields
