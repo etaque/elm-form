@@ -140,6 +140,7 @@ type Msg
     | Submit
     | Validate
     | Reset (List ( String, Field ))
+    | ResetSubmitted
 
 
 {-| Input types to determine live validation behaviour.
@@ -266,6 +267,13 @@ update msg (F model) =
                     }
             in
                 F (updateValidate newModel)
+
+        ResetSubmitted ->
+            let
+                validatedModel =
+                    updateValidate model
+            in
+                F { validatedModel | isSubmitted = False }
 
 
 updateValidate : Model e o -> Model e o
