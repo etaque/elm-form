@@ -28,10 +28,10 @@ all =
                         ( "links.0.name", "Twitter" )
 
                     formAfterAppend =
-                        Form.update (Form.Append "links") initialForm
+                        Form.update Model.validate (Form.Append "links") initialForm
 
                     formAfterInput =
-                        Form.update (Form.Input name Form.Text (Field.String value)) formAfterAppend
+                        Form.update Model.validate (Form.Input name Form.Text (Field.String value)) formAfterAppend
 
                     maybeState =
                         Form.getFieldAsString name formAfterInput
@@ -47,4 +47,4 @@ initialForm =
 
 validatedForm : Form Model.CustomError Model.User
 validatedForm =
-    Form.update Form.Validate initialForm
+    Form.update Model.validate Form.Validate initialForm

@@ -52,10 +52,10 @@ type Msg
 
 init : ( Model, Cmd Msg )
 init =
-    ( { form = Form.initialFields [] validate }, Cmd.none )
+    ( { form = Form.initialFields [] validation }, Cmd.none )
 
-validate : Validation () Foo
-validate =
+validation : Validation () Foo
+validation =
     map2 Foo
         (field "bar" email)
         (field "baz" bool)
@@ -70,7 +70,7 @@ update msg ({ form } as model) =
             ( model, Cmd.none )
 
         FormMsg formMsg ->
-            ( { model | form = Form.update formMsg form }, Cmd.none )
+            ( { model | form = Form.update validation formMsg form }, Cmd.none )
 
 
 -- Render form with Input helpers
@@ -149,7 +149,7 @@ Form.succeed Player
 * Validation:
 
 ```elm
-validate =
+validation =
     map2 Player
         (field "email" (string |> andThen email))
         (field "power" (int |> andThen (minInt 0)))
@@ -177,8 +177,8 @@ type alias TodoList =
     }
 
 -- validation
-validate : Validation () Issue
-validate =
+validation : Validation () Issue
+validation =
     map2 TodoList
         (field "title" string)
         (field "items" (list string))
@@ -240,7 +240,7 @@ initialFields =
 
 initialForm : Form
 initialForm =
-    Form.initial initialFields validate
+    Form.initial initialFields validation
 ```
 
 See `Form.Field` type for more options.
@@ -261,8 +261,8 @@ More info: https://github.com/evancz/elm-html/pull/81#issuecomment-145676200
 ```elm
 type LocalError = Fatal | NotSoBad
 
-validate : Validate LocalError Foo
-validate =
+validation : Validation LocalError Foo
+validation =
     (field "foo" (string |> customError Fatal))
 
 -- creates `Form.Error.CustomError Fatal`

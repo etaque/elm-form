@@ -21,4 +21,4 @@ update msg ({ form } as model) =
                     ( { model | userMaybe = Just user }, Cmd.none )
 
                 _ ->
-                    ( { model | form = Form.update formMsg form }, Cmd.none )
+                    ( { model | form = Form.update validate formMsg form }, Cmd.none )

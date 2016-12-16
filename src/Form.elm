@@ -43,7 +43,6 @@ type alias Model customError output =
     , isSubmitted : Bool
     , output : Maybe output
     , errors : Error customError
-    , validation : Validation customError output
     }
 
 
@@ -60,10 +59,9 @@ initial initialFields validation =
             , isSubmitted = False
             , output = Nothing
             , errors = Tree.group []
-            , validation = validation
             }
     in
-        F (updateValidate model)
+        F (updateValidate validation model)
 
 
 {-| Field state containing all necessary data for view and update,
@@ -154,8 +152,8 @@ type InputType
 
 {-| Update form state with the given message
 -}
-update : Msg -> Form e output -> Form e output
-update msg (F model) =
+update : Validation e output -> Msg -> Form e output -> Form e output
+update validation msg (F model) =
     case msg of
         NoOp ->
             F model
@@ -175,7 +173,7 @@ update msg (F model) =
                 newModel =
                     { model | focus = Nothing, dirtyFields = newDirtyFields }
             in
-                F (updateValidate newModel)
+                F (updateValidate validation newModel)
 
         Input name inputType fieldValue ->
             let
@@ -209,7 +207,7 @@ update msg (F model) =
                         , changedFields = newChangedFields
                     }
             in
-                F (updateValidate newModel)
+                F (updateValidate validation newModel)
 
         Append listName ->
             let
@@ -248,12 +246,12 @@ update msg (F model) =
         Submit ->
             let
                 validatedModel =
-                    updateValidate model
+                    updateValidate validation model
             in
                 F { validatedModel | isSubmitted = True }
 
         Validate ->
-            F (updateValidate model)
+            F (updateValidate validation model)
 
         Reset fields ->
             let
@@ -265,12 +263,12 @@ update msg (F model) =
                         , isSubmitted = False
                     }
             in
-                F (updateValidate newModel)
+                F (updateValidate validation newModel)
 
 
-updateValidate : Model e o -> Model e o
-updateValidate model =
-    case model.validation model.fields of
+updateValidate : Validation e o -> Model e o -> Model e o
+updateValidate validation model =
+    case validation model.fields of
         Ok output ->
             { model
                 | errors =
