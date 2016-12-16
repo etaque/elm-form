@@ -46,7 +46,7 @@ map f validation field =
 
 {-| Apply a new validation to the result of the validation.
 
-    field "myfield" (int `andThen` minInt 10)
+    field "myfield" (int |> andThen (minInt 10))
 -}
 andThen : (a -> Validation e b) -> Validation e a -> Validation e b
 andThen callback validation field =
@@ -56,8 +56,8 @@ andThen callback validation field =
 {-| Incremental form validation for records with more that 8 fields.
 
     Form.succeed SomeRecord
-      |> andMap (get "foo" string)
-      |> andMap (get "bar" string)
+      |> andMap (field "foo" string)
+      |> andMap (field "bar" string)
 -}
 andMap : Validation e a -> Validation e (a -> b) -> Validation e b
 andMap aValidation partialValidation field =
@@ -85,9 +85,9 @@ mapError f validation =
 
 {-| Arrange that if a validation fails, it has the given custom error.
 
-    get "customerId" (V.int
-          `andThen` minInt 1
-          `andThen` maxInt 9999
+    field "customerId" (V.int
+          |> andThen (minInt 1)
+          |> andThen (maxInt 9999)
           |> withCustomError InvalidIdentity)
 -}
 withCustomError : customErr -> Validation e a -> Validation customErr a
