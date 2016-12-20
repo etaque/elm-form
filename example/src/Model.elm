@@ -1,5 +1,6 @@
 module Model exposing (..)
 
+import Date exposing (Date)
 import Form exposing (Form)
 import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
@@ -27,6 +28,7 @@ type alias User =
     { name : String
     , email : String
     , admin : Bool
+    , date : Date
     , profile : Profile
     , todos : List Todo
     }
@@ -82,11 +84,12 @@ superpowers =
 
 validate : Validation CustomError User
 validate =
-    map5
+    map6
         User
         (field "name" (string |> andThen nonEmpty))
         (field "email" (email |> andThen (asyncCheck True)))
         (field "admin" (bool |> defaultValue False))
+        (field "date" date)
         (field "profile" validateProfile)
         (field "todos" (list validateTodo))
 

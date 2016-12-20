@@ -44,6 +44,8 @@ formView form =
                 (Form.getFieldAsString "email" form)
             , checkboxGroup (text "Administrator")
                 (Form.getFieldAsBool "admin" form)
+            , dateGroup (text "Date")
+                (Form.getFieldAsString "date" form)
             , textGroup (text "Website")
                 (Form.getFieldAsString "profile.website" form)
             , selectGroup roleOptions
