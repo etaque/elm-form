@@ -4,6 +4,7 @@ import Html exposing (..)
 import Html.Attributes exposing (..)
 import Form exposing (Form, FieldState)
 import Form.Input as Input
+import Form.Field as Field
 import Form.Error exposing (Error, ErrorValue)
 import Model exposing (..)
 
@@ -48,6 +49,21 @@ textGroup label_ state =
         [ Input.textInput state
             [ class "form-control"
             , value (Maybe.withDefault "" state.value)
+            ]
+        ]
+
+
+dateGroup : GroupBuilder String
+dateGroup label_ state =
+    formGroup label_
+        state.liveError
+        [ Input.baseInput "date"
+            Field.String
+            Form.Text
+            state
+            [ class "form-control"
+            , value (Maybe.withDefault "" state.value)
+            , placeholder "yyyy-mm-dd"
             ]
         ]
 

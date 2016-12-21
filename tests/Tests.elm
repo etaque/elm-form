@@ -17,7 +17,8 @@ all =
             \_ ->
                 equal
                     (Form.getErrors validatedForm)
-                    [ ( "email", InvalidString )
+                    [ ( "date", InvalidDate )
+                    , ( "email", InvalidString )
                     , ( "profile.role", InvalidString )
                     , ( "profile.superpower", InvalidString )
                     ]
