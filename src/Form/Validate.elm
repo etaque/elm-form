@@ -1,9 +1,9 @@
-module Form.Validate exposing (Validation, field, map, andThen, andMap, customError, defaultValue, mapError, withCustomError, map2, map3, map4, map5, map6, map7, map8, list, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf)
+module Form.Validate exposing (Validation, field, map, andThen, andMap, customError, defaultValue, mapError, withCustomError, map2, map3, map4, map5, map6, map7, map8, list, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf, sequence)
 
 {-| Form validation.
 
 # Combinators
-@docs Validation, field, map, succeed, andThen, andMap, customError, defaultValue, mapError, withCustomError
+@docs Validation, field, map, succeed, andThen, andMap, customError, defaultValue, mapError, withCustomError, sequence
 
 # Fixed-size forms
 @docs map2, map3, map4, map5, map6, map7, map8
@@ -463,6 +463,14 @@ oneOf validations field =
                     result
     in
         List.foldl walkResults (Err (Error.value Empty)) results
+
+
+{-| Combine a list of validations into a validation producing a list of all
+results.
+-}
+sequence : List (Validation e a) -> Validation e (List a)
+sequence validations =
+    List.foldr (map2 (::)) (succeed []) validations
 
 
 {-| Validate a list of fields.
