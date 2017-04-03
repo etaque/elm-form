@@ -52,7 +52,7 @@ type Msg
 
 init : ( Model, Cmd Msg )
 init =
-    ( { form = Form.initialFields [] validation }, Cmd.none )
+    ( { form = Form.initial [] validation }, Cmd.none )
 
 validation : Validation () Foo
 validation =
