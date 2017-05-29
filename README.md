@@ -4,6 +4,7 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 
     elm package install etaque/elm-form
 
+For when the classical "a message per field" doesn't work well for you, at the price of loosing some typesafety.
 
 ## Features
 
