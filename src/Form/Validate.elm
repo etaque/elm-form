@@ -55,7 +55,7 @@ andThen callback validation field =
 
 {-| Incremental form validation for records with more that 8 fields.
 
-    Form.succeed SomeRecord
+    Form.Validate.succeed SomeRecord
       |> andMap (field "foo" string)
       |> andMap (field "bar" string)
 -}
