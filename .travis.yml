@@ -20,11 +20,19 @@ install:
   - nvm use $TARGET_NODE_VERSION
   - node --version
   - npm --version
+  - npm install -g elm-use elm-test@0.18.3
+  - elm-use $ELM_VERSION
+  - mv $(npm config get prefix)/bin/elm-make $(npm config get prefix)/bin/elm-make-old
+  - chmod +x $(npm config get prefix)/bin/elm-make
+  - travis_retry elm-package install --yes
   - cd tests
-  - npm install -g elm@$ELM_VERSION elm-test
   - npm install
-  - git clone https://github.com/NoRedInk/elm-ops-tooling
-  - elm-ops-tooling/with_retry.rb elm package install --yes
+  - travis_retry elm-package install --yes
+  - cd ..
 
 script:
+  - elm-format --validate src tests examples
+  - cd examples
+  - elm-make --output=/dev/null --yes
+  - cd ..
   - npm test
