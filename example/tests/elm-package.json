@@ -1,21 +1,14 @@
 {
-    "version": "3.0.0",
-    "summary": "Live validation of form inputs in Elm",
+    "version": "1.0.0",
+    "summary": "Test Suites",
     "repository": "https://github.com/etaque/elm-form.git",
     "license": "BSD3",
     "source-directories": [
-        "src/"
+        "../src/",
+        "../../src/",
+        "."
     ],
-    "exposed-modules": [
-        "Form",
-        "Form.Error",
-        "Form.Validate",
-        "Form.Field",
-        "Form.Input",
-        "Form.Init",
-        "Form.Test",
-        "Form.Test.ValidationExpectation"
-    ],
+    "exposed-modules": [],
     "dependencies": {
         "elm-lang/core": "5.0.0 <= v < 6.0.0",
         "elm-community/elm-test": "4.0.0 <= v < 5.0.0",
