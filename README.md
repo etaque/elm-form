@@ -19,6 +19,9 @@ For when the classical "a message per field" doesn't work well for you, at the p
 
 ## Basic usage
 
+See the [example validation test suite](https://github.com/etaque/elm-form/blob/master/example/tests/ValidationTests.elm)
+and [test helper function docs](http://package.elm-lang.org/packages/etaque/elm-form/latest/Form-Test)
+for how to test-drive validations.
 
 ```elm
 module Main exposing (..)
