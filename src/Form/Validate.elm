@@ -483,13 +483,23 @@ list validation field =
                 results =
                     List.map validation items
 
+                indexedErrMaybe index res =
+                    case res of
+                        Ok _ ->
+                            Nothing
+
+                        Err e ->
+                            Just ( toString index, e )
+
                 errors =
-                    List.filterMap errMaybe results
+                    results
+                        |> List.indexedMap indexedErrMaybe
+                        |> List.filterMap identity
             in
                 if List.isEmpty errors then
                     Ok (List.filterMap Result.toMaybe results)
                 else
-                    Err (Tree.List errors)
+                    Err (Tree.group errors)
 
         _ ->
             Ok []

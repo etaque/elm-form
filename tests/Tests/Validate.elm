@@ -4,9 +4,10 @@ import Test exposing (..)
 import Expect exposing (..)
 import Fuzz exposing (..)
 import Form.Validate as Validate exposing (Validation)
-import Form.Field
-import Form.Error
+import Form.Field as Field
+import Form.Error as Error
 import Form.Tree as Tree
+import Form
 
 
 all : Test
@@ -44,9 +45,24 @@ all =
                                 ]
                                 |> Err
                             )
+        , test "Puts the errors at the correct indexes" <|
+            \_ ->
+                let
+                    validate =
+                        Validate.field "field_name"
+                            (Validate.list
+                                (Validate.string |> Validate.andThen (Validate.minLength 4))
+                            )
+
+                    initialForm =
+                        Form.initial [ ( "field_name", Field.list [ (Field.value (Field.String "longer")), (Field.value (Field.String "not")), (Field.value (Field.String "longer")) ] ) ] validate
+                in
+                    Expect.equal
+                        [ ( "field_name.1", Error.ShorterStringThan 4 ) ]
+                        (Form.getErrors initialForm)
         ]
 
 
-run : Validation e a -> Result (Form.Error.Error e) a
+run : Validation e a -> Result (Error.Error e) a
 run validation =
-    Form.Field.group [] |> validation
+    Field.group [] |> validation
