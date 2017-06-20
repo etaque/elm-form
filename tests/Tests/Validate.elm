@@ -65,33 +65,46 @@ all =
             \_ ->
                 let
                     validate =
-                        Validate.field "field_name"
+                        Validate.field "a"
                             (Validate.list
-                                (Validate.string |> Validate.andThen (Validate.minLength 4))
+                                (Validate.field "b"
+                                    (Validate.list
+                                        (Validate.string |> Validate.andThen (Validate.minLength 4))
+                                    )
+                                )
                             )
 
                     initialForm =
-                        Form.initial [ ( "field_name", Field.list [ (Field.value (Field.String "longer")), (Field.value (Field.String "not")), (Field.value (Field.String "longer")) ] ) ] validate
+                        Form.initial
+                            [ ( "a"
+                              , Field.list
+                                    [ Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    , Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    , Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    ]
+                              )
+                            ]
+                            validate
 
                     updatedForm =
                         initialForm
-                            |> Form.update validate (Form.Input "field_name.0" Form.Text (Field.String "longer"))
-                            |> Form.update validate (Form.Input "field_name.1" Form.Text (Field.String "not"))
-                            |> Form.update validate (Form.Input "field_name.2" Form.Text (Field.String "longer"))
+                            |> Form.update validate (Form.Input "a.0.b.0" Form.Text (Field.String "longer"))
+                            |> Form.update validate (Form.Input "a.1.b.0" Form.Text (Field.String "not"))
+                            |> Form.update validate (Form.Input "a.2.b.0" Form.Text (Field.String "longer"))
 
                     expectedField =
-                        { path = "field_name.1"
+                        { path = "a.1.b.0"
                         , value = Just "not"
                         , error = Just (Error.ShorterStringThan 4)
                         , liveError = Nothing
-                        , isDirty = False
-                        , isChanged = False
+                        , isDirty = True
+                        , isChanged = True
                         , hasFocus = False
                         }
                 in
                     Expect.equal
                         expectedField
-                        (Form.getFieldAsString "field_name.1" initialForm)
+                        (Form.getFieldAsString "a.1.b.0" updatedForm)
         ]
 
 
