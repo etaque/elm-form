@@ -7,6 +7,7 @@ import Form.Validate as Validate exposing (Validation)
 import Form.Field as Field
 import Form.Error as Error
 import Form.Tree as Tree
+import Form.Input as Input
 import Form
 
 
@@ -60,6 +61,37 @@ all =
                     Expect.equal
                         [ ( "field_name.1", Error.ShorterStringThan 4 ) ]
                         (Form.getErrors initialForm)
+        , test "Gets index errors from error groups" <|
+            \_ ->
+                let
+                    validate =
+                        Validate.field "field_name"
+                            (Validate.list
+                                (Validate.string |> Validate.andThen (Validate.minLength 4))
+                            )
+
+                    initialForm =
+                        Form.initial [ ( "field_name", Field.list [ (Field.value (Field.String "longer")), (Field.value (Field.String "not")), (Field.value (Field.String "longer")) ] ) ] validate
+
+                    updatedForm =
+                        initialForm
+                            |> Form.update validate (Form.Input "field_name.0" Form.Text (Field.String "longer"))
+                            |> Form.update validate (Form.Input "field_name.1" Form.Text (Field.String "not"))
+                            |> Form.update validate (Form.Input "field_name.2" Form.Text (Field.String "longer"))
+
+                    expectedField =
+                        { path = "field_name.1"
+                        , value = Just "not"
+                        , error = Just (Error.ShorterStringThan 4)
+                        , liveError = Nothing
+                        , isDirty = False
+                        , isChanged = False
+                        , hasFocus = False
+                        }
+                in
+                    Expect.equal
+                        expectedField
+                        (Form.getFieldAsString "field_name.1" initialForm)
         ]
 
 
