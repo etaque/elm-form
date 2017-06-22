@@ -61,9 +61,17 @@ getAtName name value =
 -}
 getAtIndex : Int -> Tree value -> Maybe (Tree value)
 getAtIndex index value =
-    asList value
-        |> List.drop index
-        |> List.head
+    case value of
+        List items ->
+            items
+                |> List.drop index
+                |> List.head
+
+        Group group ->
+            Dict.get (toString index) group
+
+        Value _ ->
+            Nothing
 
 
 {-| Get list of errors on qualified paths.

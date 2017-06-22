@@ -241,7 +241,7 @@ update validation msg (F model) =
                         | fields = setFieldAt listName (Tree.List newListFields) model
                     }
             in
-                F newModel
+                F (updateValidate validation newModel)
 
         Submit ->
             let

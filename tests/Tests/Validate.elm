@@ -7,6 +7,7 @@ import Form.Validate as Validate exposing (Validation)
 import Form.Field as Field
 import Form.Error as Error
 import Form.Tree as Tree
+import Form.Input as Input
 import Form
 
 
@@ -60,6 +61,95 @@ all =
                     Expect.equal
                         [ ( "field_name.1", Error.ShorterStringThan 4 ) ]
                         (Form.getErrors initialForm)
+        , test "Gets index errors from error groups" <|
+            \_ ->
+                let
+                    validate =
+                        Validate.field "a"
+                            (Validate.list
+                                (Validate.field "b"
+                                    (Validate.list
+                                        (Validate.string |> Validate.andThen (Validate.minLength 4))
+                                    )
+                                )
+                            )
+
+                    initialForm =
+                        Form.initial
+                            [ ( "a"
+                              , Field.list
+                                    [ Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    , Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    , Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    ]
+                              )
+                            ]
+                            validate
+
+                    updatedForm =
+                        initialForm
+                            |> Form.update validate (Form.Input "a.0.b.0" Form.Text (Field.String "longer"))
+                            |> Form.update validate (Form.Input "a.1.b.0" Form.Text (Field.String "not"))
+                            |> Form.update validate (Form.Input "a.2.b.0" Form.Text (Field.String "longer"))
+
+                    expectedField =
+                        { path = "a.1.b.0"
+                        , value = Just "not"
+                        , error = Just (Error.ShorterStringThan 4)
+                        , liveError = Nothing
+                        , isDirty = True
+                        , isChanged = True
+                        , hasFocus = False
+                        }
+                in
+                    Expect.equal
+                        expectedField
+                        (Form.getFieldAsString "a.1.b.0" updatedForm)
+        , test "Errors stay matched-up when an item is removed" <|
+            \_ ->
+                let
+                    validate =
+                        Validate.field "a"
+                            (Validate.list
+                                (Validate.field "b"
+                                    (Validate.list
+                                        (Validate.string |> Validate.andThen (Validate.minLength 4))
+                                    )
+                                )
+                            )
+
+                    initialForm =
+                        Form.initial
+                            [ ( "a"
+                              , Field.list
+                                    [ Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    , Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    , Field.group [ ( "b", Field.list [ Field.value (Field.String "init") ] ) ]
+                                    ]
+                              )
+                            ]
+                            validate
+
+                    updatedForm =
+                        initialForm
+                            |> Form.update validate (Form.Input "a.0.b.0" Form.Text (Field.String "longer"))
+                            |> Form.update validate (Form.Input "a.1.b.0" Form.Text (Field.String "not"))
+                            |> Form.update validate (Form.Input "a.2.b.0" Form.Text (Field.String "longer"))
+                            |> Form.update validate (Form.RemoveItem "a" 1)
+
+                    expectedField =
+                        { path = "a.1.b.0"
+                        , value = Just "longer"
+                        , error = Nothing
+                        , liveError = Nothing
+                        , isDirty = True
+                        , isChanged = True
+                        , hasFocus = False
+                        }
+                in
+                    Expect.equal
+                        expectedField
+                        (Form.getFieldAsString "a.1.b.0" updatedForm)
         ]
 
 
