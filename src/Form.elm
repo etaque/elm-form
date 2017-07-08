@@ -22,6 +22,7 @@ import Form.Error as Error exposing (Error, ErrorValue)
 import Form.Field as Field exposing (Field, FieldValue)
 import Form.Validate as Validate exposing (Validation)
 import Form.Tree as Tree
+import Dict exposing (Dict)
 
 
 {-| Form to embed in your model. Type parameters are:
@@ -40,6 +41,7 @@ type alias Model customError output =
     , focus : Maybe String
     , dirtyFields : Set String
     , changedFields : Set String
+    , originalValues : Dict String (Maybe FieldValue)
     , isSubmitted : Bool
     , output : Maybe output
     , errors : Error customError
@@ -56,6 +58,7 @@ initial initialFields validation =
             , focus = Nothing
             , dirtyFields = Set.empty
             , changedFields = Set.empty
+            , originalValues = Dict.empty
             , isSubmitted = False
             , output = Nothing
             , errors = Tree.group []
@@ -197,14 +200,57 @@ update validation msg (F model) =
                     else
                         model.dirtyFields
 
-                newChangedFields =
-                    Set.insert name model.changedFields
+                ( newChangedFields, newOriginalValues ) =
+                    if Set.member name model.changedFields then
+                        let
+                            storedValue =
+                                Dict.get
+                                    name
+                                    model.originalValues
+                                    |> Maybe.withDefault Nothing
+
+                            shouldBeNothing v =
+                                case v of
+                                    Field.String "" ->
+                                        True
+
+                                    Field.Bool False ->
+                                        True
+
+                                    _ ->
+                                        False
+
+                            sameAsOriginal =
+                                case storedValue of
+                                    Just v ->
+                                        v == fieldValue
+
+                                    Nothing ->
+                                        if shouldBeNothing fieldValue then
+                                            True
+                                        else
+                                            False
+
+                            changedFields =
+                                if sameAsOriginal then
+                                    Set.remove name model.changedFields
+                                else
+                                    model.changedFields
+                        in
+                            ( changedFields, model.originalValues )
+                    else
+                        let
+                            originalValue =
+                                (getFieldAt name model |> Maybe.andThen Tree.asValue)
+                        in
+                            ( Set.insert name model.changedFields, Dict.insert name originalValue model.originalValues )
 
                 newModel =
                     { model
                         | fields = newFields
                         , dirtyFields = newDirtyFields
                         , changedFields = newChangedFields
+                        , originalValues = newOriginalValues
                     }
             in
                 F (updateValidate validation newModel)
@@ -260,6 +306,7 @@ update validation msg (F model) =
                         | fields = Tree.group fields
                         , dirtyFields = Set.empty
                         , changedFields = Set.empty
+                        , originalValues = Dict.empty
                         , isSubmitted = False
                     }
             in
