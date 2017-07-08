@@ -279,12 +279,20 @@ update validation msg (F model) =
                         |> Maybe.map Tree.asList
                         |> Maybe.withDefault []
 
+                filterChangedFields =
+                    Set.filter (not << String.startsWith listName)
+
+                filterOriginalValue =
+                    Dict.filter (\c _ -> not <| String.startsWith listName c)
+
                 newListFields =
                     (List.take index listFields) ++ (List.drop (index + 1) listFields)
 
                 newModel =
                     { model
                         | fields = setFieldAt listName (Tree.List newListFields) model
+                        , changedFields = filterChangedFields model.changedFields
+                        , originalValues = filterOriginalValue model.originalValues
                     }
             in
                 F (updateValidate validation newModel)
