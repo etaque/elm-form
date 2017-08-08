@@ -288,11 +288,14 @@ update validation msg (F model) =
                         |> Maybe.map Tree.asList
                         |> Maybe.withDefault []
 
+                fieldNamePattern =
+                    listName ++ toString index
+
                 filterChangedFields =
-                    Set.filter (not << String.startsWith listName)
+                    Set.filter (not << String.startsWith fieldNamePattern)
 
                 filterOriginalValue =
-                    Dict.filter (\c _ -> not <| String.startsWith listName c)
+                    Dict.filter (\c _ -> not <| String.startsWith fieldNamePattern c)
 
                 newListFields =
                     (List.take index listFields) ++ (List.drop (index + 1) listFields)
