@@ -22,17 +22,11 @@ install:
   - npm --version
   - npm install -g elm-use elm-test@0.18.3
   - elm-use $ELM_VERSION
-  - mv $(npm config get prefix)/bin/elm-make $(npm config get prefix)/bin/elm-make-old
-  - chmod +x $(npm config get prefix)/bin/elm-make
-  - travis_retry elm-package install --yes
-  - cd tests
   - npm install
-  - travis_retry elm-package install --yes
-  - cd ..
-
+  
 script:
-  - elm-format --validate src tests examples
-  - cd examples
+  - elm-format --validate src tests example
+  - cd example
   - elm-make --output=/dev/null --yes
   - cd ..
   - npm test
