@@ -3,6 +3,7 @@ module Form.Init exposing (setBool, setString, setGroup, setList)
 {-| Helpers for initial fields values
 
 @docs setBool, setString, setGroup, setList
+
 -}
 
 import Form.Field as Field exposing (Field, FieldValue)

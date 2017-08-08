@@ -3,17 +3,26 @@ module Form exposing (Msg(..), InputType(..), Form, FieldState, initial, update,
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
 
+
 # Types
+
 @docs Msg, InputType, Form, FieldState
 
+
 # Init/update lifecyle
+
 @docs initial, update
 
+
 # Field state accessors
+
 @docs getFieldAsString, getFieldAsBool, getListIndexes
 
+
 # Global state accessors
+
 @docs getFocus, isSubmitted, getErrors, getOutput, getChangedFields
+
 -}
 
 import Result
@@ -27,8 +36,9 @@ import Dict exposing (Dict)
 
 {-| Form to embed in your model. Type parameters are:
 
- * `customError` - a custom error type to extend built-in errors (set to `()` if you don't need it)
- * `output` - the type of the validation output.
+  - `customError` - a custom error type to extend built-in errors (set to `()` if you don't need it)
+  - `output` - the type of the validation output.
+
 -}
 type Form customError output
     = F (Model customError output)
@@ -70,14 +80,15 @@ initial initialFields validation =
 {-| Field state containing all necessary data for view and update,
 can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
 
- * `path` - qualified path of the field in the form, with dots for nested fields (`field.subfield`)
- * `value` - a `Maybe` of the requested type
- * `error` - a `Maybe` of the field error
- * `liveError` - same but with added logic for live validation
+  - `path` - qualified path of the field in the form, with dots for nested fields (`field.subfield`)
+  - `value` - a `Maybe` of the requested type
+  - `error` - a `Maybe` of the field error
+  - `liveError` - same but with added logic for live validation
     (see [`getLiveErrorAt`](https://github.com/etaque/elm-form/blob/master/src/Form.elm) impl)
- * `isDirty` - if the field content has been changed since last validation
- * `isChanged` - if the field value has changed since last init/reset
- * `hasFocus` - if the field is currently focused
+  - `isDirty` - if the field content has been changed since last validation
+  - `isChanged` - if the field value has changed since last init/reset
+  - `hasFocus` - if the field is currently focused
+
 -}
 type alias FieldState e a =
     { path : String

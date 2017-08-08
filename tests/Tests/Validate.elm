@@ -105,7 +105,8 @@ all =
                     Expect.equal
                         expectedField
                         (Form.getFieldAsString "a.1.b.0" updatedForm)
-          {--Failing test commented now. !!! Need to be fixed or remove !!!
+
+        {--Failing test commented now. !!! Need to be fixed or remove !!!
 
         ,test "Errors stay matched-up when an item is removed" <|
             \_ ->
