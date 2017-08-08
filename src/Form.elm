@@ -204,9 +204,7 @@ update validation msg (F model) =
                     if Set.member name model.changedFields then
                         let
                             storedValue =
-                                Dict.get
-                                    name
-                                    model.originalValues
+                                Dict.get name model.originalValues
                                     |> Maybe.withDefault Nothing
 
                             shouldBeNothing v =
