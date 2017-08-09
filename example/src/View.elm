@@ -39,12 +39,10 @@ formView form =
 
         submitBtnAttributes =
             [ onClick Form.Submit
-            , class <|
-                "btn btn-primary"
-                    ++ if disableSubmit then
-                        " disabled"
-                       else
-                        ""
+            , classList
+                [ ( "btn btn-primary", True )
+                , ( "disabled", disableSubmit )
+                ]
             ]
                 ++ if disableSubmit then
                     [ attribute "disabled" "true" ]

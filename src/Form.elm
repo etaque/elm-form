@@ -235,10 +235,7 @@ update validation msg (F model) =
                                         v == fieldValue
 
                                     Nothing ->
-                                        if shouldBeNothing fieldValue then
-                                            True
-                                        else
-                                            False
+                                        shouldBeNothing fieldValue
 
                             changedFields =
                                 if sameAsOriginal then

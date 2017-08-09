@@ -57,7 +57,7 @@ all =
                         Set.insert name Set.empty
                 in
                     equal expected changedFields
-        , test "checkbox field chacked and unchacked" <|
+        , test "checkbox field checked and unchecked" <|
             \_ ->
                 let
                     name =
