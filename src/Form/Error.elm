@@ -3,6 +3,7 @@ module Form.Error exposing (Error, ErrorValue(..), value)
 {-| Validation errors.
 
 @docs Error, ErrorValue, value
+
 -}
 
 import Form.Tree as Tree exposing (Tree)

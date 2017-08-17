@@ -2,14 +2,21 @@ module Form.Tree exposing (Tree(..), getAtPath, getAtName, getAtIndex, valuesWit
 
 {-| Data structures
 
+
 # Tree structure and builders
+
 @docs Tree, group
 
+
 # Readers
+
 @docs getAtPath, getAtName, getAtIndex, asList, asValue, valuesWithPath
 
+
 # Writers
+
 @docs setAtPath
+
 -}
 
 import Dict exposing (Dict)

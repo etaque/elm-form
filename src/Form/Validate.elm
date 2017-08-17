@@ -2,20 +2,31 @@ module Form.Validate exposing (Validation, field, map, andThen, andMap, customEr
 
 {-| Form validation.
 
+
 # Combinators
+
 @docs Validation, field, map, succeed, andThen, andMap, customError, defaultValue, mapError, withCustomError, sequence
 
+
 # Fixed-size forms
+
 @docs map2, map3, map4, map5, map6, map7, map8
 
+
 # Type extractors
+
 @docs list, string, int, float, bool, date, maybe, email, url, emptyString
 
+
 # Common filters
+
 @docs minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn
 
+
 # Custom validations
+
 @docs fail, succeed, customValidation, oneOf
+
 -}
 
 import Result
@@ -38,6 +49,7 @@ type alias Validation customError output =
 {-| Map over the result of the validation.
 
     field "myfield" (string |> map String.trim)
+
 -}
 map : (a -> b) -> Validation e a -> Validation e b
 map f validation field =
@@ -47,6 +59,7 @@ map f validation field =
 {-| Apply a new validation to the result of the validation.
 
     field "myfield" (int |> andThen (minInt 10))
+
 -}
 andThen : (a -> Validation e b) -> Validation e a -> Validation e b
 andThen callback validation field =
@@ -58,6 +71,7 @@ andThen callback validation field =
     Form.Validate.succeed SomeRecord
       |> andMap (field "foo" string)
       |> andMap (field "bar" string)
+
 -}
 andMap : Validation e a -> Validation e (a -> b) -> Validation e b
 andMap aValidation partialValidation field =
@@ -89,6 +103,7 @@ mapError f validation =
           |> andThen (minInt 1)
           |> andThen (maxInt 9999)
           |> withCustomError InvalidIdentity)
+
 -}
 withCustomError : customErr -> Validation e a -> Validation customErr a
 withCustomError =
@@ -105,6 +120,7 @@ customError =
 {-| Access the given field in the group.
 
     field "name" string
+
 -}
 field : String -> Validation e a -> Validation e a
 field key validation field =

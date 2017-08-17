@@ -24,8 +24,8 @@ all =
                         ValidationExpectation.Invalid Form.Error.InvalidEmail
                             |> Expect.equal ValidationExpectation.Valid
                 in
-                actual
-                    |> Expect.equal expected
+                    actual
+                        |> Expect.equal expected
         , test "expect success get success" <|
             \() ->
                 let
@@ -35,8 +35,8 @@ all =
                             , ValidationExpectation.Valid
                             )
                 in
-                actual
-                    |> Expect.equal Expect.pass
+                    actual
+                        |> Expect.equal Expect.pass
         , test "expected error" <|
             \() ->
                 let
@@ -50,8 +50,8 @@ all =
                         ValidationExpectation.Invalid Form.Error.InvalidEmail
                             |> Expect.equal (ValidationExpectation.Invalid Form.Error.Empty)
                 in
-                actual
-                    |> Expect.equal expected
+                    actual
+                        |> Expect.equal expected
         , test "different error than expected" <|
             \() ->
                 let
@@ -61,8 +61,8 @@ all =
                             , ValidationExpectation.Invalid Form.Error.InvalidEmail
                             )
                 in
-                actual
-                    |> Expect.equal Expect.pass
+                    actual
+                        |> Expect.equal Expect.pass
         , test "custom error" <|
             \() ->
                 let
@@ -72,8 +72,8 @@ all =
                             , ValidationExpectation.InvalidCustomError InvalidSuperpower
                             )
                 in
-                actual
-                    |> Expect.equal Expect.pass
+                    actual
+                        |> Expect.equal Expect.pass
         , test "expect custom error but get no error" <|
             \() ->
                 let
@@ -88,8 +88,8 @@ all =
                             (ValidationExpectation.InvalidCustomError InvalidSuperpower)
                             (ValidationExpectation.ValidDecodesTo Flying)
                 in
-                actual
-                    |> Expect.equal expected
+                    actual
+                        |> Expect.equal expected
         ]
 
 

@@ -6,6 +6,8 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 
 For when the classical "a message per field" doesn't work well for you, at the price of loosing some typesafety.
 
+We have a dedicated channel in [Elm slack](https://elmlang.herokuapp.com/), join us in `#elm-form` for any question, support or issues coordination.
+
 ## Features
 
 * Validation API similar to `Json.Decode` with the standard `map`, `andThen`, etc: you either get the desired output value or all field errors

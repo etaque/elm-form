@@ -3,17 +3,26 @@ module Form exposing (Msg(..), InputType(..), Form, FieldState, initial, update,
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
 
+
 # Types
+
 @docs Msg, InputType, Form, FieldState
 
+
 # Init/update lifecyle
+
 @docs initial, update
 
+
 # Field state accessors
+
 @docs getFieldAsString, getFieldAsBool, getListIndexes
 
+
 # Global state accessors
+
 @docs getFocus, isSubmitted, getErrors, getOutput, getChangedFields
+
 -}
 
 import Result
@@ -22,12 +31,14 @@ import Form.Error as Error exposing (Error, ErrorValue)
 import Form.Field as Field exposing (Field, FieldValue)
 import Form.Validate as Validate exposing (Validation)
 import Form.Tree as Tree
+import Dict exposing (Dict)
 
 
 {-| Form to embed in your model. Type parameters are:
 
- * `customError` - a custom error type to extend built-in errors (set to `()` if you don't need it)
- * `output` - the type of the validation output.
+  - `customError` - a custom error type to extend built-in errors (set to `()` if you don't need it)
+  - `output` - the type of the validation output.
+
 -}
 type Form customError output
     = F (Model customError output)
@@ -40,6 +51,7 @@ type alias Model customError output =
     , focus : Maybe String
     , dirtyFields : Set String
     , changedFields : Set String
+    , originalValues : Dict String (Maybe FieldValue)
     , isSubmitted : Bool
     , output : Maybe output
     , errors : Error customError
@@ -56,6 +68,7 @@ initial initialFields validation =
             , focus = Nothing
             , dirtyFields = Set.empty
             , changedFields = Set.empty
+            , originalValues = Dict.empty
             , isSubmitted = False
             , output = Nothing
             , errors = Tree.group []
@@ -67,14 +80,15 @@ initial initialFields validation =
 {-| Field state containing all necessary data for view and update,
 can be retrived with `Form.getFieldAsString` or `Form.getFieldAsBool`.
 
- * `path` - qualified path of the field in the form, with dots for nested fields (`field.subfield`)
- * `value` - a `Maybe` of the requested type
- * `error` - a `Maybe` of the field error
- * `liveError` - same but with added logic for live validation
+  - `path` - qualified path of the field in the form, with dots for nested fields (`field.subfield`)
+  - `value` - a `Maybe` of the requested type
+  - `error` - a `Maybe` of the field error
+  - `liveError` - same but with added logic for live validation
     (see [`getLiveErrorAt`](https://github.com/etaque/elm-form/blob/master/src/Form.elm) impl)
- * `isDirty` - if the field content has been changed since last validation
- * `isChanged` - if the field value has changed since last init/reset
- * `hasFocus` - if the field is currently focused
+  - `isDirty` - if the field content has been changed since last validation
+  - `isChanged` - if the field value has changed since last init/reset
+  - `hasFocus` - if the field is currently focused
+
 -}
 type alias FieldState e a =
     { path : String
@@ -197,14 +211,52 @@ update validation msg (F model) =
                     else
                         model.dirtyFields
 
-                newChangedFields =
-                    Set.insert name model.changedFields
+                ( newChangedFields, newOriginalValues ) =
+                    if Set.member name model.changedFields then
+                        let
+                            storedValue =
+                                Dict.get name model.originalValues
+                                    |> Maybe.withDefault Nothing
+
+                            shouldBeNothing v =
+                                case v of
+                                    Field.String "" ->
+                                        True
+
+                                    Field.Bool False ->
+                                        True
+
+                                    _ ->
+                                        False
+
+                            sameAsOriginal =
+                                case storedValue of
+                                    Just v ->
+                                        v == fieldValue
+
+                                    Nothing ->
+                                        shouldBeNothing fieldValue
+
+                            changedFields =
+                                if sameAsOriginal then
+                                    Set.remove name model.changedFields
+                                else
+                                    model.changedFields
+                        in
+                            ( changedFields, model.originalValues )
+                    else
+                        let
+                            originalValue =
+                                (getFieldAt name model |> Maybe.andThen Tree.asValue)
+                        in
+                            ( Set.insert name model.changedFields, Dict.insert name originalValue model.originalValues )
 
                 newModel =
                     { model
                         | fields = newFields
                         , dirtyFields = newDirtyFields
                         , changedFields = newChangedFields
+                        , originalValues = newOriginalValues
                     }
             in
                 F (updateValidate validation newModel)
@@ -233,12 +285,23 @@ update validation msg (F model) =
                         |> Maybe.map Tree.asList
                         |> Maybe.withDefault []
 
+                fieldNamePattern =
+                    listName ++ toString index
+
+                filterChangedFields =
+                    Set.filter (not << String.startsWith fieldNamePattern)
+
+                filterOriginalValue =
+                    Dict.filter (\c _ -> not <| String.startsWith fieldNamePattern c)
+
                 newListFields =
                     (List.take index listFields) ++ (List.drop (index + 1) listFields)
 
                 newModel =
                     { model
                         | fields = setFieldAt listName (Tree.List newListFields) model
+                        , changedFields = filterChangedFields model.changedFields
+                        , originalValues = filterOriginalValue model.originalValues
                     }
             in
                 F (updateValidate validation newModel)
@@ -260,6 +323,7 @@ update validation msg (F model) =
                         | fields = Tree.group fields
                         , dirtyFields = Set.empty
                         , changedFields = Set.empty
+                        , originalValues = Dict.empty
                         , isSubmitted = False
                     }
             in

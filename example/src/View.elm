@@ -8,6 +8,7 @@ import Form exposing (Form)
 import Form.Input as Input
 import Model exposing (..)
 import View.Bootstrap exposing (..)
+import Set exposing (Set)
 
 
 view : Model -> Html Msg
@@ -32,6 +33,21 @@ formView form =
 
         superpowerOptions =
             List.map (\i -> ( i, String.toUpper i )) superpowers
+
+        disableSubmit =
+            Set.isEmpty <| Form.getChangedFields form
+
+        submitBtnAttributes =
+            [ onClick Form.Submit
+            , classList
+                [ ( "btn btn-primary", True )
+                , ( "disabled", disableSubmit )
+                ]
+            ]
+                ++ if disableSubmit then
+                    [ attribute "disabled" "true" ]
+                   else
+                    []
     in
         div
             [ class "form-horizontal"
@@ -60,10 +76,7 @@ formView form =
                 (Form.getFieldAsString "profile.bio" form)
             , todosView form
             , formActions
-                [ button
-                    [ onClick Form.Submit
-                    , class "btn btn-primary"
-                    ]
+                [ button submitBtnAttributes
                     [ text "Submit" ]
                 , text " "
                 , button
