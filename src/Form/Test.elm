@@ -35,7 +35,7 @@ describeValidation description validation cases =
         testCases =
             List.map (testValidation validation) cases
     in
-    describe (description ++ " validations") testCases
+        describe (description ++ " validations") testCases
 
 
 {-| Create a single test case for a `Validation`.

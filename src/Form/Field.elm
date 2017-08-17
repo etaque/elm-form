@@ -2,12 +2,16 @@ module Form.Field exposing (Field, FieldValue(..), value, string, bool, group, l
 
 {-| Read and write field values.
 
+
 # Constructors
+
 @docs Field, FieldValue, value, string, bool, group, list
 
 
 # Value readers
-@docs  asString, asBool
+
+@docs asString, asBool
+
 -}
 
 import Form.Tree as Tree exposing (Tree)

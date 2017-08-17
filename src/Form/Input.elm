@@ -1,11 +1,11 @@
 module Form.Input exposing (Input, baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput, dumpErrors)
 
-{-|
-@docs Input
+{-| @docs Input
 
 @docs baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput
 
 @docs dumpErrors
+
 -}
 
 import Maybe exposing (andThen)
