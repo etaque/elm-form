@@ -1,6 +1,8 @@
 module Form.Input exposing (Input, baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput, dumpErrors)
 
-{-| @docs Input
+{-| Html input view helpers, wired for elm-form validation.
+
+@docs Input
 
 @docs baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput
 
