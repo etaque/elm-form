@@ -140,8 +140,13 @@ validateTodo =
 -}
 validateUrl : Validation e String
 validateUrl =
-    string
-        |> andThen (format (Regex.regex "^(https?://)"))
+    let
+        urlRegex =
+            Regex.fromString "^(https?://)"
+                |> Maybe.withDefault Regex.never
+    in
+        string
+            |> andThen (format urlRegex)
 
 
 
