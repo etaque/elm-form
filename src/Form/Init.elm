@@ -1,4 +1,4 @@
-module Form.Init exposing (setBool, setString, setGroup, setList)
+module Form.Init exposing (setBool, setGroup, setList, setString)
 
 {-| Helpers for initial fields values
 

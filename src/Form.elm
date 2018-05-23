@@ -1,4 +1,4 @@
-module Form exposing (Msg(..), InputType(..), Form, FieldState, initial, update, getFieldAsString, getFieldAsBool, getListIndexes, getFocus, getErrors, isSubmitted, getOutput, getChangedFields)
+module Form exposing (FieldState, Form, InputType(..), Msg(..), getChangedFields, getErrors, getFieldAsBool, getFieldAsString, getFocus, getListIndexes, getOutput, initial, isSubmitted, update)
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.
@@ -25,13 +25,13 @@ with state lifecycle and input helpers for the views.
 
 -}
 
-import Result
-import Set exposing (Set)
+import Dict exposing (Dict)
 import Form.Error as Error exposing (Error, ErrorValue)
 import Form.Field as Field exposing (Field, FieldValue)
-import Form.Validate as Validate exposing (Validation)
 import Form.Tree as Tree
-import Dict exposing (Dict)
+import Form.Validate as Validate exposing (Validation)
+import Result
+import Set exposing (Set)
 
 
 {-| Form to embed in your model. Type parameters are:
@@ -74,7 +74,7 @@ initial initialFields validation =
             , errors = Tree.group []
             }
     in
-        F (updateValidate validation model)
+    F (updateValidate validation model)
 
 
 {-| Field state containing all necessary data for view and update,
@@ -137,7 +137,7 @@ getListIndexes path (F model) =
                 |> Maybe.map (Tree.asList >> List.length)
                 |> Maybe.withDefault 0
     in
-        List.range 0 (length - 1)
+    List.range 0 (length - 1)
 
 
 {-| Form messages for `update`.
@@ -177,7 +177,7 @@ update validation msg (F model) =
                 newModel =
                     { model | focus = Just name }
             in
-                F newModel
+            F newModel
 
         Blur name ->
             let
@@ -187,7 +187,7 @@ update validation msg (F model) =
                 newModel =
                     { model | focus = Nothing, dirtyFields = newDirtyFields }
             in
-                F (updateValidate validation newModel)
+            F (updateValidate validation newModel)
 
         Input name inputType fieldValue ->
             let
@@ -208,6 +208,7 @@ update validation msg (F model) =
                 newDirtyFields =
                     if isDirty then
                         Set.insert name model.dirtyFields
+
                     else
                         model.dirtyFields
 
@@ -240,16 +241,18 @@ update validation msg (F model) =
                             changedFields =
                                 if sameAsOriginal then
                                     Set.remove name model.changedFields
+
                                 else
                                     model.changedFields
                         in
-                            ( changedFields, model.originalValues )
+                        ( changedFields, model.originalValues )
+
                     else
                         let
                             originalValue =
-                                (getFieldAt name model |> Maybe.andThen Tree.asValue)
+                                getFieldAt name model |> Maybe.andThen Tree.asValue
                         in
-                            ( Set.insert name model.changedFields, Dict.insert name originalValue model.originalValues )
+                        ( Set.insert name model.changedFields, Dict.insert name originalValue model.originalValues )
 
                 newModel =
                     { model
@@ -259,7 +262,7 @@ update validation msg (F model) =
                         , originalValues = newOriginalValues
                     }
             in
-                F (updateValidate validation newModel)
+            F (updateValidate validation newModel)
 
         Append listName ->
             let
@@ -276,7 +279,7 @@ update validation msg (F model) =
                         | fields = setFieldAt listName (Tree.List newListFields) model
                     }
             in
-                F newModel
+            F newModel
 
         RemoveItem listName index ->
             let
@@ -295,7 +298,7 @@ update validation msg (F model) =
                     Dict.filter (\c _ -> not <| String.startsWith fieldNamePattern c)
 
                 newListFields =
-                    (List.take index listFields) ++ (List.drop (index + 1) listFields)
+                    List.take index listFields ++ List.drop (index + 1) listFields
 
                 newModel =
                     { model
@@ -304,14 +307,14 @@ update validation msg (F model) =
                         , originalValues = filterOriginalValue model.originalValues
                     }
             in
-                F (updateValidate validation newModel)
+            F (updateValidate validation newModel)
 
         Submit ->
             let
                 validatedModel =
                     updateValidate validation model
             in
-                F { validatedModel | isSubmitted = True }
+            F { validatedModel | isSubmitted = True }
 
         Validate ->
             F (updateValidate validation model)
@@ -327,7 +330,7 @@ update validation msg (F model) =
                         , isSubmitted = False
                     }
             in
-                F (updateValidate validation newModel)
+            F (updateValidate validation newModel)
 
 
 updateValidate : Validation e o -> Model e o -> Model e o
@@ -398,6 +401,7 @@ getLiveErrorAt : String -> Form e o -> Maybe (ErrorValue e)
 getLiveErrorAt name form =
     if isSubmitted form || (isChangedAt name form && not (isDirtyAt name form)) then
         getErrorAt name form
+
     else
         Nothing
 

@@ -1,4 +1,4 @@
-module Form.Validate exposing (Validation, field, map, andThen, andMap, customError, defaultValue, mapError, withCustomError, map2, map3, map4, map5, map6, map7, map8, list, string, int, float, bool, date, maybe, email, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf, sequence)
+module Form.Validate exposing (Validation, andMap, andThen, bool, customError, customValidation, date, defaultValue, email, emptyString, fail, field, float, format, includedIn, int, list, map, map2, map3, map4, map5, map6, map7, map8, mapError, maxFloat, maxInt, maxLength, maybe, minFloat, minInt, minLength, nonEmpty, oneOf, sequence, string, succeed, withCustomError)
 
 {-| Form validation.
 
@@ -29,14 +29,14 @@ module Form.Validate exposing (Validation, field, map, andThen, andMap, customEr
 
 -}
 
-import Result
 import Date exposing (Date)
 import Dict exposing (Dict)
-import String
-import Regex exposing (Regex)
 import Form.Error as Error exposing (Error, ErrorValue(..))
 import Form.Field as Field exposing (Field, FieldValue(..))
 import Form.Tree as Tree
+import Regex exposing (Regex)
+import Result
+import String
 
 
 {-| A validation is a function that takes a form field and returns a result
@@ -63,7 +63,7 @@ map f validation field =
 -}
 andThen : (a -> Validation e b) -> Validation e a -> Validation e b
 andThen callback validation field =
-    validation field |> Result.andThen (\next -> (callback next) field)
+    validation field |> Result.andThen (\next -> callback next field)
 
 
 {-| Incremental form validation for records with more that 8 fields.

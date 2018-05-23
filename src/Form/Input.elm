@@ -1,4 +1,4 @@
-module Form.Input exposing (Input, baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput, dumpErrors)
+module Form.Input exposing (Input, baseInput, checkboxInput, dumpErrors, passwordInput, radioInput, selectInput, textArea, textInput)
 
 {-| Html input view helpers, wired for elm-form validation.
 
@@ -10,14 +10,14 @@ module Form.Input exposing (Input, baseInput, textInput, passwordInput, textArea
 
 -}
 
+import Form exposing (FieldState, Form, InputType(..), Msg(Blur, Focus, Input))
+import Form.Field as Field exposing (Field, FieldValue(..))
+import Html exposing (..)
+import Html.Attributes as HtmlAttr exposing (..)
+import Html.Events exposing (..)
+import Json.Decode as Json
 import Maybe exposing (andThen)
 import String
-import Html exposing (..)
-import Html.Events exposing (..)
-import Html.Attributes as HtmlAttr exposing (..)
-import Json.Decode as Json
-import Form exposing (Form, Msg, FieldState, Msg(Input, Focus, Blur), InputType(..))
-import Form.Field as Field exposing (Field, FieldValue(..))
 
 
 {-| An input renders Html from a field state and list of additional attributes.
@@ -35,12 +35,12 @@ baseInput t toFieldValue inputType state attrs =
         formAttrs =
             [ type_ t
             , defaultValue (state.value |> Maybe.withDefault "")
-            , onInput (toFieldValue >> (Input state.path inputType))
+            , onInput (toFieldValue >> Input state.path inputType)
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []
 
 
 {-| Text input.
@@ -64,12 +64,12 @@ textArea state attrs =
     let
         formAttrs =
             [ defaultValue (state.value |> Maybe.withDefault "")
-            , onInput (String >> (Input state.path Textarea))
+            , onInput (String >> Input state.path Textarea)
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
     in
-        Html.textarea (formAttrs ++ attrs) []
+    Html.textarea (formAttrs ++ attrs) []
 
 
 {-| Select input.
@@ -80,7 +80,7 @@ selectInput options state attrs =
         formAttrs =
             [ on
                 "change"
-                (targetValue |> Json.map (String >> (Input state.path Select)))
+                (targetValue |> Json.map (String >> Input state.path Select))
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
@@ -88,7 +88,7 @@ selectInput options state attrs =
         buildOption ( k, v ) =
             option [ value k, selected (state.value == Just k) ] [ text v ]
     in
-        select (formAttrs ++ attrs) (List.map buildOption options)
+    select (formAttrs ++ attrs) (List.map buildOption options)
 
 
 {-| Checkbox input.
@@ -99,12 +99,12 @@ checkboxInput state attrs =
         formAttrs =
             [ type_ "checkbox"
             , checked (state.value |> Maybe.withDefault False)
-            , onCheck (Bool >> (Input state.path Checkbox))
+            , onCheck (Bool >> Input state.path Checkbox)
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []
 
 
 {-| Radio input.
@@ -121,10 +121,10 @@ radioInput value state attrs =
             , onBlur (Blur state.path)
             , on
                 "change"
-                (targetValue |> Json.map (String >> (Input state.path Radio)))
+                (targetValue |> Json.map (String >> Input state.path Radio))
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []
 
 
 {-| Dump all form errors in a `<pre>` tag. Useful for debugging.
@@ -133,9 +133,9 @@ dumpErrors : Form e o -> Html msg
 dumpErrors form =
     let
         line ( name, error ) =
-            name ++ ": " ++ (toString error)
+            name ++ ": " ++ toString error
 
         content =
             Form.getErrors form |> List.map line |> String.join "\n"
     in
-        pre [] [ text content ]
+    pre [] [ text content ]
