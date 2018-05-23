@@ -52,8 +52,8 @@ type alias Validation customError output =
 
 -}
 map : (a -> b) -> Validation e a -> Validation e b
-map f validation field =
-    Result.map f (validation field)
+map f validation validationField =
+    Result.map f (validation validationField)
 
 
 {-| Apply a new validation to the result of the validation.
@@ -62,8 +62,8 @@ map f validation field =
 
 -}
 andThen : (a -> Validation e b) -> Validation e a -> Validation e b
-andThen callback validation field =
-    validation field |> Result.andThen (\next -> callback next field)
+andThen callback validation validationField =
+    validation validationField |> Result.andThen (\next -> callback next validationField)
 
 
 {-| Incremental form validation for records with more that 8 fields.
@@ -74,8 +74,8 @@ andThen callback validation field =
 
 -}
 andMap : Validation e a -> Validation e (a -> b) -> Validation e b
-andMap aValidation partialValidation field =
-    case ( partialValidation field, aValidation field ) of
+andMap aValidation partialValidation validationField =
+    case ( partialValidation validationField, aValidation validationField ) of
         ( Ok partial, Ok a ) ->
             Ok (partial a)
 
@@ -86,15 +86,15 @@ andMap aValidation partialValidation field =
 {-| Rescue a failed validation with the supplied value.
 -}
 defaultValue : a -> Validation e a -> Validation e a
-defaultValue a validation field =
-    Ok (Result.withDefault a (validation field))
+defaultValue a validation validationField =
+    Ok (Result.withDefault a (validation validationField))
 
 
 {-| Call Result.mapError on validation result.
 -}
 mapError : (Error e1 -> Error e2) -> Validation e1 a -> Validation e2 a
 mapError f validation =
-    \field -> Result.mapError f (validation field)
+    \validationField -> Result.mapError f (validation validationField)
 
 
 {-| Arrange that if a validation fails, it has the given custom error.
@@ -123,8 +123,8 @@ customError =
 
 -}
 field : String -> Validation e a -> Validation e a
-field key validation field =
-    Tree.getAtName key field
+field key validation validationField =
+    Tree.getAtName key validationField
         |> Maybe.withDefault (Tree.Value EmptyField)
         |> validation
         |> Result.mapError
@@ -309,14 +309,14 @@ date v =
 {-| Transform validation result to `Maybe`, using `Result.toMaybe`.
 -}
 maybe : Validation e a -> Validation e (Maybe a)
-maybe validation field =
-    Ok (Result.toMaybe (validation field))
+maybe validation validationField =
+    Ok (Result.toMaybe (validation validationField))
 
 
 {-| Fails if `String.isEmpty`.
 -}
 nonEmpty : String -> Validation e String
-nonEmpty s field =
+nonEmpty s validationField =
     if String.isEmpty s then
         Err (Error.value Empty)
     else
@@ -326,7 +326,7 @@ nonEmpty s field =
 {-| Min length for String.
 -}
 minLength : Int -> String -> Validation e String
-minLength min s field =
+minLength min s validationField =
     if String.length s >= min then
         Ok s
     else
@@ -336,7 +336,7 @@ minLength min s field =
 {-| Max length for String.
 -}
 maxLength : Int -> String -> Validation e String
-maxLength max s field =
+maxLength max s validationField =
     if String.length s <= max then
         Ok s
     else
@@ -346,7 +346,7 @@ maxLength max s field =
 {-| Min value for Int.
 -}
 minInt : Int -> Int -> Validation e Int
-minInt min i field =
+minInt min i validationField =
     if i >= min then
         Ok i
     else
@@ -356,7 +356,7 @@ minInt min i field =
 {-| Max value for Int.
 -}
 maxInt : Int -> Int -> Validation e Int
-maxInt max i field =
+maxInt max i validationField =
     if i <= max then
         Ok i
     else
@@ -366,7 +366,7 @@ maxInt max i field =
 {-| Min value for Float.
 -}
 minFloat : Float -> Float -> Validation e Float
-minFloat min i field =
+minFloat min i validationField =
     if i >= min then
         Ok i
     else
@@ -376,7 +376,7 @@ minFloat min i field =
 {-| Max value for Float.
 -}
 maxFloat : Float -> Float -> Validation e Float
-maxFloat max i field =
+maxFloat max i validationField =
     if i <= max then
         Ok i
     else
@@ -386,7 +386,7 @@ maxFloat max i field =
 {-| Validates format of the string.
 -}
 format : Regex -> String -> Validation e String
-format regex s field =
+format regex s validationField =
     if Regex.contains regex s then
         Ok s
     else
@@ -416,7 +416,7 @@ email =
 {-| Check if the string is included in the given list.
 -}
 includedIn : List String -> String -> Validation e String
-includedIn items s field =
+includedIn items s validationField =
     if List.member s items then
         Ok s
     else
@@ -426,31 +426,31 @@ includedIn items s field =
 {-| A validation that always fails. Useful for contextual validation.
 -}
 fail : Error e -> Validation e a
-fail error field =
+fail error validationField =
     Err error
 
 
 {-| A validation that always succeeds. Useful for contextual validation.
 -}
 succeed : a -> Validation e a
-succeed a field =
+succeed a validationField =
     Ok a
 
 
 {-| Custom validation for your special cases.
 -}
 customValidation : Validation e a -> (a -> Result (Error e) b) -> Validation e b
-customValidation validation callback field =
-    validation field |> Result.andThen callback
+customValidation validation callback validationField =
+    validation validationField |> Result.andThen callback
 
 
 {-| First successful validation wins, from left to right.
 -}
 oneOf : List (Validation e a) -> Validation e a
-oneOf validations field =
+oneOf validations validationField =
     let
         results =
-            List.map (\v -> v field) validations
+            List.map (\v -> v validationField) validations
 
         walkResults result combined =
             case ( combined, result ) of
@@ -474,8 +474,8 @@ sequence validations =
 {-| Validate a list of fields.
 -}
 list : Validation e a -> Validation e (List a)
-list validation field =
-    case field of
+list validation validationField =
+    case validationField of
         Tree.List items ->
             let
                 results =

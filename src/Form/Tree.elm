@@ -49,7 +49,7 @@ getAtPath path tree =
                 StringFragment name ->
                     maybeField |> Maybe.andThen (getAtName name)
     in
-    List.foldl walkPath (Just tree) (extractFragments path)
+        List.foldl walkPath (Just tree) (extractFragments path)
 
 
 {-| Get node at name, if group
@@ -57,8 +57,8 @@ getAtPath path tree =
 getAtName : String -> Tree value -> Maybe (Tree value)
 getAtName name value =
     case value of
-        Group group ->
-            Dict.get name group
+        Group items ->
+            Dict.get name items
 
         _ ->
             Nothing
@@ -74,8 +74,8 @@ getAtIndex index value =
                 |> List.drop index
                 |> List.head
 
-        Group group ->
-            Dict.get (toString index) group
+        Group items ->
+            Dict.get (String.fromInt index) items
 
         Value _ ->
             Nothing
@@ -91,20 +91,20 @@ valuesWithPath tree =
 
         walkTree path value =
             case value of
-                Group group ->
+                Group items ->
                     List.concatMap
                         (mapGroupItem path)
-                        (Dict.toList group)
+                        (Dict.toList items)
 
                 List items ->
                     List.concatMap
                         (mapGroupItem path)
                         (List.indexedMap (\index item -> ( toString index, item )) items)
 
-                Value value ->
-                    [ ( String.join "." path, value ) ]
+                Value item ->
+                    [ ( String.join "." path, item ) ]
     in
-    walkTree [] tree
+        walkTree [] tree
 
 
 {-| Extract value, if possible.
