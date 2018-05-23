@@ -132,8 +132,58 @@ radioInput value state attrs =
 dumpErrors : Form e o -> Html msg
 dumpErrors form =
     let
+        errorToString error =
+            case error of
+                Empty ->
+                    "Empty"
+
+                InvalidString ->
+                    "InvalidString"
+
+                InvalidEmail ->
+                    "InvalidEmail"
+
+                InvalidFormat ->
+                    "InvalidFormat"
+
+                InvalidInt ->
+                    "InvalidInt"
+
+                InvalidFloat ->
+                    "InvalidFloat"
+
+                InvalidBool ->
+                    "InvalidBool"
+
+                InvalidDate ->
+                    "InvalidDate"
+
+                SmallerIntThan v ->
+                    "SmallerIntThan " ++ String.fromInt v
+
+                GreaterIntThan v ->
+                    "GreaterIntThan " ++ String.fromInt v
+
+                SmallerFloatThan v ->
+                    "SmallerFloatThan " ++ String.fromFloat v
+
+                GreaterFloatThan v ->
+                    "GreaterFloatThan " ++ String.fromFloat v
+
+                ShorterStringThan v ->
+                    "ShorterStringThan " ++ String.fromInt v
+
+                LongerStringThan v ->
+                    "LongerStringThan " ++ String.fromInt v
+
+                NotIncludedIn ->
+                    "NotIncludedIn"
+
+                CustomError _ ->
+                    "CustomError"
+
         line ( name, error ) =
-            name ++ ": " ++ toString error
+            name ++ ": " ++ errorToString error
 
         content =
             Form.getErrors form |> List.map line |> String.join "\n"

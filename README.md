@@ -95,7 +95,7 @@ formView form =
             case field.liveError of
                 Just error ->
                     -- replace toString with your own translations
-                    div [ class "error" ] [ text (toString error) ]
+                    div [ class "error" ] [ text (Debug.toString error) ]
 
                 Nothing ->
                     text ""
@@ -215,7 +215,7 @@ itemView form i =
     div
         [ class "item" ]
         [ Input.textInput
-            (Form.getFieldAsString ("items." ++ (toString i)) form)
+            (Form.getFieldAsString ("items." ++ (String.fromInt i)) form)
             []
         , a
             [ class "remove"

@@ -289,7 +289,7 @@ update validation msg (F model) =
                         |> Maybe.withDefault []
 
                 fieldNamePattern =
-                    listName ++ toString index
+                    listName ++ String.fromInt index
 
                 filterChangedFields =
                     Set.filter (not << String.startsWith fieldNamePattern)

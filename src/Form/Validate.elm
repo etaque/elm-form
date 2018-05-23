@@ -489,7 +489,7 @@ list validation validationField =
                             Nothing
 
                         Err e ->
-                            Just ( toString index, e )
+                            Just ( String.fromInt index, e )
 
                 errors =
                     results

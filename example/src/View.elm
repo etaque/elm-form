@@ -18,7 +18,7 @@ view { form, userMaybe } =
         [ Html.map FormMsg (formView form)
         , case userMaybe of
             Just user ->
-                p [ class "alert alert-success" ] [ text (toString user) ]
+                p [ class "alert alert-success" ] [ text (Debug.toString user) ]
 
             Nothing ->
                 text ""
@@ -111,14 +111,14 @@ todoItemView : Form CustomError User -> Int -> List (Html Form.Msg)
 todoItemView form i =
     let
         labelField =
-            Form.getFieldAsString ("todos." ++ (toString i) ++ ".label") form
+            Form.getFieldAsString ("todos." ++ (String.fromInt i) ++ ".label") form
     in
         [ div
             [ class ("input-group" ++ (errorClass labelField.liveError)) ]
             [ span
                 [ class "input-group-addon" ]
                 [ Input.checkboxInput
-                    (Form.getFieldAsBool ("todos." ++ (toString i) ++ ".done") form)
+                    (Form.getFieldAsBool ("todos." ++ (String.fromInt i) ++ ".done") form)
                     []
                 ]
             , Input.textInput

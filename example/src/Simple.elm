@@ -78,7 +78,7 @@ formView form =
             case field.liveError of
                 Just error ->
                     -- replace toString with your own translations
-                    div [ class "error" ] [ text (toString error) ]
+                    div [ class "error" ] [ text (Debug.toString error) ]
 
                 Nothing ->
                     text ""

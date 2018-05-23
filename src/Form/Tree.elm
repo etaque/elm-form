@@ -99,7 +99,7 @@ valuesWithPath tree =
                 List items ->
                     List.concatMap
                         (mapGroupItem path)
-                        (List.indexedMap (\index item -> ( toString index, item )) items)
+                        (List.indexedMap (\index item -> ( String.fromInt index, item )) items)
 
                 Value item ->
                     [ ( String.join "." path, item ) ]
@@ -181,7 +181,7 @@ recursiveSet fragments node tree =
                         childNode =
                             recursiveSet rest node target
                     in
-                    merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
+                        merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
 
         [] ->
             node

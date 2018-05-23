@@ -16,7 +16,7 @@ row content =
 
 colN : Int -> List (Html Form.Msg) -> Html Form.Msg
 colN i content =
-    div [ class ("col-xs-" ++ toString i) ] content
+    div [ class ("col-xs-" ++ String.fromInt i) ] content
 
 
 type alias GroupBuilder a =
@@ -126,7 +126,7 @@ errorMessage maybeError =
         Just error ->
             p
                 [ class "help-block" ]
-                [ text (toString error) ]
+                [ text (Debug.toString error) ]
 
         Nothing ->
             span
