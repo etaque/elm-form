@@ -148,12 +148,9 @@ extractFragments name =
 
 toFragment : String -> Fragment
 toFragment s =
-    case String.toInt s of
-        Ok i ->
-            IntFragment i
-
-        Err _ ->
-            StringFragment s
+    String.toInt s
+        |> Maybe.map IntFragment
+        |> Maybe.withDefault (StringFragment s)
 
 
 {-| Set node in tree at given path.

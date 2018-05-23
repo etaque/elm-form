@@ -230,26 +230,18 @@ errMaybe res =
 -}
 int : Validation e Int
 int v =
-    case Field.asString v of
-        Just s ->
-            String.toInt s
-                |> Result.mapError (\_ -> Error.value InvalidInt)
-
-        Nothing ->
-            Err (Error.value InvalidInt)
+    Field.asString v
+        |> Maybe.andThen String.toInt
+        |> Result.fromMaybe (Error.value InvalidInt)
 
 
 {-| Validation a float using `String.toFloat`.
 -}
 float : Validation e Float
 float v =
-    case Field.asString v of
-        Just s ->
-            String.toFloat s
-                |> Result.mapError (\_ -> Error.value InvalidFloat)
-
-        Nothing ->
-            Err (Error.value InvalidFloat)
+    Field.asString v
+        |> Maybe.andThen String.toFloat
+        |> Result.fromMaybe (Error.value InvalidFloat)
 
 
 {-| Validation a String.
