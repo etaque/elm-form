@@ -1,4 +1,4 @@
-module Form.Validate exposing (Validation, andMap, andThen, bool, customError, customValidation, date, defaultValue, email, emptyString, fail, field, float, format, includedIn, int, list, map, map2, map3, map4, map5, map6, map7, map8, mapError, maxFloat, maxInt, maxLength, maybe, minFloat, minInt, minLength, nonEmpty, oneOf, sequence, string, succeed, withCustomError)
+module Form.Validate exposing (Validation, andMap, andThen, bool, customError, customValidation, defaultValue, email, emptyString, fail, field, float, format, includedIn, int, list, map, map2, map3, map4, map5, map6, map7, map8, mapError, maxFloat, maxInt, maxLength, maybe, minFloat, minInt, minLength, nonEmpty, oneOf, sequence, string, succeed, withCustomError)
 
 {-| Form validation.
 
@@ -29,7 +29,9 @@ module Form.Validate exposing (Validation, andMap, andThen, bool, customError, c
 
 -}
 
-import Date exposing (Date)
+--date
+-- import Date exposing (Date)
+
 import Dict exposing (Dict)
 import Form.Error as Error exposing (Error, ErrorValue(..))
 import Form.Field as Field exposing (Field, FieldValue(..))
@@ -293,17 +295,17 @@ bool v =
             Ok False
 
 
-{-| Validation a Date using `Date.fromString`.
--}
-date : Validation e Date
-date v =
-    case Field.asString v of
-        Just s ->
-            Date.fromString s
-                |> Result.mapError (\_ -> Error.value InvalidDate)
 
-        Nothing ->
-            Err (Error.value InvalidDate)
+--{-| Validation a Date using `Date.fromString`.
+---}
+-- date : Validation e Date
+-- date v =
+--     case Field.asString v of
+--         Just s ->
+--             Date.fromString s
+--                 |> Result.mapError (\_ -> Error.value InvalidDate)
+--         Nothing ->
+--             Err (Error.value InvalidDate)
 
 
 {-| Transform validation result to `Maybe`, using `Result.toMaybe`.
