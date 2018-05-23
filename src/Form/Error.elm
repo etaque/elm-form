@@ -21,7 +21,6 @@ type ErrorValue e
     = Empty
     | InvalidString
     | InvalidEmail
-    | InvalidUrl
     | InvalidFormat
     | InvalidInt
     | InvalidFloat

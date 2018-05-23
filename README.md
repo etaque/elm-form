@@ -4,7 +4,9 @@ HTML live forms builders and validation for Elm. [![Build Status](https://travis
 
     elm package install etaque/elm-form
 
-For when the classical "a message per field" doesn't work well for you, at the price of loosing some typesafety.
+For when the classical "a message per field" doesn't work well for you, at the price of loosing some typesafety (field names are made of strings, see [#97](https://github.com/etaque/elm-form/issues/97)).
+
+## Support
 
 We have a dedicated channel in [Elm slack](https://elmlang.herokuapp.com/), join us in `#elm-form` for any question, support or issues coordination.
 

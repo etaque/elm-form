@@ -4,6 +4,7 @@ import Date exposing (Date)
 import Form exposing (Form)
 import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
+import Regex
 
 
 type Msg
@@ -101,7 +102,7 @@ validateProfile =
             (field "website"
                 (oneOf
                     [ emptyString |> map (\_ -> Nothing)
-                    , url |> map Just
+                    , validateUrl |> map Just
                     ]
                 )
             )
@@ -133,6 +134,14 @@ validateTodo =
     map2 Todo
         (field "done" bool)
         (field "label" string)
+
+
+{-| Check if the string is a valid URL.
+-}
+validateUrl : Validation e String
+validateUrl =
+    string
+        |> andThen (format (Regex.regex "^(https?://)"))
 
 
 

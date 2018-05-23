@@ -1,4 +1,4 @@
-module Form.Validate exposing (Validation, field, map, andThen, andMap, customError, defaultValue, mapError, withCustomError, map2, map3, map4, map5, map6, map7, map8, list, string, int, float, bool, date, maybe, email, url, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf, sequence)
+module Form.Validate exposing (Validation, field, map, andThen, andMap, customError, defaultValue, mapError, withCustomError, map2, map3, map4, map5, map6, map7, map8, list, string, int, float, bool, date, maybe, email, emptyString, minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn, fail, succeed, customValidation, oneOf, sequence)
 
 {-| Form validation.
 
@@ -15,7 +15,7 @@ module Form.Validate exposing (Validation, field, map, andThen, andMap, customEr
 
 # Type extractors
 
-@docs list, string, int, float, bool, date, maybe, email, url, emptyString
+@docs list, string, int, float, bool, date, maybe, email, emptyString
 
 
 # Common filters
@@ -410,24 +410,6 @@ email =
             (\s ->
                 format validEmailPattern s
                     |> mapError (\_ -> Error.value InvalidEmail)
-            )
-
-
-validUrlPattern : Regex
-validUrlPattern =
-    Regex.regex "^(https?://)?([\\da-z\\.-]+)\\.([a-z\\.]{2,6})([\\w \\.-]*)*/?$"
-        |> Regex.caseInsensitive
-
-
-{-| Check if the string is a valid URL.
--}
-url : Validation e String
-url =
-    string
-        |> andThen
-            (\s ->
-                format validUrlPattern s
-                    |> mapError (\_ -> Error.value InvalidUrl)
             )
 
 
