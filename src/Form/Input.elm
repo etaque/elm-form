@@ -11,6 +11,7 @@ module Form.Input exposing (Input, baseInput, checkboxInput, dumpErrors, passwor
 -}
 
 import Form exposing (FieldState, Form, InputType(..), Msg(..))
+import Form.Error exposing (ErrorValue(..))
 import Form.Field as Field exposing (Field, FieldValue(..))
 import Html exposing (..)
 import Html.Attributes as HtmlAttr exposing (..)
