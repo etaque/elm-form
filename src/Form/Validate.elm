@@ -29,9 +29,6 @@ module Form.Validate exposing (Validation, andMap, andThen, bool, customError, c
 
 -}
 
---date
--- import Date exposing (Date)
-
 import Dict exposing (Dict)
 import Form.Error as Error exposing (Error, ErrorValue(..))
 import Form.Field as Field exposing (Field, FieldValue(..))
@@ -285,19 +282,6 @@ bool v =
 
         Nothing ->
             Ok False
-
-
-
---{-| Validation a Date using `Date.fromString`.
----}
--- date : Validation e Date
--- date v =
---     case Field.asString v of
---         Just s ->
---             Date.fromString s
---                 |> Result.mapError (\_ -> Error.value InvalidDate)
---         Nothing ->
---             Err (Error.value InvalidDate)
 
 
 {-| Transform validation result to `Maybe`, using `Result.toMaybe`.
