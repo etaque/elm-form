@@ -35,7 +35,7 @@ describeValidation description validation cases =
         testCases =
             List.map (testValidation validation) cases
     in
-        describe (description ++ " validations") testCases
+    describe (description ++ " validations") testCases
 
 
 {-| Create a single test case for a `Validation`.
@@ -65,6 +65,6 @@ testValidation validation (( stringToValidate, validationExpectation ) as valida
                 InvalidCustomError _ ->
                     "InvalidCustomError"
     in
-        Test.test ("expect " ++ shallowExpectationString ++ "with input '" ++ stringToValidate ++ "'") <|
-            \() ->
-                TestHelpers.getValidationExpectation validation validationCase
+    Test.test ("expect " ++ shallowExpectationString ++ "with input '" ++ stringToValidate ++ "'") <|
+        \() ->
+            TestHelpers.getValidationExpectation validation validationCase

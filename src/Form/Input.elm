@@ -125,4 +125,4 @@ radioInput value state attrs =
                 (targetValue |> Json.map (String >> Input state.path Radio))
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []

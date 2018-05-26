@@ -49,7 +49,7 @@ getAtPath path tree =
                 StringFragment name ->
                     maybeField |> Maybe.andThen (getAtName name)
     in
-        List.foldl walkPath (Just tree) (extractFragments path)
+    List.foldl walkPath (Just tree) (extractFragments path)
 
 
 {-| Get node at name, if group
@@ -104,7 +104,7 @@ valuesWithPath tree =
                 Value item ->
                     [ ( String.join "." path, item ) ]
     in
-        walkTree [] tree
+    walkTree [] tree
 
 
 {-| Extract value, if possible.
@@ -178,7 +178,7 @@ recursiveSet fragments node tree =
                         childNode =
                             recursiveSet rest node target
                     in
-                        merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
+                    merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
 
         [] ->
             node

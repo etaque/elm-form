@@ -249,6 +249,7 @@ string v =
         Just s ->
             if String.isEmpty s then
                 Err (Error.value Empty)
+
             else
                 Ok s
 
@@ -265,6 +266,7 @@ emptyString v =
         Just s ->
             if String.isEmpty s then
                 Ok s
+
             else
                 Err (Error.value InvalidString)
 
@@ -297,6 +299,7 @@ nonEmpty : String -> Validation e String
 nonEmpty s validationField =
     if String.isEmpty s then
         Err (Error.value Empty)
+
     else
         Ok s
 
@@ -307,6 +310,7 @@ minLength : Int -> String -> Validation e String
 minLength min s validationField =
     if String.length s >= min then
         Ok s
+
     else
         Err (Error.value (ShorterStringThan min))
 
@@ -317,6 +321,7 @@ maxLength : Int -> String -> Validation e String
 maxLength max s validationField =
     if String.length s <= max then
         Ok s
+
     else
         Err (Error.value (LongerStringThan max))
 
@@ -327,6 +332,7 @@ minInt : Int -> Int -> Validation e Int
 minInt min i validationField =
     if i >= min then
         Ok i
+
     else
         Err (Error.value (SmallerIntThan min))
 
@@ -337,6 +343,7 @@ maxInt : Int -> Int -> Validation e Int
 maxInt max i validationField =
     if i <= max then
         Ok i
+
     else
         Err (Error.value (GreaterIntThan max))
 
@@ -347,6 +354,7 @@ minFloat : Float -> Float -> Validation e Float
 minFloat min i validationField =
     if i >= min then
         Ok i
+
     else
         Err (Error.value (SmallerFloatThan min))
 
@@ -357,6 +365,7 @@ maxFloat : Float -> Float -> Validation e Float
 maxFloat max i validationField =
     if i <= max then
         Ok i
+
     else
         Err (Error.value (GreaterFloatThan max))
 
@@ -367,6 +376,7 @@ format : Regex -> String -> Validation e String
 format regex s validationField =
     if Regex.contains regex s then
         Ok s
+
     else
         Err (Error.value InvalidFormat)
 
@@ -398,6 +408,7 @@ includedIn : List String -> String -> Validation e String
 includedIn items s validationField =
     if List.member s items then
         Ok s
+
     else
         Err (Error.value NotIncludedIn)
 
@@ -439,7 +450,7 @@ oneOf validations validationField =
                 _ ->
                     result
     in
-        List.foldl walkResults (Err (Error.value Empty)) results
+    List.foldl walkResults (Err (Error.value Empty)) results
 
 
 {-| Combine a list of validations into a validation producing a list of all
@@ -473,10 +484,11 @@ list validation validationField =
                         |> List.indexedMap indexedErrMaybe
                         |> List.filterMap identity
             in
-                if List.isEmpty errors then
-                    Ok (List.filterMap Result.toMaybe results)
-                else
-                    Err (Tree.group errors)
+            if List.isEmpty errors then
+                Ok (List.filterMap Result.toMaybe results)
+
+            else
+                Err (Tree.group errors)
 
         _ ->
             Ok []
