@@ -1,12 +1,10 @@
-module Form.Input exposing (Input, baseInput, checkboxInput, dumpErrors, passwordInput, radioInput, selectInput, textArea, textInput)
+module Form.Input exposing (Input, baseInput, checkboxInput, passwordInput, radioInput, selectInput, textArea, textInput)
 
 {-| Html input view helpers, wired for elm-form validation.
 
 @docs Input
 
 @docs baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput
-
-@docs dumpErrors
 
 -}
 
@@ -35,13 +33,13 @@ baseInput t toFieldValue inputType state attrs =
     let
         formAttrs =
             [ type_ t
-            , defaultValue (state.value |> Maybe.withDefault "")
+            , value (state.value |> Maybe.withDefault "")
             , onInput (toFieldValue >> Input state.path inputType)
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
     in
-    input (formAttrs ++ attrs) []
+        input (formAttrs ++ attrs) []
 
 
 {-| Text input.
@@ -64,13 +62,13 @@ textArea : Input e String
 textArea state attrs =
     let
         formAttrs =
-            [ defaultValue (state.value |> Maybe.withDefault "")
+            [ value (state.value |> Maybe.withDefault "")
             , onInput (String >> Input state.path Textarea)
             , onFocus (Focus state.path)
             , onBlur (Blur state.path)
             ]
     in
-    Html.textarea (formAttrs ++ attrs) []
+        Html.textarea (formAttrs ++ attrs) []
 
 
 {-| Select input.
@@ -89,7 +87,7 @@ selectInput options state attrs =
         buildOption ( k, v ) =
             option [ value k, selected (state.value == Just k) ] [ text v ]
     in
-    select (formAttrs ++ attrs) (List.map buildOption options)
+        select (formAttrs ++ attrs) (List.map buildOption options)
 
 
 {-| Checkbox input.
@@ -105,7 +103,7 @@ checkboxInput state attrs =
             , onBlur (Blur state.path)
             ]
     in
-    input (formAttrs ++ attrs) []
+        input (formAttrs ++ attrs) []
 
 
 {-| Radio input.
@@ -125,4 +123,4 @@ radioInput value state attrs =
                 (targetValue |> Json.map (String >> Input state.path Radio))
             ]
     in
-    input (formAttrs ++ attrs) []
+        input (formAttrs ++ attrs) []
