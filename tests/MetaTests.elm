@@ -1,4 +1,4 @@
-module Tests.MetaTests exposing (all)
+module MetaTests exposing (all)
 
 import Expect exposing (Expectation)
 import Form.Error exposing (ErrorValue)

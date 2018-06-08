@@ -1,4 +1,4 @@
-module Tests.ChangedFields exposing (all)
+module ChangedFields exposing (all)
 
 import Test exposing (..)
 import Expect exposing (..)

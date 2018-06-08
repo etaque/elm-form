@@ -25,7 +25,6 @@ type ErrorValue e
     | InvalidInt
     | InvalidFloat
     | InvalidBool
-    | InvalidDate
     | SmallerIntThan Int
     | GreaterIntThan Int
     | SmallerFloatThan Float

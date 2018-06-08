@@ -1,4 +1,4 @@
-module Tests.Example exposing (all)
+module Example exposing (all)
 
 import Test exposing (..)
 import Expect exposing (..)
@@ -17,7 +17,7 @@ all =
             \_ ->
                 equal
                     (Form.getErrors validatedForm)
-                    [ ( "date", InvalidDate )
+                    [ ( "date", CustomError Model.InvalidDate )
                     , ( "email", InvalidString )
                     , ( "profile.role", InvalidString )
                     , ( "profile.superpower", InvalidString )

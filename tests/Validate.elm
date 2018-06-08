@@ -1,4 +1,4 @@
-module Tests.Validate exposing (all)
+module Validate exposing (all)
 
 import Test exposing (..)
 import Expect exposing (..)
@@ -13,7 +13,7 @@ import Form
 
 all : Test
 all =
-    describe "Validate"
+    describe "Form.Validate"
         [ fuzz (list int) "Transforms a list of successes to a success of lists" <|
             \nums ->
                 nums

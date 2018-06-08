@@ -23,5 +23,7 @@
         "elm/time": "1.0.0 <= v < 2.0.0",
         "elm-explorations/test": "1.0.0 <= v < 2.0.0"
     },
-    "test-dependencies": {}
+    "test-dependencies": {
+        "elm/parser": "1.0.0 <= v < 2.0.0"
+    }
 }
