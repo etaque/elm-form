@@ -1,9 +1,10 @@
 module Model exposing (..)
 
-import Date exposing (Date)
 import Form exposing (Form)
+import Form.Error as Error
 import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
+import Parser exposing (Parser, (|.), (|=))
 import Regex
 
 
@@ -23,13 +24,21 @@ type CustomError
     | Nope
     | AlreadyTaken
     | InvalidSuperpower
+    | InvalidDate
+
+
+type alias Date =
+    { year : Int
+    , month : Int
+    , day : Int
+    }
 
 
 type alias User =
     { name : String
     , email : String
     , admin : Bool
-    , date : Date
+    , birthday : Date
     , profile : Profile
     , todos : List Todo
     }
@@ -90,9 +99,44 @@ validate =
         (field "name" (string |> andThen nonEmpty))
         (field "email" (email |> andThen (asyncCheck True)))
         (field "admin" (bool |> defaultValue False))
-        (field "date" date)
+        (field "date" validateDate)
         (field "profile" validateProfile)
         (field "todos" (list validateTodo))
+
+
+validateDate : Validation CustomError Date
+validateDate =
+    let
+        parseDate text =
+            text
+                |> Parser.run dateParser
+                |> Result.mapError (always (Error.value (Error.CustomError InvalidDate)))
+
+        -- This should use much more complicated logic to ensure it's actually valid
+        validateDayIsValid date validationField =
+            if date.month > 12 || date.month < 1 then
+                Err (Error.value (Error.CustomError InvalidDate))
+            else if date.day > 31 || date.day < 1 then
+                Err (Error.value (Error.CustomError InvalidDate))
+            else
+                Ok date
+
+    in
+        customValidation string parseDate
+            |> andThen validateDayIsValid
+            |> mapError (always (Error.value (Error.CustomError InvalidDate)))
+
+dateParser : Parser Date
+dateParser =
+    Parser.succeed Date
+        |= Parser.int
+        |. Parser.symbol "-"
+        |. Parser.chompIf ((==) '0')
+        |= Parser.int
+        |. Parser.symbol "-"
+        |. Parser.chompIf ((==) '0')
+        |= Parser.int
+        |. Parser.end
 
 
 validateProfile : Validation CustomError Profile
@@ -145,8 +189,8 @@ validateUrl =
             Regex.fromString "^(https?://)"
                 |> Maybe.withDefault Regex.never
     in
-        string
-            |> andThen (format urlRegex)
+    string
+        |> andThen (format urlRegex)
 
 
 
@@ -160,6 +204,7 @@ naturalInt =
         (\i ->
             if i > 0 then
                 Ok i
+
             else
                 Err (customError Nope)
         )
@@ -169,5 +214,6 @@ asyncCheck : Bool -> String -> Validation CustomError String
 asyncCheck serverIsOk s =
     if serverIsOk then
         succeed s
+
     else
         fail (customError AlreadyTaken)

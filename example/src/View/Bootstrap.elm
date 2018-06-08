@@ -1,11 +1,11 @@
 module View.Bootstrap exposing (..)
 
+import Form exposing (FieldState, Form)
+import Form.Error exposing (Error, ErrorValue)
+import Form.Field as Field
+import Form.Input as Input
 import Html exposing (..)
 import Html.Attributes exposing (..)
-import Form exposing (Form, FieldState)
-import Form.Input as Input
-import Form.Field as Field
-import Form.Error exposing (Error, ErrorValue)
 import Model exposing (..)
 
 
@@ -26,7 +26,7 @@ type alias GroupBuilder a =
 formGroup : Html Form.Msg -> Maybe (ErrorValue CustomError) -> List (Html Form.Msg) -> Html Form.Msg
 formGroup label_ maybeError inputs =
     div
-        [ class ("row form-group " ++ (errorClass maybeError)) ]
+        [ class ("row form-group " ++ errorClass maybeError) ]
         [ colN 3
             [ label [ class "control-label" ] [ label_ ] ]
         , colN 5
@@ -110,9 +110,9 @@ radioGroup options label_ state =
                 , text l
                 ]
     in
-        formGroup label_
-            state.liveError
-            (List.map item options)
+    formGroup label_
+        state.liveError
+        (List.map item options)
 
 
 errorClass : Maybe error -> String
@@ -131,7 +131,7 @@ errorMessage maybeError =
         Nothing ->
             span
                 [ class "help-block" ]
-                [ text "\x2007" ]
+                [ text "\u{2007}" ]
 
 
 

@@ -126,14 +126,18 @@ validateDate =
             |> andThen validateDayIsValid
             |> mapError (always (Error.value (Error.CustomError InvalidDate)))
 
+
 dateParser : Parser Date
 dateParser =
     Parser.succeed Date
         |= Parser.int
         |. Parser.symbol "-"
+        |. Parser.chompIf ((==) '0')
         |= Parser.int
         |. Parser.symbol "-"
+        |. Parser.chompIf ((==) '0')
         |= Parser.int
+        |. Parser.end
 
 
 validateProfile : Validation CustomError Profile

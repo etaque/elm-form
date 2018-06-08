@@ -1,12 +1,13 @@
 module Main exposing (..)
 
-import Html.App as Html
+import Form exposing (Form)
+import Form.Input as Input
+import Form.Validate as Validate exposing (..)
 import Html exposing (..)
+import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Form exposing (Form)
-import Form.Validate as Validate exposing (..)
-import Form.Input as Input
+
 
 
 -- your expected form output
@@ -90,19 +91,19 @@ formView form =
         baz =
             Form.getFieldAsBool "baz" form
     in
-        div []
-            [ label [] [ text "Bar" ]
-            , Input.textInput bar []
-            , errorFor bar
-            , label []
-                [ Input.checkboxInput baz []
-                , text "Baz"
-                ]
-            , errorFor baz
-            , button
-                [ onClick Form.Submit ]
-                [ text "Submit" ]
+    div []
+        [ label [] [ text "Bar" ]
+        , Input.textInput bar []
+        , errorFor bar
+        , label []
+            [ Input.checkboxInput baz []
+            , text "Baz"
             ]
+        , errorFor baz
+        , button
+            [ onClick Form.Submit ]
+            [ text "Submit" ]
+        ]
 
 
 app =
