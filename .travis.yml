@@ -6,8 +6,8 @@ os:
 
 env:
   matrix:
-    - ELM_VERSION=0.18.0 TARGET_NODE_VERSION=node
-    - ELM_VERSION=0.18.0 TARGET_NODE_VERSION=4.0
+    - ELM_VERSION=0.19.0 TARGET_NODE_VERSION=node
+    - ELM_VERSION=0.19.0 TARGET_NODE_VERSION=4.0
 
 before_install:
   - if [ ${TRAVIS_OS_NAME} == "osx" ];
@@ -20,13 +20,13 @@ install:
   - nvm use $TARGET_NODE_VERSION
   - node --version
   - npm --version
-  - npm install -g elm-use elm-test@0.18.3
+  - npm install -g elm-use elm-test@0.19.0-beta4
   - elm-use $ELM_VERSION
   - npm install
   
 script:
   - node_modules/elm-format/bin/elm-format --validate src tests example
   - cd example
-  - elm-make --output=/dev/null --yes
+  - elm make --output=/dev/null
   - cd ..
   - npm test
