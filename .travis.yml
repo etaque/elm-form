@@ -20,8 +20,7 @@ install:
   - nvm use $TARGET_NODE_VERSION
   - node --version
   - npm --version
-  - npm install -g elm-use elm-test@0.19.0-beta4
-  - elm-use $ELM_VERSION
+  - npm install -g elm@${ELM_VERSION} elm-test@0.19.0-beta4
   - npm install
   
 script:
