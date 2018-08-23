@@ -1,4 +1,4 @@
-module Update exposing (..)
+module Update exposing (init, update)
 
 import Form exposing (Form)
 import Model exposing (..)

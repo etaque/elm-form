@@ -1,4 +1,4 @@
-module Main exposing (..)
+module Main exposing (Foo, Model, Msg(..), app, formView, init, update, validate, view)
 
 import Form exposing (Form)
 import Form.Input as Input

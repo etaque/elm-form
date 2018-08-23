@@ -26,6 +26,6 @@ install:
 script:
   - node_modules/elm-format/bin/elm-format --validate src tests example
   - cd example
-  - elm make --output=/dev/null
+  - elm make src/Main.elm --output=/dev/null
   - cd ..
   - npm test

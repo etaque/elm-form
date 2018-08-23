@@ -1,4 +1,8 @@
-module Form.Tree exposing (Tree(..), asList, asValue, getAtIndex, getAtName, getAtPath, group, setAtPath, valuesWithPath)
+module Form.Tree exposing
+    ( Tree(..), group
+    , getAtPath, getAtName, getAtIndex, asList, asValue, valuesWithPath
+    , setAtPath
+    )
 
 {-| Data structures
 

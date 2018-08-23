@@ -1,4 +1,4 @@
-module ValidationTests exposing (..)
+module ValidationTests exposing (suite)
 
 import Form.Error
 import Form.Test

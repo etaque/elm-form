@@ -1,4 +1,7 @@
-module Form.Input exposing (Input, baseInput, checkboxInput, passwordInput, radioInput, selectInput, textArea, textInput)
+module Form.Input exposing
+    ( Input
+    , baseInput, textInput, passwordInput, textArea, checkboxInput, selectInput, radioInput
+    )
 
 {-| Html input view helpers, wired for elm-form validation.
 
@@ -39,7 +42,7 @@ baseInput t toFieldValue inputType state attrs =
             , onBlur (Blur state.path)
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []
 
 
 {-| Text input.
@@ -68,7 +71,7 @@ textArea state attrs =
             , onBlur (Blur state.path)
             ]
     in
-        Html.textarea (formAttrs ++ attrs) []
+    Html.textarea (formAttrs ++ attrs) []
 
 
 {-| Select input.
@@ -87,7 +90,7 @@ selectInput options state attrs =
         buildOption ( k, v ) =
             option [ value k, selected (state.value == Just k) ] [ text v ]
     in
-        select (formAttrs ++ attrs) (List.map buildOption options)
+    select (formAttrs ++ attrs) (List.map buildOption options)
 
 
 {-| Checkbox input.
@@ -103,7 +106,7 @@ checkboxInput state attrs =
             , onBlur (Blur state.path)
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []
 
 
 {-| Radio input.
@@ -123,4 +126,4 @@ radioInput value state attrs =
                 (targetValue |> Json.map (String >> Input state.path Radio))
             ]
     in
-        input (formAttrs ++ attrs) []
+    input (formAttrs ++ attrs) []

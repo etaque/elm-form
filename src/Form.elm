@@ -1,4 +1,9 @@
-module Form exposing (FieldState, Form, InputType(..), Msg(..), getChangedFields, getErrors, getFieldAsBool, getFieldAsString, getFocus, getListIndexes, getOutput, initial, isSubmitted, update)
+module Form exposing
+    ( Msg(..), InputType(..), Form, FieldState
+    , initial, update
+    , getFieldAsString, getFieldAsBool, getListIndexes
+    , getFocus, isSubmitted, getErrors, getOutput, getChangedFields
+    )
 
 {-| Simple forms made easy: A Dict implementation of the core `Json.Decode` API,
 with state lifecycle and input helpers for the views.

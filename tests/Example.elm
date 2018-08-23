@@ -1,11 +1,11 @@
 module Example exposing (all)
 
-import Test exposing (..)
 import Expect exposing (..)
-import Model
 import Form exposing (Form)
 import Form.Error exposing (..)
 import Form.Field as Field
+import Model
+import Test exposing (..)
 
 
 all : Test
@@ -37,7 +37,7 @@ all =
                     maybeState =
                         Form.getFieldAsString name formAfterInput
                 in
-                    equal (Just value) maybeState.value
+                equal (Just value) maybeState.value
         ]
 
 

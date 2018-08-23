@@ -1,4 +1,10 @@
-module Form.Validate exposing (Validation, andMap, andThen, bool, customError, customValidation, defaultValue, email, emptyString, fail, field, float, format, includedIn, int, list, map, map2, map3, map4, map5, map6, map7, map8, mapError, maxFloat, maxInt, maxLength, maybe, minFloat, minInt, minLength, nonEmpty, oneOf, sequence, string, succeed, withCustomError)
+module Form.Validate exposing
+    ( Validation, field, map, succeed, andThen, andMap, customError, defaultValue, mapError, withCustomError, sequence
+    , map2, map3, map4, map5, map6, map7, map8
+    , list, string, int, float, bool, maybe, email, emptyString
+    , minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn
+    , fail, succeed, customValidation, oneOf
+    )
 
 {-| Form validation.
 
@@ -68,8 +74,8 @@ andThen callback validation validationField =
 {-| Incremental form validation for records with more that 8 fields.
 
     Form.Validate.succeed SomeRecord
-      |> andMap (field "foo" string)
-      |> andMap (field "bar" string)
+        |> andMap (field "foo" string)
+        |> andMap (field "bar" string)
 
 -}
 andMap : Validation e a -> Validation e (a -> b) -> Validation e b
@@ -98,10 +104,12 @@ mapError f validation =
 
 {-| Arrange that if a validation fails, it has the given custom error.
 
-    field "customerId" (V.int
-          |> andThen (minInt 1)
-          |> andThen (maxInt 9999)
-          |> withCustomError InvalidIdentity)
+    field "customerId"
+        (V.int
+            |> andThen (minInt 1)
+            |> andThen (maxInt 9999)
+            |> withCustomError InvalidIdentity
+        )
 
 -}
 withCustomError : customErr -> Validation e a -> Validation customErr a

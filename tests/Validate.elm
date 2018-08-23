@@ -1,14 +1,14 @@
 module Validate exposing (all)
 
-import Test exposing (..)
 import Expect exposing (..)
-import Fuzz exposing (..)
-import Form.Validate as Validate exposing (Validation)
-import Form.Field as Field
-import Form.Error as Error
-import Form.Tree as Tree
-import Form.Input as Input
 import Form
+import Form.Error as Error
+import Form.Field as Field
+import Form.Input as Input
+import Form.Tree as Tree
+import Form.Validate as Validate exposing (Validation)
+import Fuzz exposing (..)
+import Test exposing (..)
 
 
 all : Test
@@ -36,16 +36,16 @@ all =
                     validations =
                         successes ++ ((failure firstErr :: successes) ++ (failure secondErr :: successes))
                 in
-                    validations
-                        |> Validate.sequence
-                        |> run
-                        |> Expect.equal
-                            (Tree.group
-                                [ ( firstErr, Validate.customError firstErr )
-                                , ( secondErr, Validate.customError secondErr )
-                                ]
-                                |> Err
-                            )
+                validations
+                    |> Validate.sequence
+                    |> run
+                    |> Expect.equal
+                        (Tree.group
+                            [ ( firstErr, Validate.customError firstErr )
+                            , ( secondErr, Validate.customError secondErr )
+                            ]
+                            |> Err
+                        )
         , test "Puts the errors at the correct indexes" <|
             \_ ->
                 let
@@ -56,11 +56,11 @@ all =
                             )
 
                     initialForm =
-                        Form.initial [ ( "field_name", Field.list [ (Field.value (Field.String "longer")), (Field.value (Field.String "not")), (Field.value (Field.String "longer")) ] ) ] validate
+                        Form.initial [ ( "field_name", Field.list [ Field.value (Field.String "longer"), Field.value (Field.String "not"), Field.value (Field.String "longer") ] ) ] validate
                 in
-                    Expect.equal
-                        [ ( "field_name.1", Error.ShorterStringThan 4 ) ]
-                        (Form.getErrors initialForm)
+                Expect.equal
+                    [ ( "field_name.1", Error.ShorterStringThan 4 ) ]
+                    (Form.getErrors initialForm)
         , test "Gets index errors from error groups" <|
             \_ ->
                 let
@@ -102,9 +102,9 @@ all =
                         , hasFocus = False
                         }
                 in
-                    Expect.equal
-                        expectedField
-                        (Form.getFieldAsString "a.1.b.0" updatedForm)
+                Expect.equal
+                    expectedField
+                    (Form.getFieldAsString "a.1.b.0" updatedForm)
         , test "Errors stay matched-up when an item is removed" <|
             \_ ->
                 let
@@ -147,9 +147,9 @@ all =
                         , hasFocus = False
                         }
                 in
-                    Expect.equal
-                        expectedField
-                        (Form.getFieldAsString "a.1.b.0" updatedForm)
+                Expect.equal
+                    expectedField
+                    (Form.getFieldAsString "a.1.b.0" updatedForm)
         ]
 
 

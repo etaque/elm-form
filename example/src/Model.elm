@@ -1,10 +1,10 @@
-module Model exposing (..)
+module Model exposing (CustomError(..), Date, Model, Msg(..), Profile, Superpower(..), Todo, User, asyncCheck, dateParser, initialFields, naturalInt, roles, superpowers, validate, validateDate, validateProfile, validateSuperpower, validateTodo, validateUrl)
 
 import Form exposing (Form)
 import Form.Error as Error
 import Form.Field as Field exposing (Field)
 import Form.Validate as Validate exposing (..)
-import Parser exposing (Parser, (|.), (|=))
+import Parser exposing ((|.), (|=), Parser)
 import Regex
 
 
@@ -116,15 +116,17 @@ validateDate =
         validateDayIsValid date validationField =
             if date.month > 12 || date.month < 1 then
                 Err (Error.value (Error.CustomError InvalidDate))
+
             else if date.day > 31 || date.day < 1 then
                 Err (Error.value (Error.CustomError InvalidDate))
+
             else
                 Ok date
-
     in
-        customValidation string parseDate
-            |> andThen validateDayIsValid
-            |> mapError (always (Error.value (Error.CustomError InvalidDate)))
+    customValidation string parseDate
+        |> andThen validateDayIsValid
+        |> mapError (always (Error.value (Error.CustomError InvalidDate)))
+
 
 dateParser : Parser Date
 dateParser =
