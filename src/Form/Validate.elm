@@ -3,7 +3,7 @@ module Form.Validate exposing
     , map2, map3, map4, map5, map6, map7, map8
     , list, string, int, float, bool, maybe, email, emptyString
     , minInt, maxInt, minFloat, maxFloat, minLength, maxLength, nonEmpty, format, includedIn
-    , fail, succeed, customValidation, oneOf
+    , fail, customValidation, oneOf
     )
 
 {-| Form validation.
@@ -31,7 +31,7 @@ module Form.Validate exposing
 
 # Custom validations
 
-@docs fail, succeed, customValidation, oneOf
+@docs fail, customValidation, oneOf
 
 -}
 
