@@ -1,10 +1,10 @@
 module Main exposing (Foo, Model, Msg(..), app, formView, init, update, validate, view)
 
+import Browser
 import Form exposing (Form)
 import Form.Input as Input
 import Form.Validate as Validate exposing (..)
 import Html exposing (..)
-import Html.App as Html
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
 
@@ -36,30 +36,30 @@ type Msg
 -- Setup form validation
 
 
-init : ( Model, Cmd Msg )
+init : Model
 init =
-    ( { form = Form.initial [] validate }, Cmd.none )
+    { form = Form.initial [] validate }
 
 
 validate : Validation () Foo
 validate =
-    form2 Foo
-        (get "bar" email)
-        (get "baz" bool)
+    succeed Foo
+        |> andMap (field "bar" email)
+        |> andMap (field "baz" bool)
 
 
 
 -- Forward form msgs to Form.update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Model
 update msg ({ form } as model) =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            model
 
         FormMsg formMsg ->
-            ( { model | form = Form.update formMsg form }, Cmd.none )
+            { model | form = Form.update validate formMsg form }
 
 
 
@@ -107,9 +107,8 @@ formView form =
 
 
 app =
-    Html.program
+    Browser.sandbox
         { init = init
         , update = update
         , view = view
-        , subscriptions = \_ -> Sub.none
         }
