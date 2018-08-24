@@ -158,7 +158,7 @@ Overall, having a look at current [helpers source code](https://github.com/etaqu
 
 ### Incremental validation
 
-Similar to what Json.Extra provides. Use `Form.apply`, or the `|:` infix version from [infix package](https://github.com/etaque/elm-form-infix):
+Similar to what Json.Extra provides you can also use `Form.andMap`
 
 ```elm
 Form.succeed Player
