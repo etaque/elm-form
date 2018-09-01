@@ -1,4 +1,8 @@
-module Form.Tree exposing (Tree(..), getAtPath, getAtName, getAtIndex, valuesWithPath, group, asList, asValue, setAtPath)
+module Form.Tree exposing
+    ( Tree(..), group
+    , getAtPath, getAtName, getAtIndex, asList, asValue, valuesWithPath
+    , setAtPath
+    )
 
 {-| Data structures
 
@@ -49,7 +53,7 @@ getAtPath path tree =
                 StringFragment name ->
                     maybeField |> Maybe.andThen (getAtName name)
     in
-        List.foldl walkPath (Just tree) (extractFragments path)
+    List.foldl walkPath (Just tree) (extractFragments path)
 
 
 {-| Get node at name, if group
@@ -57,8 +61,8 @@ getAtPath path tree =
 getAtName : String -> Tree value -> Maybe (Tree value)
 getAtName name value =
     case value of
-        Group group ->
-            Dict.get name group
+        Group items ->
+            Dict.get name items
 
         _ ->
             Nothing
@@ -74,8 +78,8 @@ getAtIndex index value =
                 |> List.drop index
                 |> List.head
 
-        Group group ->
-            Dict.get (toString index) group
+        Group items ->
+            Dict.get (String.fromInt index) items
 
         Value _ ->
             Nothing
@@ -91,20 +95,20 @@ valuesWithPath tree =
 
         walkTree path value =
             case value of
-                Group group ->
+                Group items ->
                     List.concatMap
                         (mapGroupItem path)
-                        (Dict.toList group)
+                        (Dict.toList items)
 
                 List items ->
                     List.concatMap
                         (mapGroupItem path)
-                        (List.indexedMap (\index item -> ( toString index, item )) items)
+                        (List.indexedMap (\index item -> ( String.fromInt index, item )) items)
 
-                Value value ->
-                    [ ( String.join "." path, value ) ]
+                Value item ->
+                    [ ( String.join "." path, item ) ]
     in
-        walkTree [] tree
+    walkTree [] tree
 
 
 {-| Extract value, if possible.
@@ -148,12 +152,9 @@ extractFragments name =
 
 toFragment : String -> Fragment
 toFragment s =
-    case String.toInt s of
-        Ok i ->
-            IntFragment i
-
-        Err _ ->
-            StringFragment s
+    String.toInt s
+        |> Maybe.map IntFragment
+        |> Maybe.withDefault (StringFragment s)
 
 
 {-| Set node in tree at given path.
@@ -181,7 +182,7 @@ recursiveSet fragments node tree =
                         childNode =
                             recursiveSet rest node target
                     in
-                        merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
+                    merge (Group (Dict.fromList [ ( name, childNode ) ])) tree
 
         [] ->
             node
@@ -193,6 +194,7 @@ updateListAtIndex index updater =
         (\i f ->
             if i == index then
                 updater f
+
             else
                 f
         )

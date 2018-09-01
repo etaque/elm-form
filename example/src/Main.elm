@@ -1,17 +1,17 @@
-module Main exposing (..)
+module Main exposing (main)
 
-import Html
-import View exposing (view)
+import Browser
 import Update exposing (init, update)
+import View exposing (view)
+
 
 
 -- App
 
 
 main =
-    Html.program
+    Browser.sandbox
         { init = init
-        , update = update
         , view = view
-        , subscriptions = \_ -> Sub.none
+        , update = update
         }

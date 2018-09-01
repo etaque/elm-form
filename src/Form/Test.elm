@@ -8,7 +8,7 @@ module Form.Test exposing (describeValidation, testValidation)
 -}
 
 import Form.Test.Helpers as TestHelpers
-import Form.Test.ValidationExpectation exposing (ValidationExpectation)
+import Form.Test.ValidationExpectation exposing (ValidationExpectation(..))
 import Form.Validate as Validate exposing (Validation)
 import Test exposing (..)
 
@@ -35,7 +35,7 @@ describeValidation description validation cases =
         testCases =
             List.map (testValidation validation) cases
     in
-        describe (description ++ " validations") testCases
+    describe (description ++ " validations") testCases
 
 
 {-| Create a single test case for a `Validation`.
@@ -50,6 +50,21 @@ describeValidation description validation cases =
 -}
 testValidation : Validate.Validation e a -> ( String, ValidationExpectation e a ) -> Test
 testValidation validation (( stringToValidate, validationExpectation ) as validationCase) =
-    Test.test ("expect " ++ toString validationExpectation ++ "with input '" ++ stringToValidate ++ "'") <|
+    let
+        shallowExpectationString =
+            case validationExpectation of
+                Valid ->
+                    "Valid"
+
+                ValidDecodesTo a ->
+                    "ValidDecodesTo"
+
+                Invalid _ ->
+                    "Invalid "
+
+                InvalidCustomError _ ->
+                    "InvalidCustomError"
+    in
+    Test.test ("expect " ++ shallowExpectationString ++ "with input '" ++ stringToValidate ++ "'") <|
         \() ->
             TestHelpers.getValidationExpectation validation validationCase

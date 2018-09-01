@@ -1,4 +1,7 @@
-module Form.Field exposing (Field, FieldValue(..), value, string, bool, group, list, asString, asBool)
+module Form.Field exposing
+    ( Field, FieldValue(..), value, string, bool, group, list
+    , asString, asBool
+    )
 
 {-| Read and write field values.
 

@@ -1,11 +1,11 @@
-module Tests.ChangedFields exposing (all)
+module ChangedFields exposing (all)
 
-import Test exposing (..)
 import Expect exposing (..)
-import Model
 import Form exposing (Form)
 import Form.Field as Field
+import Model
 import Set exposing (Set)
+import Test exposing (..)
 
 
 all : Test
@@ -26,7 +26,7 @@ all =
                     expected =
                         Set.insert name Set.empty
                 in
-                    equal expected changedFields
+                equal expected changedFields
         , test "field changed and change reverted back" <|
             \_ ->
                 let
@@ -40,7 +40,7 @@ all =
                     changedFields =
                         Form.getChangedFields formAfterInput
                 in
-                    equal Set.empty changedFields
+                equal Set.empty changedFields
         , test "checkbox field changed" <|
             \_ ->
                 let
@@ -56,7 +56,7 @@ all =
                     expected =
                         Set.insert name Set.empty
                 in
-                    equal expected changedFields
+                equal expected changedFields
         , test "checkbox field checked and unchecked" <|
             \_ ->
                 let
@@ -70,7 +70,7 @@ all =
                     changedFields =
                         Form.getChangedFields formAfterInput
                 in
-                    equal Set.empty changedFields
+                equal Set.empty changedFields
         ]
 
 

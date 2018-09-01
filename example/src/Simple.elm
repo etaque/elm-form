@@ -1,12 +1,13 @@
-module Main exposing (..)
+module Main exposing (Foo, Model, Msg(..), app, formView, init, update, validate, view)
 
-import Html.App as Html
+import Browser
+import Form exposing (Form)
+import Form.Input as Input
+import Form.Validate as Validate exposing (..)
 import Html exposing (..)
 import Html.Attributes exposing (..)
 import Html.Events exposing (..)
-import Form exposing (Form)
-import Form.Validate as Validate exposing (..)
-import Form.Input as Input
+
 
 
 -- your expected form output
@@ -35,30 +36,30 @@ type Msg
 -- Setup form validation
 
 
-init : ( Model, Cmd Msg )
+init : Model
 init =
-    ( { form = Form.initial [] validate }, Cmd.none )
+    { form = Form.initial [] validate }
 
 
 validate : Validation () Foo
 validate =
-    form2 Foo
-        (get "bar" email)
-        (get "baz" bool)
+    succeed Foo
+        |> andMap (field "bar" email)
+        |> andMap (field "baz" bool)
 
 
 
 -- Forward form msgs to Form.update
 
 
-update : Msg -> Model -> ( Model, Cmd Msg )
+update : Msg -> Model -> Model
 update msg ({ form } as model) =
     case msg of
         NoOp ->
-            ( model, Cmd.none )
+            model
 
         FormMsg formMsg ->
-            ( { model | form = Form.update formMsg form }, Cmd.none )
+            { model | form = Form.update validate formMsg form }
 
 
 
@@ -78,7 +79,7 @@ formView form =
             case field.liveError of
                 Just error ->
                     -- replace toString with your own translations
-                    div [ class "error" ] [ text (toString error) ]
+                    div [ class "error" ] [ text (Debug.toString error) ]
 
                 Nothing ->
                     text ""
@@ -90,25 +91,24 @@ formView form =
         baz =
             Form.getFieldAsBool "baz" form
     in
-        div []
-            [ label [] [ text "Bar" ]
-            , Input.textInput bar []
-            , errorFor bar
-            , label []
-                [ Input.checkboxInput baz []
-                , text "Baz"
-                ]
-            , errorFor baz
-            , button
-                [ onClick Form.Submit ]
-                [ text "Submit" ]
+    div []
+        [ label [] [ text "Bar" ]
+        , Input.textInput bar []
+        , errorFor bar
+        , label []
+            [ Input.checkboxInput baz []
+            , text "Baz"
             ]
+        , errorFor baz
+        , button
+            [ onClick Form.Submit ]
+            [ text "Submit" ]
+        ]
 
 
 app =
-    Html.program
+    Browser.sandbox
         { init = init
         , update = update
         , view = view
-        , subscriptions = \_ -> Sub.none
         }
