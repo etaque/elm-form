@@ -21,7 +21,7 @@ module Form.Validate exposing
 
 # Type extractors
 
-@docs list, string, int, float, bool, date, maybe, email, emptyString
+@docs list, string, int, float, bool, maybe, email, emptyString
 
 
 # Common filters
