@@ -1,10 +1,10 @@
 # Elm Form
 
-HTML live forms builders and validation for Elm. [![Build Status](https://travis-ci.org/etaque/elm-form.svg?branch=master)](https://travis-ci.org/etaque/elm-form)
+HTML live form builders and validation for Elm. [![Build Status](https://travis-ci.org/etaque/elm-form.svg?branch=master)](https://travis-ci.org/etaque/elm-form)
 
     elm package install etaque/elm-form
 
-For when the classical "a message per field" doesn't work well for you, at the price of loosing some typesafety (field names are made of strings, see [#97](https://github.com/etaque/elm-form/issues/97)).
+For when the classical "a message per field" doesn't work well for you, at the price of losing some type safety (field names are made of strings, see [#97](https://github.com/etaque/elm-form/issues/97)).
 
 ## Support
 
@@ -18,7 +18,7 @@ We have a dedicated channel in [Elm slack](https://elmlang.herokuapp.com/), join
 * Unlimited fields, see `andMap` function (as in `Json.Extra`)
 * Nested fields (`foo.bar.baz`) and lists (`todos.1.checked`) enabling rich form build
 
-[See complete example here](http://etaque.github.io/elm-form/example/) ([source code](https://github.com/etaque/elm-form/tree/master/example)).
+See [complete example here](http://etaque.github.io/elm-form/example/) ([source code](https://github.com/etaque/elm-form/tree/master/example)).
 
 
 ## Basic usage
@@ -273,7 +273,7 @@ See `Form.Field` type for more options.
 button [ onClick (Form.Reset initialFields) ] [ text "Reset" ]
 ```
 
-*Note:* To have programmatically control over any `input[type=text]`/`textarea` value, like reseting or changing the value, you must set the `value` attribute with `Maybe.withDefault "" state.value`, as seen [here](https://github.com/etaque/elm-form/pull/57/files#diff-bfb877e82b2c89b329fcda943a258611R50). There's a downside of doing this: if the user types too fast, the caret can go crazy.
+*Note:* To have programmatic control over any `input[type=text]`/`textarea` value, like reseting or changing the value, you must set the `value` attribute with `Maybe.withDefault "" state.value`, as seen [here](https://github.com/etaque/elm-form/pull/57/files#diff-bfb877e82b2c89b329fcda943a258611R50). There's a downside of doing this: if the user types too fast, the caret can go crazy.
 
 More info: https://github.com/evancz/elm-html/pull/81#issuecomment-145676200
 
@@ -293,6 +293,6 @@ validation =
 
 ### Async validation
 
-This package doesn't provide anything special for async validation, but doesn't prevent you to do that neither. As field values are accessible from `update` with `Form.getStringAt/getBoolAt`, you can process them as you need, trigger effects like an HTTP request, and then add any errors to the view by yourself.
+This package doesn't provide anything special for async validation, but doesn't prevent you to do that either. As field values are accessible from `update` with `Form.getStringAt/getBoolAt`, you can process them as you need, trigger effects like an HTTP request, and then add any errors to the view by yourself.
 
 Another way would be to enable dynamic validation reload, to make it dependant of an effect, as it's part of the form state. Please ping me if this feature would be useful to you.
