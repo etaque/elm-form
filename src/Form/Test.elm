@@ -1,7 +1,7 @@
 module Form.Test exposing (describeValidation, testValidation)
 
 {-| Helpers to test your validations. See
-[an example validation test suite here](https://github.com/etaque/elm-form/tree/master/example/tests).
+[an example validation test suite here](https://github.com/etaque/elm-form/tree/master/tests).
 
 @docs describeValidation, testValidation
 
