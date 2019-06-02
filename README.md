@@ -23,7 +23,7 @@ See [complete example here](http://etaque.github.io/elm-form/example/) ([source 
 
 ## Basic usage
 
-See the [example validation test suite](https://github.com/etaque/elm-form/blob/master/example/tests/ValidationTests.elm)
+See the [example validation test suite](https://github.com/etaque/elm-form/blob/master/tests/ValidationTests.elm)
 and [test helper function docs](http://package.elm-lang.org/packages/etaque/elm-form/latest/Form-Test)
 for how to test-drive validations.
 
